@@ -7,20 +7,15 @@
 	<packaging>pom</packaging>
 
         <distributionManagement>
-                <site>
-                        <id />
-                        <name>Maven site</name>
-                        <url>file://</url>
-                </site>
                 <repository>
                         <id>nexus.public</id>
                         <name>ffm-libs-PRErelease-local</name>
-                        <url>https://calt.cms.gov/nexus/content/repositories/ffm-libs-PRErelease-local</url>
+                        <url>${nexus.url}/content/repositories/ffm-libs-PRErelease-local</url>
                 </repository>
                 <snapshotRepository>
                                 <id>nexus.public</id>
                                 <name>ffm-libs-snapshot-local</name>
-                                <url>https://calt.cms.gov/nexus/content/repositories/ffm-libs-snapshot-local</url>
+                                <url>${nexus.url}/content/repositories/ffm-libs-snapshot-local</url>
                 </snapshotRepository>
         </distributionManagement>
 		 
@@ -58,13 +53,13 @@
 	 </build>
 	
 	
-	<modules>
-    <module>EPS-Corb</module>
-      </modules>
+    <modules>
+        <module>EPS-Corb</module>
+    </modules>
 
-	<scm>
- 		<connection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-corb-batch/eps-corb-xquery-xqy</connection>
- 		<developerConnection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-corb-batch/eps-corb-xquery-xqy</developerConnection>
- 		<url>https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-corb-batch/eps-corb-xquery-xqy</url>
- 	</scm>
+    <scm>
+        <connection>scm:git:${git.repo.url}</connection>
+        <developerConnection>scm:git:${git.repo.url}</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
 </project>
