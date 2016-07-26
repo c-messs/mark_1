@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc" 	
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop	http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<!-- DATA SOURCE -->
+	
+	<bean id="dataSource" class="oracle.ucp.jdbc.PoolDataSourceFactory" factory-method="getPoolDataSource">
+		<property name="URL" value="${jdbc.url}" />
+		<property name="user" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="connectionFactoryClassName" value="oracle.jdbc.pool.OracleDataSource" />
+		<property name="initialPoolSize" value="${jdbc.initialPoolSize:1}" />
+		<property name="minPoolSize" value="${jdbc.minPoolSize:1}" />
+		<property name="maxPoolSize" value="${jdbc.maxPoolSize:50}" />
+		<property name="maxStatements" value="${jdbc.maxStatements:100}" />
+		<property name="validateConnectionOnBorrow" value="true" />
+	</bean>
+
+</beans>

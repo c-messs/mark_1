@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd  
+       		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd     
+           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd        
+           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+
+	<context:property-placeholder location="classpath:sql.properties"
+		ignore-unresolvable="true" />
+
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<constructor-arg ref="dataSource" />
+	</bean>
+	
+	<bean id="userVO" class="gov.hhs.cms.ff.fm.eps.ep.vo.UserVO" />
+
+	<!-- Dao Impl Beans -->
+	
+	<bean id="transMsgFileInfoDao"
+		class="gov.hhs.cms.ff.fm.eps.ep.dao.impl.TransMsgFileInfoDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="simpleJdbcInsert" ref="transMsgFileInfoSimpleJdbcInsert"></property>
+		<property name="sequenceHelper" ref="sequenceHelper"></property>
+		<property name="insertStagingBER" value="${INSERT_STAGING_BER}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+
+	<bean id="transMsgFileInfoSimpleJdbcInsert" class="org.springframework.jdbc.core.simple.SimpleJdbcInsert"
+		init-method="includeSynonymsForTableColumnMetaData">
+		<constructor-arg ref="jdbcTemplate" />
+	</bean>
+
+
+	<bean id="transMsgDao" class="gov.hhs.cms.ff.fm.eps.ep.dao.impl.TransMsgDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="extractTransMsgSQL" value="${EXTRACT_TRANSMSG}"></property>
+	</bean>
+
+	<bean id="sequenceHelper" class="gov.hhs.cms.ff.fm.eps.ep.dao.SequenceHelper">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+	</bean>
+	
+	
+	
+	<bean id="batchTransMsgDao" class="gov.hhs.cms.ff.fm.eps.ep.dao.impl.BatchTransMsgDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="simpleJdbcInsert" ref="batchTransMsgSimpleJdbcInsert"></property>
+		<property name="selectBatchTransMsgByPk" value="${SELECT_BATCH_TRANS_MSG_BY_PK}"></property>
+		<property name="updateProcessToDbStatus" value="${UPDATE_PROCESSED_TO_DB_STATUS}"></property>
+		<property name="selectSkippedVersion" value="${SELECT_PREV_SKIPPED_VERSIONS}"></property>
+		<property name="updateSkippedVersion" value="${UPDATE_SKIPPED_VERSION}"></property>
+		<property name="getSkippedVersionCount" value="${SELECT_SKIPPED_VERSION_COUNT}"></property>
+		<property name="updateLaterVersions" value="${UPDATE_LATER_VERSIONS}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="batchTransMsgSimpleJdbcInsert" class="org.springframework.jdbc.core.simple.SimpleJdbcInsert"
+		init-method="includeSynonymsForTableColumnMetaData">
+		<constructor-arg ref="jdbcTemplate" />
+	</bean>
+	
+	
+	
+	<bean id="policyVersionDao" class="gov.hhs.cms.ff.fm.eps.ep.dao.impl.PolicyVersionDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="simpleJdbcInsert" ref="policyVersionSimpleJdbcInsert"></property>
+		<property name="sequenceHelper" ref="sequenceHelper"></property>
+		<property
+			name="selectLatestPolicyVersionByExchangePolicyIdAndSubscriberStCd"
+			value="${SELECT_LATEST_EPS_POLICY_BY_EXCHANGE_POLICY_ID_AND_SUBSCRIBER_STATE_CODE}"></property>
+		<property name="updatePolicyVersionDate" value="${UPDATE_EPS_POLICY_DATE}"></property>
+		<property name="selectPolicyVersionByIdAndState" value="${SELECT_POLICY_VERSION_BY_ID_AND_STATE}"></property>
+		<property name="selectMaxPolicyMaintStartDateTime" value="${SELECT_MAX_POLICY_MAINTENANCESTARTDATETIME}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="policyVersionSimpleJdbcInsert" class="org.springframework.jdbc.core.simple.SimpleJdbcInsert"
+		init-method="includeSynonymsForTableColumnMetaData">
+		<constructor-arg ref="jdbcTemplate" />
+	</bean>
+	
+	
+	
+	<bean id="policyStatusDao" class="gov.hhs.cms.ff.fm.eps.ep.dao.impl.PolicyStatusDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="simpleJdbcInsert" ref="policyStatusSimpleJdbcInsert"></property>
+		<property name="selectPolicyStatusList" value="${SELECT_POLICY_STATUS_LIST}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+
+	<bean id="policyStatusSimpleJdbcInsert" class="org.springframework.jdbc.core.simple.SimpleJdbcInsert"
+		init-method="includeSynonymsForTableColumnMetaData">
+		<constructor-arg ref="jdbcTemplate" />
+	</bean>
+	
+	
+	
+	<bean id="policyPremiumDao" class="gov.hhs.cms.ff.fm.eps.ep.dao.impl.PolicyPremiumDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="simpleJdbcInsert" ref="policyPremiumSimpleJdbcInsert"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+
+	<bean id="policyPremiumSimpleJdbcInsert" class="org.springframework.jdbc.core.simple.SimpleJdbcInsert"
+		init-method="includeSynonymsForTableColumnMetaData">
+		<constructor-arg ref="jdbcTemplate" />
+	</bean>
+	
+	
+	
+	<bean id="policyMemberDao" class="gov.hhs.cms.ff.fm.eps.ep.dao.impl.PolicyMemberDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="simpleJdbcInsert" ref="policyMemberSimpleJdbcInsert"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+
+	<bean id="policyMemberSimpleJdbcInsert" class="org.springframework.jdbc.core.simple.SimpleJdbcInsert"
+		init-method="includeSynonymsForTableColumnMetaData">
+		<constructor-arg ref="jdbcTemplate" />
+	</bean>
+	
+	
+
+	<bean id="policyMemberVersionDao" class="gov.hhs.cms.ff.fm.eps.ep.dao.impl.PolicyMemberVersionDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="simpleJdbcInsert" ref="policyMemberVersionSimpleJdbcInsert"></property>
+		<property name="sequenceHelper" ref="sequenceHelper"></property>
+		<property name="selectPolicyMemberVersionsByPolVerIdAndState" value="${SELECT_PMV_BY_PVID_AND_STATE}"></property>
+		<property name="updatePolicyMemberVersion" value="${UPDATE_POLICY_MEMBER_VERSION}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="policyMemberVersionSimpleJdbcInsert" class="org.springframework.jdbc.core.simple.SimpleJdbcInsert"
+		init-method="includeSynonymsForTableColumnMetaData">
+		<constructor-arg ref="jdbcTemplate" />
+	</bean>
+
+
+
+	<bean id="policyMemberAddressDao" class="gov.hhs.cms.ff.fm.eps.ep.dao.impl.PolicyMemberAddressDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="simpleJdbcInsert" ref="policyMemberAddressSimpleJdbcInsert"></property>
+		<property name="selectPolicyMemberAddressByPolVerId" value="${SELECT_PMV_ADDRESS}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+
+	<bean id="policyMemberAddressSimpleJdbcInsert" class="org.springframework.jdbc.core.simple.SimpleJdbcInsert"
+		init-method="includeSynonymsForTableColumnMetaData">
+		<constructor-arg ref="jdbcTemplate" />
+	</bean>
+	
+	
+	
+	<bean id="policyMemberDateDao" class="gov.hhs.cms.ff.fm.eps.ep.dao.impl.PolicyMemberDateDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="simpleJdbcInsert" ref="policyMemberDateSimpleJdbcInsert"></property>
+		<property name="selectPolicyMemberDates" value="${SELECT_PMV_DATE}"></property>			
+		<property name="userVO" ref="userVO" />
+	</bean>
+
+	<bean id="policyMemberDateSimpleJdbcInsert" class="org.springframework.jdbc.core.simple.SimpleJdbcInsert"
+		init-method="includeSynonymsForTableColumnMetaData">
+		<constructor-arg ref="jdbcTemplate" />
+	</bean>
+
+
+
+	<bean id="errorWarningLogDao" class="gov.hhs.cms.ff.fm.eps.ep.dao.impl.ErrorWarningLogDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="simpleJdbcInsert" ref="errorWarningLogSimpleJdbcInsert"></property>
+		<property name="sequenceHelper" ref="sequenceHelper"></property>
+		<property name="selectErrorsListByTransMsgId" value="${SELECT_ERROR_LIST_BY_TRANS_ID}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+
+	<bean id="errorWarningLogSimpleJdbcInsert" class="org.springframework.jdbc.core.simple.SimpleJdbcInsert"
+		init-method="includeSynonymsForTableColumnMetaData">
+		<constructor-arg ref="jdbcTemplate" />
+	</bean>
+	
+
+	<!-- Mapper Beans -->
+
+	<bean id="transMsgFileInfoMapper" class="gov.hhs.cms.ff.fm.eps.ep.mappers.TransMsgFileInfoMapper" />
+	<bean id="policyVersionMapper" class="gov.hhs.cms.ff.fm.eps.ep.mappers.PolicyVersionMapper" />
+	<bean id="policyPremiumMapper" class="gov.hhs.cms.ff.fm.eps.ep.mappers.PolicyPremiumMapper" />
+	<bean id="policyStatusMapper" class="gov.hhs.cms.ff.fm.eps.ep.mappers.PolicyStatusMapper" />
+	<bean id="policyMemberVersionMapper" class="gov.hhs.cms.ff.fm.eps.ep.mappers.PolicyMemberVersionMapper" />
+	<bean id="policyMemberAddressMapper" class="gov.hhs.cms.ff.fm.eps.ep.mappers.PolicyMemberAddressMapper" />
+	<bean id="policyMemberDateMapper" class="gov.hhs.cms.ff.fm.eps.ep.mappers.PolicyMemberDateMapper" />
+	<bean id="errorWarningLogMapper" class="gov.hhs.cms.ff.fm.eps.ep.mappers.ErrorWarningLogMapper" />
+	<bean id="batchTransMsgMapper" class="gov.hhs.cms.ff.fm.eps.ep.mappers.BatchTransMsgMapper" />
+
+	<!-- Service Beans -->
+
+	<bean id="transMsgFileInfoCompositeDAO" class="gov.hhs.cms.ff.fm.eps.ep.services.impl.TransMsgFileInfoCompositeDAOImpl">
+		<property name="transMsgFileInfoMapper" ref="transMsgFileInfoMapper" />
+		<property name="transMsgFileInfoDao" ref="transMsgFileInfoDao" />
+		<property name="transMsgDao" ref="transMsgDao" />
+		<property name="userVO" ref="userVO" />
+	</bean>
+
+	<bean id="transMsgCompositeDAO" class="gov.hhs.cms.ff.fm.eps.ep.services.impl.TransMsgCompositeDAOImpl">
+		<property name="batchTransMsgMapper" ref="batchTransMsgMapper" />
+		<property name="batchTransMsgDao" ref="batchTransMsgDao" />
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="ffmDataService" class="gov.hhs.cms.ff.fm.eps.ep.services.impl.FFMDataServiceImpl">
+		
+		<property name="policyVersionMapper" ref="policyVersionMapper" />
+		<property name="policyPremiumMapper" ref="policyPremiumMapper" />
+		<property name="policyStatusMapper" ref="policyStatusMapper" />
+		
+		<property name="policyVersionDao" ref="policyVersionDao" />
+		<property name="policyPremiumDao" ref="policyPremiumDao" />
+		<property name="policyStatusDao" ref="policyStatusDao" />
+		
+		<property name="memberDAO" ref="ffmMemberDAO" />	
+		<property name="policyMatchService" ref="policyMatchService" />	
+		
+		<property name="userVO" ref="userVO" />	
+	</bean>	
+
+	<bean id="errorWarningLogService" class="gov.hhs.cms.ff.fm.eps.ep.services.impl.ErrorWarningLogServiceImpl">
+		<property name="errorWarningLogMapper" ref="errorWarningLogMapper" />
+		<property name="errorWarningLogDao" ref="errorWarningLogDao" />
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="policyMatchService" class="gov.hhs.cms.ff.fm.eps.ep.services.impl.PolicyMatchServiceImpl">
+		<property name="policyVersionDao" ref="policyVersionDao" />
+	</bean>
+	
+	
+	<bean id="ffmMemberDAO" class="gov.hhs.cms.ff.fm.eps.ep.services.impl.FFMMemberDAOImpl">
+		
+		<property name="policyMemberVersionMapper" ref="policyMemberVersionMapper" />
+		<property name="policyMemberAddressMapper" ref="policyMemberAddressMapper" />
+		<property name="policyMemberDateMapper" ref="policyMemberDateMapper" />
+		<property name="policyMemberDao" ref="policyMemberDao" />
+		<property name="policyMemberVersionDao" ref="policyMemberVersionDao" />
+		<property name="policyMemberAddressDao" ref="policyMemberAddressDao" />
+		<property name="policyMemberDateDao" ref="policyMemberDateDao" />
+				
+	</bean>
+
+	<bean id="batchRunControlDao" class="gov.hhs.cms.ff.fm.eps.ep.dao.impl.BatchRunControlDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="selectPreAuditIngestStatus" value="${SELECT_PREAUDIT_INGEST_STATUS}"/>
+	</bean>
+
+	<!-- Logging AOP -->
+
+
+	<bean id="loggingAspect" class="gov.hhs.cms.ff.fm.eps.ep.aop.EpsDataLogger" />
+
+	<aop:config>
+		<aop:aspect ref="loggingAspect">
+			<aop:pointcut id="AllInsertLogging"
+				expression="execution(* gov.hhs.cms.ff.fm.eps.ep.dao.impl.*.insert*(..)) " />
+			<aop:around pointcut-ref="AllInsertLogging" method="logInserts" />
+			
+			<aop:pointcut id="AllMatchLogging"
+				expression="execution(* gov.hhs.cms.ff.fm.eps.ep.dao.impl.*.match*(..)) " />
+			<aop:around pointcut-ref="AllMatchLogging" method="logGets" />
+
+			<aop:pointcut id="AllSelectLogging"
+				expression="execution(* gov.hhs.cms.ff.fm.eps.ep.dao.impl.*.get*(..)) " />
+			<aop:around pointcut-ref="AllSelectLogging" method="logGets" />
+		</aop:aspect>
+
+	</aop:config>
+
+
+</beans>

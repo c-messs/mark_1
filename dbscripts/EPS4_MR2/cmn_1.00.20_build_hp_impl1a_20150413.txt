@@ -1,0 +1,21 @@
+Release: EPS4_MR2
+Build #: unknown
+Environment: IMPL1A
+
+Description:
+-----------
+
+Add 45 Insurance Plans for ACA testing of PP4 drop 2.
+
+
+Scripts:
+--------
+cmn_1.00.20_dat_smoke.sql 
+
+
+Instructions:
+-------------
+
+For schema: EPS_OWNER
+cmn_1.00.20_dat_smoke.sql 
+

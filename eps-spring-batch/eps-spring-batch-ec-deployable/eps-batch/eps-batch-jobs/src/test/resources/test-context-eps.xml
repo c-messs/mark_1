@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:util="http://www.springframework.org/schema/util" xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:aop="http://www.springframework.org/schema/aop" xmlns:batch="http://www.springframework.org/schema/batch" 
+    xmlns:oxm="http://www.springframework.org/schema/oxm" 
+    xsi:schemaLocation="
+    	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+    	http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+    	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+    	http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-1.5.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+   <import resource="classpath:/jasypt-config.xml" />
+   
+   <bean id="jobLauncherTestUtils" class="org.springframework.batch.test.JobLauncherTestUtils">
+        <property name="job" ref="enrollmentProcessingBatchJob" />
+        <property name="jobRepository" ref="jobRepository" />
+        <property name="jobLauncher" ref="jobLauncher" />
+    </bean>
+   
+    <bean id="bemIndexWriter"
+        class="org.springframework.batch.item.database.JdbcBatchItemWriter"
+        scope="step">
+        <property name="dataSource" ref="dataSource" />
+        <property name="sql" ref="erlBEMIndexInsert" />
+        <property name="itemSqlParameterSourceProvider">
+            <bean
+                class="gov.hhs.cms.ff.fm.eps.ep.jobs.EPSBeanPropertyItemSqlParameterSourceProvider" />
+        </property>
+    </bean>
+
+	<bean id="erlBEMIndexInsert" class="java.lang.String">
+		<constructor-arg
+	        value="INSERT INTO DAILYBEMINDEXER (BEMINDEXID, INDEXDATETIME, BEMXML, FILENM, FILENMDATETIME, FILEINFOXML, TRANSMSGID, EXCHANGETYPECD, SUBSCRIBERSTATECD, PLANID,BATCHRUNCONTROLID)
+	               VALUES(BEMINDEXSEQ.nextval, current_timestamp, :bemXml, :fileNm, :fileNmDateTime, :fileInfoXml, :transMsgId, 'FFM', :subscriberStateCd, :planId,'JUNIT' )">			
+		</constructor-arg>
+	</bean>
+
+     <bean id="skipBemListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.SkipBemListener">
+            <property name="transMsgService" ref="transMsgCompositeDAO"/>
+       </bean>
+       
+       <bean id="manifestFileReader" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.ErlManifestFileReader">
+             <property name="manifestDirectory" value="./UnitTestDirs" />
+             <property name="batchRunControlDao" ref="batchRunControlDao"/>
+             <property name="policyVersionDao" ref="policyVersionDao"/>
+             <property name="erlBEMIndexCount" ref="erlBEMIndexCount"/>
+             <property name="jdbcTemplate" ref="jdbcTemplate"/>             
+       </bean>        
+       
+       <bean id="erlManifestWriter" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.ErlManifestWriter">
+			<property name="sourceDirectory" value="./UnitTestDirs" />
+			<property name="processingDirectory" value="./UnitTestDirs" />
+       </bean>  
+       
+       <bean id="xsdValidator" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.FileIngestionReader">
+             <property name="xsd" value="/erl/BatchUpdateUtilitySchema.xsd"/>
+             <property name="privateDirectory" value="./UnitTestDirs"/>
+       </bean>               
+       
+       <bean id="fileIngestionWriter" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.FileIngestionWriter">
+             <property name="invalidFilesDirectory" value="./UnitTestDirs"/>
+       </bean>    
+       
+       <bean id="multiResourceReader" class=" org.springframework.batch.item.file.MultiResourceItemReader">
+             <property name="delegate" ref="xmlItemReader" />
+       </bean>          
+
+       <bean id="bemExtractionProcessor" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.BEMExtractionProcessor">
+             <property name="filePath" value="./UnitTestDirs"/>
+             <!-- <property name="jobParameters" value="#{stepExecution.jobParameters}"/> -->
+       </bean>
+
+       <bean id="bemProcessorListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.BemProcessorListener">
+       		<property name="applicationContextUtil" ref="applicationContextUtil"/>
+       		<property name="jdbcTemplate" ref="jdbcTemplate"/>
+       		<property name="erlBEMIndexDeleteAll" ref="erlBEMIndexDeleteAll"/>
+       		<property name="erlBatchRunControlUpdateIngestStatus" ref="erlBatchRunControlUpdateIngestStatus"/>
+       		<property name="erlBEMIndexDeleteForManifest" ref="erlBEMIndexDeleteForManifest"/>
+       		<property name="erlBEMIndexManifestCountSelect" ref="erlBEMIndexManifestCountSelect"/>       		
+       </bean>        
+
+       <bean id="bemExtractionWriter" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.BEMExtractionWriter">
+              <property name="txnMsgFileInfoService" ref="transMsgFileInfoCompositeDAO"/>
+             <property name="jdbcTemplate" ref="jdbcTemplate"  />
+             <property name="insertDailyBEMIndexer" ref="insertDailyBEMIndexer"  />
+       </bean> 
+              
+       <bean id="moveProcessedFilesTasklet" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.FileMoveTasklet">
+			<property name="sourceDirectory" value="./UnitTestDirs"/>
+			<property name="destinationDirectory" value="./UnitTestDirs"/>
+       </bean>     
+       
+       <bean id="jdbcTaskletPostCleanup" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.JdbcTasklet">
+			  <property name="sqls">
+				   <list>
+				   		<ref bean ="erlBEMIndexDelete"/>
+					    <ref bean ="stagingPlanLockDeleteSql"/>
+				   </list>
+			  </property> 
+              <property name="jdbcTemplate" ref="jdbcTemplate"/>
+       </bean>
+       
+       <bean id="reProcessSkipsStepListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.ErlBemHandlerStepListener">
+             <property name="stageDataSql" ref="erlReprocessBemIndexInsert"/>
+             <property name="dataLockSql" ref="reprocessQhpLockSql"/>
+             <property name="postCleanUpSql" ref="erlBEMIndexPostReprocessCleanup"/>
+             <property name="stageDataCleanUpSql" ref="qhpLockDeleteSql"/>
+             <property name="jdbcTemplate" ref="jdbcTemplate"/>
+       </bean>  
+       
+       <bean id="manifestLoopDecider" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.ManifestLoopDecider">
+	    	<property name="manifestDirectory" value="./UnitTestDirs" />
+	   </bean>       
+       
+</beans>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+	xsi:schemaLocation="
+             http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+             http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+             http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+             http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd 
+             http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
+	
+	<context:component-scan base-package="gov.hhs.cms.ff.fm.eps.ep" />
+
+	<import resource="classpath:eps-data-config.xml" />
+
+	<bean id="financialValidator" class="gov.hhs.cms.ff.fm.eps.ep.validation.impl.FinancialValidatorImpl"/>
+
+	<bean id="ffmValidationService"
+		class="gov.hhs.cms.ff.fm.eps.ep.validation.impl.FFMValidationServiceImpl" scope="prototype">
+		<property name="policyDataService" ref="ffmDataService" />
+		<property name="txnMsgService" ref="transMsgCompositeDAO"/>
+		<property name="financialValidator" ref="financialValidator" />
+	</bean>
+
+	<util:map id="epsValidators">   
+		<entry key="ffm" value-ref="ffmValidationService" />   
+	</util:map> 
+
+</beans>

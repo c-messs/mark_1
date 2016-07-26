@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:batch="http://www.springframework.org/schema/batch" xmlns:util="http://www.springframework.org/schema/util" 
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:aop="http://www.springframework.org/schema/aop" 
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+	http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<context:annotation-config />
+	<aop:config proxy-target-class="true"/>
+	
+    <bean id="applicationContextUtil" class="gov.hhs.cms.ff.fm.eps.ep.jobs.aop.ApplicationContextUtil"/>
+	<bean id="multiResourceReaderTest" class=" org.springframework.batch.item.file.MultiResourceItemReader"/>
+	<bean id="bemUnMarshallerTest" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+	     <property name="classesToBeBound">
+	     	<list>
+	            <!-- <value>gov.cms.dsh.bem.BenefitEnrollmentMaintenanceType</value> -->
+	            <value>gov.cms.dsh.bem.ObjectFactory</value>
+	        </list>
+	     </property>
+	</bean>		
+	
+	<bean id="erlBEMIndexDeleteAll" class="java.lang.String">
+		<constructor-arg		
+               value="DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND INGESTJOBID=?">		
+		</constructor-arg>
+	</bean>
+	<bean id="erlBEMIndexManifestCountSelect" class="java.lang.String">
+		<constructor-arg		
+               value="SELECT COUNT(BEMINDEXID) FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND BATCHRUNCONTROLID=?">		
+		</constructor-arg>
+	</bean>
+	<bean id="qhpLockInsertSql" class="java.lang.String">
+		<constructor-arg
+	        value="INSERT INTO STAGINGPLANLOCK (BATCHID, PLANID) 
+							SELECT ?, PLANID FROM (
+									SELECT PLANID FROM DAILYBEMINDEXER A  
+										WHERE A.PLANID NOT IN (SELECT DISTINCT PLANID FROM STAGINGPLANLOCK) 
+										ORDER BY A.FILENMDATETIME, A.BEMINDEXID) 
+							WHERE ROWNUM = 1">			
+		</constructor-arg>
+	</bean>
+	<bean id="reprocessQhpLockSql" class="java.lang.String">
+		<constructor-arg
+	        value="INSERT INTO STAGINGPLANLOCK (BATCHID, PLANID) 
+							SELECT :jobId, PLANID FROM (
+									SELECT DISTINCT PLANID FROM DAILYBEMINDEXER  
+									WHERE INGESTJOBID=:jobId
+									AND PLANID NOT IN (SELECT DISTINCT PLANID FROM STAGINGPLANLOCK)) ">			
+		</constructor-arg>
+	</bean>	
+	<bean id="erlBEMIndexPostCleanup" class="java.lang.String">
+		<constructor-arg		
+               value="DELETE FROM DAILYBEMINDEXER A WHERE EXCHANGETYPECD='FFM' AND PLANID=(SELECT S.PLANID FROM STAGINGPLANLOCK S WHERE S.BATCHID=?) AND TRANSMSGID IN
+               (SELECT TRANSMSGID FROM BATCHTRANSMSG B WHERE B.SUBSCRIBERSTATECD=A.SUBSCRIBERSTATECD AND B.TRANSMSGID=A.TRANSMSGID AND B.PROCESSEDTODBSTATUSTYPECD IN ('Y', 'N', 'S', 'I', 'D', 'R'))">		
+		</constructor-arg>
+	</bean>
+	<bean id="qhpLockDeleteSql" class="java.lang.String">
+		<constructor-arg		
+               value="DELETE FROM STAGINGPLANLOCK WHERE BATCHID=? ">		
+		</constructor-arg>
+	</bean>											
+		
+</beans>

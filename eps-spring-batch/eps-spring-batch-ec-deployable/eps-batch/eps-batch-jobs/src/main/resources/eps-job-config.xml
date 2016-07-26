@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch"
+       xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util" xmlns:oxm="http://www.springframework.org/schema/oxm"
+       xmlns:aop="http://www.springframework.org/schema/aop" 
+       xsi:schemaLocation="
+             http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+             http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+             http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+             http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+             http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-1.5.xsd
+             http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+       ">
+       
+	   <context:property-placeholder location="classpath:eps.properties" ignore-unresolvable="true"/>
+	   <context:property-placeholder location="classpath:eps-env.properties" ignore-unresolvable="true"/>
+
+       <job id="enrollmentProcessingBatchJob" xmlns="http://www.springframework.org/schema/batch" job-repository="jobRepository">
+             
+             <step id="bemPreCleanup" next="stepDecider"> 
+                <tasklet transaction-manager="transactionManager" ref="jdbcTaskletCleanup"/>
+         		<listeners>
+				    <listener ref="bemIndexWriteListener" />
+	    		</listeners>   
+          	 </step>
+		     <decision id="stepDecider" decider="epsFlowExecutionDecider">
+		         <next on="FFM_EXTRACTION" to="readManifest" />
+		         <next on="FFM" to="bemHandlerFFM" />
+		         <end on="HUB"/>
+		     </decision>
+             <step id="readManifest" next="preAuditExtractDecision"> 
+	             <tasklet>
+                     <chunk reader="manifestFileReader" writer="manifestCompositeWriter" commit-interval="1" />
+	             </tasklet>
+          	 </step>
+		     <decision id="preAuditExtractDecision" decider="epsFlowExecutionDecider">
+		         <next on="FFM_EXTRACTION" to="fileIngestion" />
+		         <end on="END_INGEST"/>
+		     </decision>          	 
+          	  		     
+             <step id="fileIngestion" next="bemExtraction">
+	             <tasklet>
+                     <chunk reader="xsdValidator" writer="fileIngestionWriter" commit-interval="${commit.interval.fileIngestion}" />
+	             </tasklet>
+             </step>
+             <step id="bemExtraction">
+	             <tasklet>
+	             	<chunk reader="multiResourceReader" processor="bemExtractionProcessor" writer="bemExtractionWriter" 
+	             	commit-interval="${commit.interval.bemExtraction}" retry-limit="${retry.limit}">
+	             		<retryable-exception-classes>
+            				<include class="com.accenture.foundation.common.exception.EnvironmentException"/>
+            				<include class="com.accenture.foundation.common.exception.ApplicationException"/>
+         			 	</retryable-exception-classes>
+					</chunk>
+          			<listeners>
+					    <listener ref="bemProcessorListener" />
+					    <listener ref="bemIndexWriteListener" />
+		    		</listeners>					  
+	             </tasklet>
+			    <fail on="FAILED" exit-code="FAILED"/>
+			    <next on="*" to="moveProcessedFiles"/>
+             </step>
+             <step id="moveProcessedFiles" next="bemHandlerExecutionDecider"> 
+                 <tasklet ref="moveProcessedFilesTasklet"/>
+          	 </step>
+		     <decision id="bemHandlerExecutionDecider" decider="epsFlowExecutionDecider">
+		         <next on="FFM_EXTRACTION" to="archiveErlManifest" />
+		         <next on="FFM" to="bemHandlerFFM" />
+		     </decision>          	  
+          	 
+		     <step id="archiveErlManifest" next="manifestCheck">
+                 <tasklet ref="archiveManifest"/>
+          	 </step>
+			 <decision id="manifestCheck" decider="manifestLoopDecider">
+			 	<next on="LOOP" to="readManifest" />
+			 	<end  on="COMPLETED"/>
+			 </decision>          	 
+          	               
+             <step id="bemHandlerFFM" next="limitDecision">
+	             <tasklet> 
+	                <chunk reader="bemIndexReader" writer="erlBEMHandlerWriter" 
+	                		commit-interval="${commit.interval.bemHandler.erl}" retry-limit="${retry.limit}" 
+	                		skip-limit="${skip.limit.bemHandler.erl}">
+	             		<retryable-exception-classes>
+            				<include class="com.accenture.foundation.common.exception.EnvironmentException"/>
+         			 	</retryable-exception-classes>	                    	
+	                    <skippable-exception-classes>
+            				<include class="com.accenture.foundation.common.exception.ApplicationException"/>
+            				<include class="java.lang.NullPointerException"/>
+         				</skippable-exception-classes>
+         				<listeners>
+							<listener ref="skipBemListener" />
+							<listener ref="erlBemHandlerStepListener" />
+		    			</listeners>
+         			</chunk> 
+	              </tasklet>
+             </step>
+
+			 <decision id="limitDecision" decider="limitDecider">
+			 	<next on="LOOP" to="bemHandlerFFM" />
+			 	<next on="COMPLETED" to="reProcessSkips" />
+			 </decision>           	 
+
+		     <step id="reProcessSkips"> 
+	             <tasklet> 
+	                <chunk reader="reprocessReader" writer="erlBEMHandlerWriter" 
+	                		commit-interval="1" retry-limit="0" 
+	                		skip-limit="${skip.limit.bemHandler.erl}">
+	                    <skippable-exception-classes>
+            				<include class="com.accenture.foundation.common.exception.ApplicationException"/>
+            				<include class="java.lang.NullPointerException"/>
+         				</skippable-exception-classes>
+         				<listeners>
+							<listener ref="skipBemListener" />
+							<listener ref="reProcessSkipsStepListener" />
+		    			</listeners>
+         			</chunk> 
+	              </tasklet>
+          	 </step>
+			<listeners>
+				<listener ref="epsJobExecListener" />
+			</listeners>          	 
+       </job>
+       
+		<bean id="epsJobExecListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.EpsJobExecutionListener">
+			<property name="batchProcessDAO" ref="batchProcessDAO" />
+		</bean>
+		
+		<bean id="ppCommonQueryProps" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+			<property name="locations" value="classpath*:data-query.properties" />
+		</bean>
+
+    	<bean id="batchProcessDAO" class="gov.hhs.cms.ff.fm.eps.rap.dao.BatchProcessDAO">
+			<property name="queryProps" ref="ppCommonQueryProps" />
+			<property name="jdbcTemplate" ref="jdbcTemplate"  />
+		</bean>
+		       
+       <bean id="applicationContextUtil" class="gov.hhs.cms.ff.fm.eps.ep.jobs.aop.ApplicationContextUtil"/>
+       
+       <bean id="limitDecider" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.ErlLimitDecider">
+       		<property name="erlBEMIndexCountSelect" ref="erlBEMIndexCountSelect"/>
+       		<property name="jdbcTemplate" ref="jdbcTemplate"/>
+       </bean>
+       
+       <bean id="epsFlowExecutionDecider" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.EPSFlowExecutionDecider"/>
+              
+       <bean id="jdbcTaskletCleanup" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.JdbcTasklet" scope="step">
+			  <property name="sqls">
+				   <list>
+				   		<ref bean ="erlBEMIndexDelete"/>
+					    <ref bean ="stagingPlanLockDeleteSql"/>
+				   </list>
+			  </property>             
+             <property name="jobExecution" value="#{stepExecution.jobExecution}"/>
+             <property name="jdbcTemplate" ref="jdbcTemplate"/>
+       </bean>
+
+       <bean id="manifestFileReader" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.ErlManifestFileReader" scope="step">
+             <property name="manifestDirectory" value="${eps.manifestfolder.erl}" />
+             <property name="jobExecutionContext" value="#{stepExecution.jobExecution}"/>
+             <property name="batchRunControlDao" ref="batchRunControlDao"/>
+             <property name="policyVersionDao" ref="policyVersionDao"/>
+             <property name="erlBEMIndexCount" ref="erlBEMIndexCount"/>
+             <property name="jdbcTemplate" ref="jdbcTemplate"/>
+       </bean> 
+	   
+	   <bean id="manifestCompositeWriter" class="org.springframework.batch.item.support.CompositeItemWriter">
+		  <property name="delegates">
+			   <list>
+			   		<ref bean ="batchRunControlWriter"/>
+				    <ref bean ="erlManifestWriter"/>
+			   </list>
+		  </property>
+	   </bean>        
+       <bean id="erlManifestWriter" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.ErlManifestWriter" scope="step">
+			<property name="sourceDirectory" value="${eps.inputfolder.erl}" />
+			<property name="processingDirectory" value="${eps.privatefolder.erl}" />
+			<property name="jobExecutionContext" value="#{stepExecution.jobExecution}"/>
+       </bean>      
+	   
+	   <bean id="batchRunControlWriter" class="org.springframework.batch.item.database.JdbcBatchItemWriter">
+			<property name="dataSource" ref="dataSource" />
+			<property name="sql" ref="batchRunControlMerge" />
+			<property name="itemSqlParameterSourceProvider">
+				<bean class="gov.hhs.cms.ff.fm.eps.ep.jobs.EPSBeanPropertyItemSqlParameterSourceProvider" />
+			</property>
+	   </bean>
+
+       <bean id="archiveManifest" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.ErlManifestFileCleanUpTasklet">
+			<property name="destinationDirectory" value="${eps.manifestarchive.erl}" />
+       </bean>	   
+       
+       <bean id="manifestLoopDecider" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.ManifestLoopDecider">
+	    	<property name="manifestDirectory" value="${eps.manifestfolder.erl}" />
+	   </bean>
+	   
+       <bean id="fileMoveTasklet" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.FileMoveTasklet" scope="step">
+			<property name="sourceDirectory" value="${eps.inputfolder.erl}"/>
+			<property name="destinationDirectory" value="${eps.privatefolder.erl}" />
+       </bean>
+       
+       <bean id="xsdValidator" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.FileIngestionReader" scope="step">
+             <property name="xsd" value="/erl/BatchUpdateUtilitySchema.xsd"/>
+             <property name="privateDirectory" value="${eps.privatefolder.erl}"/>
+       </bean>
+
+       <bean id="fileIngestionWriter" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.FileIngestionWriter" scope="step">
+             <property name="invalidFilesDirectory" value="${eps.invalidfolder.erl}"/>
+       </bean>
+
+       <bean id="bemProcessorListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.BemProcessorListener" scope="step">
+       		<property name="sourceDirectory" value="${eps.privatefolder.erl}"/>
+       		<property name="applicationContextUtil" ref="applicationContextUtil"/>
+       		<property name="jdbcTemplate" ref="jdbcTemplate"/>
+       		<property name="erlBEMIndexDeleteAll" ref="erlBEMIndexDeleteAll"/>
+       		<property name="erlBatchRunControlUpdateIngestStatus" ref="erlBatchRunControlUpdateIngestStatus"/>
+       		<property name="erlBEMIndexDeleteForManifest" ref="erlBEMIndexDeleteForManifest"/>
+       		<property name="erlBEMIndexManifestCountSelect" ref="erlBEMIndexManifestCountSelect"/>
+       		<property name="invalidFilesDirectory" value="${eps.invalidfolder.erl}"/>
+       		<property name="erlBatchRunControlId" value="#{jobExecutionContext['BATCH_RUNCONTROL_ID']}"/>
+       </bean>        
+       <bean id="multiResourceReader" class=" org.springframework.batch.item.file.MultiResourceItemReader">
+             <property name="resources" value="" />
+             <property name="delegate" ref="xmlItemReader" />
+       </bean>
+       <bean id="xmlItemReader" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.BEMExtractionReader">
+             <property name="fragmentRootElementNames" value="BenefitEnrollmentRequest" />
+             <property name="unmarshaller" ref="bemUnMarshaller" />
+       </bean>
+       <bean id="bemUnMarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+             <property name="classesToBeBound">
+             	<list>
+					<!-- <value>gov.cms.dsh.bem.BenefitEnrollmentMaintenanceType</value> -->
+                    <value>gov.cms.dsh.bem.ObjectFactory</value>
+                </list>
+             </property>
+       </bean>
+       <bean id="bemExtractionProcessor" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.BEMExtractionProcessor" scope="step">
+             <property name="filePath" value="${eps.privatefolderPathString.erl}"/>
+             <property name="jobParameters" value="#{stepExecution.jobParameters}"/>
+       </bean>
+       
+       <bean id="bemExtractionWriter" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.BEMExtractionWriter" scope="step">
+             <property name="txnMsgFileInfoService" ref="transMsgFileInfoCompositeDAO"/>
+             <property name="jobExecution" value="#{stepExecution.jobExecution}"/>
+             <property name="jdbcTemplate" ref="jdbcTemplate"  />
+             <property name="insertDailyBEMIndexer" ref="insertDailyBEMIndexer"  />
+       </bean> 
+      
+       <bean id="bemIndexWriteListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.EPSBatchItemFailureListener">
+       		<property name="errorCode" value="${errorCode.EPROD.05}" />
+       </bean>              
+
+       <bean id="erlBemHandlerStepListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.ErlBemHandlerStepListener">
+             <property name="stageDataSql" ref="qhpLockInsertSql"/>
+             <property name="postCleanUpSql" ref="erlBEMIndexPostCleanup"/>
+             <property name="stageDataCleanUpSql" ref="qhpLockDeleteSql"/>
+             <property name="jdbcTemplate" ref="jdbcTemplate"/>
+       </bean>
+       
+       <bean id="bemIndexReader" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.BemIndexItemReader" scope="step">
+       		 <property name="jobExecution" value="#{stepExecution.jobExecution}"/>
+             <property name="dataSource" ref="dataSource" />
+             <property name="sql" ref="erlBEMIndexSelect" />
+             <property name="verifyCursorPosition" value="${batch.verify.cursor.position}" />
+             <property name="rowMapper">
+                    <bean class="gov.hhs.cms.ff.fm.eps.ep.dao.mappers.BemDTORowMapper" />
+             </property>
+       </bean>
+       
+       <bean id="reProcessSkipsStepListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.ErlBemHandlerStepListener">
+             <property name="stageDataSql" ref="erlReprocessBemIndexInsert"/>
+             <property name="dataLockSql" ref="reprocessQhpLockSql"/>
+             <property name="postCleanUpSql" ref="erlBEMIndexPostReprocessCleanup"/>
+             <property name="stageDataCleanUpSql" ref="qhpLockDeleteSql"/>
+             <property name="jdbcTemplate" ref="jdbcTemplate"/>
+       </bean>       
+             
+       <bean id="reprocessReader" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.BemIndexItemReader" scope="step">
+             <property name="jobExecution" value="#{stepExecution.jobExecution}"/>
+             <property name="dataSource" ref="dataSource" />
+             <property name="sql" ref="erlReprocessSelect" />
+             <property name="verifyCursorPosition" value="${batch.verify.cursor.position}" />
+             <property name="rowMapper">
+	             <bean class="gov.hhs.cms.ff.fm.eps.ep.dao.EpsBeanPropertyRowMapper">
+	              	<constructor-arg name="class1" value="gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentMaintenanceDTO"/>
+	             </bean>
+             </property>
+       </bean>       
+       
+       <bean id="bemProcessorHelper" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.BEMProcessorHelper">
+       </bean>
+       
+       <bean id="skipBemListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.SkipBemListener" scope="step">
+       		<property name="transMsgService" ref="transMsgCompositeDAO"/>
+       </bean>
+
+       <bean id="erlBEMHandlerWriter" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.ErlBEMHandlerWriter" scope="step">
+             <property name="epsValidationService" ref="ffmValidationService" />
+             <property name="bemProcessorHelper" ref="bemProcessorHelper" />             
+             <property name="policyDataService" ref="ffmDataService" />
+             <property name="errorWarningLogService" ref="errorWarningLogService" />
+             <property name="txnMsgService" ref="transMsgCompositeDAO"/>
+             <property name="jobId" value="#{stepExecution.jobExecution.jobId}"/>
+       </bean>       
+       
+       <bean id="moveProcessedFilesTasklet" class="gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.FileMoveTasklet" scope="step">
+			<property name="sourceDirectory" value="${eps.privatefolder.erl}"/>
+			<property name="destinationDirectory" value="${eps.processedfolder.erl}"/>
+       </bean>
+ 
+ 		<util:map id="sqlInsertBemIndex">    
+ 			<entry key="hub" value-ref="dailyBEMIndexInsert" /> 
+ 			<entry key="ffm" value-ref="erlBEMIndexInsert" /> 
+ 		</util:map>       
+  
+		<bean id="dailyBEMIndexInsert" class="java.lang.String">
+			<constructor-arg
+		        value="INSERT INTO DAILYBEMINDEXER (BEMINDEXID, INDEXDATETIME, BEMXML, FILENM, FILENMDATETIME, FILEINFOXML, TRANSMSGID, EXCHANGETYPECD, SUBSCRIBERSTATECD, INGESTJOBID)
+		               VALUES(BEMINDEXSEQ.nextval, current_timestamp, :bemXml, :fileNm, :fileNmDateTime, :fileInfoXml, :transMsgId, :exchangeTypeCd, :subscriberStateCd, :ingestJobId )">			
+			</constructor-arg>
+		</bean>
+		<bean id="erlBEMIndexInsert" class="java.lang.String">
+			<constructor-arg
+		        value="INSERT INTO DAILYBEMINDEXER (BEMINDEXID, INDEXDATETIME, BEMXML, FILENM, FILENMDATETIME, FILEINFOXML, TRANSMSGID, EXCHANGETYPECD, SUBSCRIBERSTATECD, PLANID, INGESTJOBID, BATCHRUNCONTROLID)
+		               VALUES(BEMINDEXSEQ.nextval, current_timestamp, :bemXml, :fileNm, :fileNmDateTime, :fileInfoXml, :transMsgId, 'FFM', :subscriberStateCd, :planId, :ingestJobId, :batchRunControlId )">			
+			</constructor-arg>
+		</bean>
+
+		<bean id="qhpLockInsertSql" class="java.lang.String">
+			<constructor-arg
+		        value="INSERT INTO STAGINGPLANLOCK (BATCHID, PLANID) 
+								SELECT :jobId, PLANID FROM (
+										SELECT PLANID FROM DAILYBEMINDEXER A, BATCHRUNCONTROL B
+										WHERE A.BATCHRUNCONTROLID = B.BATCHRUNCONTROLID
+										AND B.INGESTCOMPLETEIND = 'Y'
+										AND A.PLANID NOT IN (SELECT DISTINCT PLANID FROM STAGINGPLANLOCK) ) 
+								WHERE ROWNUM = 1">			
+			</constructor-arg>
+		</bean>
+ 		
+		<bean id="erlBEMIndexSelect" class="java.lang.String">
+			<constructor-arg		
+                value="SELECT BEMINDEXID,TRANSMSGID,FILENM,FILENMDATETIME,FILEINFOXML,INDEXDATETIME,BEMXML,EXCHANGETYPECD,SUBSCRIBERSTATECD,PLANID  
+                           FROM DAILYBEMINDEXER A , BATCHRUNCONTROL B 
+                            WHERE A.EXCHANGETYPECD='FFM' 
+                            AND A.BATCHRUNCONTROLID = B.BATCHRUNCONTROLID 
+                            AND B.INGESTCOMPLETEIND = 'Y'
+                            AND A.PLANID=(SELECT S.PLANID FROM STAGINGPLANLOCK S WHERE S.BATCHID=:jobId) ORDER BY FILENMDATETIME">		
+			</constructor-arg>
+		</bean>
+		<bean id="erlBEMIndexCountSelect" class="java.lang.String">
+			<constructor-arg		
+                value="SELECT COUNT(BEMINDEXID) FROM DAILYBEMINDEXER A , BATCHRUNCONTROL B WHERE A.BATCHRUNCONTROLID = B.BATCHRUNCONTROLID 
+			                AND B.INGESTCOMPLETEIND = 'Y' 
+			                AND A.EXCHANGETYPECD='FFM' 
+			                AND A.PLANID NOT IN (SELECT DISTINCT PLANID FROM STAGINGPLANLOCK) ">		
+			</constructor-arg>
+		</bean>
+		<bean id="erlBEMIndexCount" class="java.lang.String">
+			<constructor-arg		
+                value="SELECT COUNT(BEMINDEXID) FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM'">		
+			</constructor-arg>
+		</bean>				 		 
+
+		<bean id="erlReprocessBemIndexInsert" class="java.lang.String">
+			<constructor-arg		
+                value="INSERT INTO DAILYBEMINDEXER(BEMINDEXID, INDEXDATETIME, BEMXML, FILENM, FILEINFOXML, FILENMDATETIME, TRANSMSGID, EXCHANGETYPECD, SUBSCRIBERSTATECD, PLANID, INGESTJOBID)
+					  (SELECT BEMINDEXSEQ.nextval,current_timestamp, C.MSG.getClobval() AS BEMXML, B.FILENM, B.FILEINFOXML.getClobval(), A.SOURCEVERSIONDATETIME, 
+					  		  C.TRANSMSGID, B.TRANSMSGORIGINTYPECD, A.SUBSCRIBERSTATECD, B.GROUPSENDERID, ?    
+  						 FROM BATCHTRANSMSG A, TRANSMSGFILEINFO B, TRANSMSG C 
+ 					    WHERE B.TRANSMSGORIGINTYPECD='FFM' AND A.PROCESSEDTODBSTATUSTYPECD='R' and A.TRANSMSGID=C.TRANSMSGID and C.TRANSMSGFILEINFOID=B.TRANSMSGFILEINFOID
+ 					    AND NOT EXISTS (SELECT TRANSMSGID FROM DAILYBEMINDEXER D WHERE D.TRANSMSGID=C.TRANSMSGID))">		
+			</constructor-arg>
+		</bean>
+		<bean id="reprocessQhpLockSql" class="java.lang.String">
+			<constructor-arg
+		        value="INSERT INTO STAGINGPLANLOCK (BATCHID, PLANID) 
+								SELECT :jobId, PLANID FROM (
+										SELECT DISTINCT PLANID FROM DAILYBEMINDEXER  
+										WHERE INGESTJOBID=:jobId
+										AND PLANID NOT IN (SELECT DISTINCT PLANID FROM STAGINGPLANLOCK)) ">			
+			</constructor-arg>
+		</bean>		
+		<bean id="erlReprocessSelect" class="java.lang.String">
+			<constructor-arg		
+                value=" SELECT BEMINDEXID,A.TRANSMSGID,FILENM,FILENMDATETIME,FILEINFOXML,INDEXDATETIME,BEMXML,EXCHANGETYPECD,A.SUBSCRIBERSTATECD,PLANID,B.EXCHANGEPOLICYID,B.SOURCEVERSIONID,B.SOURCEVERSIONDATETIME,B.BATCHID       
+                         FROM DAILYBEMINDEXER A, BATCHTRANSMSG B 
+                        WHERE EXCHANGETYPECD='FFM' AND A.INGESTJOBID=:jobId AND A.SUBSCRIBERSTATECD = B.SUBSCRIBERSTATECD AND A.TRANSMSGID=B.TRANSMSGID AND B.PROCESSEDTODBSTATUSTYPECD='R' 
+                          AND PLANID IN (SELECT S.PLANID FROM STAGINGPLANLOCK S WHERE S.BATCHID=:jobId)  
+                        ORDER BY B.EXCHANGEPOLICYID,B.SOURCEVERSIONID,B.SOURCEVERSIONDATETIME">		
+			</constructor-arg>
+		</bean>
+ 		 		
+		<bean id="erlBEMIndexDelete" class="java.lang.String">
+			<constructor-arg		
+                value="DELETE FROM DAILYBEMINDEXER A WHERE EXCHANGETYPECD='FFM' AND PLANID NOT IN (SELECT DISTINCT PLANID FROM STAGINGPLANLOCK) AND TRANSMSGID IN
+                (SELECT TRANSMSGID FROM BATCHTRANSMSG B WHERE B.SUBSCRIBERSTATECD=A.SUBSCRIBERSTATECD AND B.TRANSMSGID=A.TRANSMSGID AND PROCESSEDTODBSTATUSTYPECD IN ('Y', 'N', 'S', 'I', 'D'))">		
+			</constructor-arg>
+		</bean>
+		<bean id="stagingPlanLockDeleteSql" class="java.lang.String">
+			<constructor-arg		
+                value="DELETE FROM STAGINGPLANLOCK WHERE BATCHID IN (SELECT JOB_INSTANCE_ID FROM BATCH_JOB_EXECUTION WHERE STATUS='ABANDONED' AND EXIT_CODE='ABANDONED') ">		
+			</constructor-arg>
+		</bean>		
+		<bean id="erlBEMIndexPostCleanup" class="java.lang.String">
+			<constructor-arg		
+                value="DELETE FROM DAILYBEMINDEXER A WHERE EXCHANGETYPECD='FFM' AND PLANID=(SELECT S.PLANID FROM STAGINGPLANLOCK S WHERE S.BATCHID=:jobId) AND TRANSMSGID IN
+                (SELECT TRANSMSGID FROM BATCHTRANSMSG B WHERE (B.SUBSCRIBERSTATECD=A.SUBSCRIBERSTATECD OR B.SUBSCRIBERSTATECD IS NULL) AND B.TRANSMSGID=A.TRANSMSGID AND B.PROCESSEDTODBSTATUSTYPECD IN ('Y', 'N', 'S', 'I', 'D', 'R'))">		
+			</constructor-arg>
+		</bean>
+		<bean id="erlBEMIndexPostReprocessCleanup" class="java.lang.String">
+			<constructor-arg		
+                value="DELETE FROM DAILYBEMINDEXER A WHERE EXCHANGETYPECD='FFM' AND INGESTJOBID=:jobId AND TRANSMSGID IN
+                (SELECT TRANSMSGID FROM BATCHTRANSMSG B WHERE B.SUBSCRIBERSTATECD=A.SUBSCRIBERSTATECD AND B.TRANSMSGID=A.TRANSMSGID AND B.PROCESSEDTODBSTATUSTYPECD IN ('Y', 'N', 'S', 'I', 'D', 'R'))">		
+			</constructor-arg>
+		</bean>		
+		<bean id="qhpLockDeleteSql" class="java.lang.String">
+			<constructor-arg		
+                value="DELETE FROM STAGINGPLANLOCK WHERE BATCHID=? ">		
+			</constructor-arg>
+		</bean>						
+		<bean id="erlBEMIndexDeleteAll" class="java.lang.String">
+			<constructor-arg		
+                value="DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND INGESTJOBID=? AND BATCHRUNCONTROLID=?">		
+			</constructor-arg>
+		</bean>
+		<bean id="erlBatchRunControlUpdateIngestStatus" class="java.lang.String">
+			<constructor-arg		
+                value="UPDATE BATCHRUNCONTROL SET INGESTCOMPLETEIND = 'Y' WHERE BATCHRUNCONTROLID=?">		
+			</constructor-arg>
+		</bean>
+		<bean id="erlBEMIndexDeleteForManifest" class="java.lang.String">
+			<constructor-arg		
+                value="DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND BATCHRUNCONTROLID=?">		
+			</constructor-arg>
+		</bean>
+		<bean id="erlBEMIndexManifestCountSelect" class="java.lang.String">
+			<constructor-arg		
+                value="SELECT COUNT(BEMINDEXID) FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND BATCHRUNCONTROLID=?">		
+			</constructor-arg>
+		</bean>
+		
+		<bean id="batchRunControlMerge" class="java.lang.String">
+			<constructor-arg 
+		        value="MERGE INTO BATCHRUNCONTROL USING dual ON (BATCHRUNCONTROLID=:batchRunControlId) 
+		        	    WHEN NOT MATCHED THEN INSERT (BATCHRUNCONTROLID, HIGHWATERMARKSTARTDATETIME, HIGHWATERMARKENDDATETIME, BATCHSTARTDATETIME, BATCHENDDATETIME,  
+		        		RECORDCOUNTQUANTITY, PREAUDITEXTRACTCOMPLETIONIND, JOB_INSTANCE_ID, CREATEDATETIME, LASTMODIFIEDDATETIME, CREATEBY, LASTMODIFIEDBY,INGESTCOMPLETEIND)
+		               VALUES(:batchRunControlId, :highWaterMarkStartDateTime, :highWaterMarkEndDateTime, :batchStartDateTime, :batchEndDateTime,  
+		               	:recordCountQuantity, :preAuditExtractCompletionInd, :jobInstanceId, SYSTIMESTAMP, SYSTIMESTAMP, 'ERL_INGESTION', 'ERL_INGESTION','N')">
+			</constructor-arg>
+		</bean>		
+		
+		<bean id="insertDailyBEMIndexer" class="java.lang.String">
+			<constructor-arg		
+                value="INSERT INTO DAILYBEMINDEXER ( BEMINDEXID, INDEXDATETIME, BEMXML, FILENM, FILEINFOXML, FILENMDATETIME, TRANSMSGID, EXCHANGETYPECD, SUBSCRIBERSTATECD, PLANID, 
+                  INGESTJOBID, BATCHRUNCONTROLID ) (SELECT BEMINDEXSEQ.nextval, CURRENT_TIMESTAMP, C.MSG.getClobval() AS BEMXML, B.FILENM, B.FILEINFOXML.getClobval(),
+                  to_timestamp_tz(EXTRACT(C.msg,'/BenefitEnrollmentMaintenance/TransactionInformation/PolicySnapshotDateTime/text()','xmlns=&quot;http://bem.dsh.cms.gov&quot;').GetStringVal(), 
+                 'YYYY-MM-DD&quot;T&quot;HH24:MI:SS.FF TZH:TZM'),   C.TRANSMSGID,   B.TRANSMSGORIGINTYPECD, C.SUBSCRIBERSTATECD  ,  
+                  B.GROUPSENDERID,   ?,   ? FROM TRANSMSGFILEINFO B,   TRANSMSG C WHERE B.TRANSMSGORIGINTYPECD ='FFM' AND C.TRANSMSGFILEINFOID = B.TRANSMSGFILEINFOID AND 
+                  B.TRANSMSGFILEINFOID = ?   )	">		
+			</constructor-arg>
+		</bean>
+			
+</beans>

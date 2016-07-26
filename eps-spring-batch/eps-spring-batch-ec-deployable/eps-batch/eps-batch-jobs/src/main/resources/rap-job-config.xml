@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch"
+       xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util" xmlns:oxm="http://www.springframework.org/schema/oxm"
+       xmlns:aop="http://www.springframework.org/schema/aop" 
+       xsi:schemaLocation="
+             http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+             http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+             http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+             http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+             http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-1.5.xsd
+             http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+           	 
+       ">
+
+		<context:property-placeholder location="classpath:eps.properties" ignore-unresolvable="true"/>
+		<context:property-placeholder location="classpath*:rap-sql.properties" ignore-unresolvable="true" />
+		
+        <job id="retroActivePaymentsJob" xmlns="http://www.springframework.org/schema/batch"
+             job-repository="jobRepository">
+           
+             <decision id="stepDecider" decider="rapFlowExecutionDecider">
+		         <next on="RAPSTAGE" to="retroActivePaymentsStage" />
+		         <next on="RAP" to="rapProcessing" />
+		     </decision>
+
+			<step id="retroActivePaymentsStage">
+				<tasklet transaction-manager="transactionManager" ref="rapStageTasklet">
+				</tasklet>
+			</step>
+             
+            <step id="rapProcessing" next="limitDecision"> 
+                <tasklet>
+					<chunk reader="rapReader" processor="rapProcessor" writer="rapWriter" 
+						commit-interval="1" retry-limit="${retry.limit}">
+	             		<retryable-exception-classes>
+            				<include class="com.accenture.foundation.common.exception.EnvironmentException"/>
+         			 	</retryable-exception-classes>	
+         			 	<listeners>
+         			 	  <listener ref="rapProcessStepExecutionLister" />
+		    			</listeners>					
+					</chunk>
+				</tasklet>
+			</step>
+			
+			<decision id="limitDecision" decider="limitDecider">
+			 	<next on="LOOP" to="rapProcessing" />
+			 	<end  on="COMPLETE" />
+			</decision> 
+			
+			 <listeners>
+				<listener ref="rapJobExecListener" />
+			</listeners>
+			
+		</job>   
+		
+		
+		<bean id="limitDecider" class="gov.hhs.cms.ff.fm.eps.ep.jobs.retroactivepaymentsjob.RAPLimitDecider">
+       		<property name="rapStageIssuerIdSelect" value="${SELECT_PENDING_RAP_ISSUERID_SQL}"/>
+       		<property name="jdbcTemplate" ref="jdbcTemplate"/>
+        </bean>
+       
+        <bean id="rapFlowExecutionDecider" class="gov.hhs.cms.ff.fm.eps.ep.jobs.retroactivepaymentsjob.RAPFlowExecutionDecider"/>
+      
+        <bean id="rapReader" class="org.springframework.batch.item.database.JdbcCursorItemReader" scope="step">
+            <property name="dataSource" ref="dataSource" />
+            <property name="sql" value="${SELECT_POLICY_VERSIONS_RAP}" />
+            
+            <property name="preparedStatementSetter">
+			<bean class="org.springframework.batch.core.resource.ListPreparedStatementSetter">
+				<property name="parameters">
+					<list>
+						<value>#{stepExecution.jobExecution.jobId}</value>
+						<value>#{stepExecution.jobExecution.jobId}</value>
+					</list>
+				</property>
+			</bean>
+		    </property>
+			<property name="rowMapper">
+				<bean class="gov.hhs.cms.ff.fm.eps.rap.dao.mappers.PolicyDataRowMapper" />
+			</property>
+      </bean>
+       	
+	  <bean id="rapProcessor"
+			class="gov.hhs.cms.ff.fm.eps.ep.jobs.retroactivepaymentsjob.RAPProcessor" scope="step">
+			<property name="rapService" ref="rapProcessingService" />
+			<property name="jobExecution" value="#{stepExecution.jobExecution}"/>
+	  </bean>       	
+	  	
+	  <bean id="rapWriter" class="gov.hhs.cms.ff.fm.eps.ep.jobs.retroactivepaymentsjob.RAPCompositeItemWriter">
+			<property name="insertRetroPaymentWriter" ref="paymentTransactionWriter" />
+			<property name="paymentStatusUpdateWriter" ref="paymentTransStatusUpdateWriter" />
+			<property name="paymentTransStatusWriter" ref="paymentTransStatusWriter" />
+	  </bean>	  	
+      
+      <bean id="paymentTransactionWriter" class="org.springframework.batch.item.database.JdbcBatchItemWriter">
+             <property name="dataSource" ref="dataSource" />
+             <property name="sql" value="${INSERT_POLICY_PYMT_TRANS_RAP}"/>
+             <property name="itemSqlParameterSourceProvider" ref="rapParamsProvider"/>
+      </bean> 	 
+       	
+	  <bean id="paymentTransStatusUpdateWriter" class="org.springframework.batch.item.database.JdbcBatchItemWriter"> 
+             <property name="dataSource" ref="dataSource" />
+             <property name="sql" value="${UPDATE_POLICY_PYMT_TRANS_STATUS_RAP}"/>
+             <property name="itemSqlParameterSourceProvider" ref="paramsProvider"/> 	
+	  </bean>       	
+	   
+	  <bean id="paymentTransStatusWriter" class="org.springframework.batch.item.database.JdbcBatchItemWriter"> 
+             <property name="dataSource" ref="dataSource" />
+             <property name="sql" value="${INSERT_POLICY_PAYMENT_TRANS_STATUS_RAP}"/>
+             <property name="itemSqlParameterSourceProvider" ref="paramsProvider"/> 	
+	  </bean>	       	
+
+      <bean id="paramsProvider" class="org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider" />
+	  <bean id="rapParamsProvider" class="gov.hhs.cms.ff.fm.eps.ep.jobs.retroactivepaymentsjob.RAPBeanPropertyItemSqlParameterSourceProvider" />
+		
+	  <bean id="rapJobExecListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.retroactivepaymentsjob.RapJobExecutionListener" scope="job">
+			<property name="batchProcessDAO" ref="batchProcessDAO" />
+			<property name="jdbcTemplate" ref="jdbcTemplate"  />
+			<property name="updatePendingRecordSql" value="${UPDATE_REQUIRED_POLICY_STAGE_SQL}" />
+		    <property name="selectMaxPolicyMaintStartDateTime" value="${SELECT_MAX_LAST_POLICY_MAINTSTARTDATETIME}" />
+		    <property name="blockConcurrentJobExecutionMap" ref = "blockConcurrentJobExecution" />
+	   </bean>
+	  
+	  <util:map id="blockConcurrentJobExecution">   
+ 			<entry key="RAP"> 
+ 			  <list>
+                 <value>${rap.blockConcurrentJobExecution.jobNames}</value>
+              </list>                
+ 			</entry> 
+ 			<entry key="RAPSTAGE" > 
+	 			 <list>
+	                 <value>${rapstage.blockConcurrentJobExecution.jobNames}</value>
+	             </list>     
+             </entry>
+ 	  </util:map>
+	   
+	  <bean id="rapProcessStepExecutionLister" class="gov.hhs.cms.ff.fm.eps.ep.jobs.retroactivepaymentsjob.RapJobProcessStepExecutionListener">
+			<property name="jdbcTemplate" ref="jdbcTemplate"  />
+			<property name="lockStageIssuerId" value="${UPDATE_RAP_STAGE_ISSUER_ID}"/>
+			<property name="deleteProcessedStageIssuerId" value="${DELETE_RAP_STAGE_ISSUER_ID}"/>		
+	  </bean>
+	  
+	  <bean id="rapStageTasklet"
+			class="gov.hhs.cms.ff.fm.eps.ep.jobs.retroactivepaymentsjob.RapStageProcessTasklet"
+			scope="step">
+		<property name="loadRapStageSql" value="${LOAD_RAP_STAGE_SQL}" />
+		<property name="jdbcTemplate" ref="jdbcTemplate" />
+	  </bean>
+		  
+	  <bean id="ppCommonQueryProps" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+			<property name="locations" value="classpath*:data-query.properties" />
+	  </bean>
+
+      <bean id="batchProcessDAO" class="gov.hhs.cms.ff.fm.eps.rap.dao.BatchProcessDAO">
+			<property name="queryProps" ref="ppCommonQueryProps" />
+			<property name="jdbcTemplate" ref="jdbcTemplate"  />
+	  </bean>       	
+       	
+</beans>		
+		
+		    

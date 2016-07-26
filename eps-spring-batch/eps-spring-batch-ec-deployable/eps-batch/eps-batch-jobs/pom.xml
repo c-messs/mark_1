@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
+		<artifactId>eps</artifactId>
+		<version>25.0.0-SNAPSHOT</version>	
+	</parent>
+	<artifactId>eps-batch-jobs</artifactId>
+	<name>eps-batch-jobs</name>
+        <distributionManagement>
+                <site>
+                        <id />
+                        <name>Maven site</name>
+                        <url>file://</url>
+                </site>
+                <repository>
+                        <id>nexus.public</id>
+                        <name>ffm-libs-PRErelease-local</name>
+                        <url>https://calt.cms.gov/nexus/content/repositories/ffm-libs-PRErelease-local</url>
+                </repository>
+                <snapshotRepository>
+                                <id>nexus.public</id>
+                                <name>ffm-libs-snapshot-local</name>
+                                <url>https://calt.cms.gov/nexus/content/repositories/ffm-libs-snapshot-local</url>
+                </snapshotRepository>
+        </distributionManagement>
+	<profiles>
+		<profile>
+			<id>release</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<!-- <plugin>
+							<artifactId>maven-assembly-plugin</artifactId>
+							<inherited>true</inherited>
+							<configuration>
+								<descriptorRefs>
+									<descriptorRef>jar-with-dependencies</descriptorRef>
+								</descriptorRefs>
+								<archive>
+									<index>true</index>
+									<manifest>
+										<mainClass>org.springframework.batch.core.launch.support.CommandLineJobRunner</mainClass>
+										<addClasspath>true</addClasspath>
+									</manifest>
+								</archive>
+							</configuration>
+						</plugin> -->
+
+						<!-- Ignore copy-dependencies from maven-dependency-plugin by m2e execution 
+							because this plugin is not supported -->
+						<!-- It will be ignored only by m2e plugin, but will be executed normally 
+							during the maven commands execution -->
+						<plugin>
+							<groupId>org.eclipse.m2e</groupId>
+							<artifactId>lifecycle-mapping</artifactId>
+							<version>1.0.0</version>
+							<configuration>
+								<lifecycleMappingMetadata>
+									<pluginExecutions>
+										<!-- copy-dependency plugin -->
+										<pluginExecution>
+											<pluginExecutionFilter>
+												<groupId>org.apache.maven.plugins</groupId>
+												<artifactId>maven-dependency-plugin</artifactId>
+												<versionRange>[1.0.0,)</versionRange>
+												<goals>
+													<goal>copy-dependencies</goal>
+												</goals>
+											</pluginExecutionFilter>
+											<action>
+												<ignore />
+											</action>
+										</pluginExecution>
+									</pluginExecutions>
+								</lifecycleMappingMetadata>
+							</configuration>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>1.1</version>
+						<configuration>
+							<mainClass>org.springframework.batch.core.launch.support.CommandLineJobRunner</mainClass>
+							<arguments>
+								<!-- job configuration file -->
+								<argument>classpath:/batch-application-context.xml</argument>
+								<!-- job name -->
+								<argument>processOrder</argument>
+							</arguments>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>copy-dependencies</id>
+								<phase>package</phase>
+								<goals>
+									<goal>copy-dependencies</goal>
+								</goals>
+								<configuration>
+									<outputDirectory>${project.build.directory}/../../../buildoutput/enrollmentProcessingBatchJob/lib</outputDirectory>
+									<overWriteReleases>false</overWriteReleases>
+									<overWriteSnapshots>false</overWriteSnapshots>
+									<overWriteIfNewer>true</overWriteIfNewer>
+									<includeScope>compile</includeScope>
+								</configuration>
+							</execution>
+
+							<execution>
+								<id>copy-installed</id>
+								<phase>package</phase>
+								<goals>
+									<goal>copy</goal>
+								</goals>
+								<configuration>
+									<artifactItems>
+										<artifactItem>
+											<groupId>${project.groupId}</groupId>
+											<artifactId>${project.artifactId}</artifactId>
+											<version>${project.version}</version>
+											<type>${project.packaging}</type>
+										</artifactItem>
+									</artifactItems>
+									<outputDirectory>${project.build.directory}/../../../buildoutput/enrollmentProcessingBatchJob/lib</outputDirectory>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!-- <plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<configuration>
+							<descriptor>src/assembly/distribution.xml</descriptor>
+							<finalName>eps-batch-jobs-${pom.version}</finalName>
+						</configuration>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>single</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin> -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-jar-plugin</artifactId>
+						<configuration>
+							<archive>
+								<index>true</index>
+								<!-- <manifest> <mainClass>org.springframework.batch.core.launch.support.CommandLineJobRunner</mainClass> 
+									<addClasspath>true</addClasspath> <classpathPrefix>lib/</classpathPrefix> 
+									</manifest> -->
+                                                        <manifest>
+                                                              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                                              <packageName>${project.artifactId}</packageName>
+                                                        </manifest>
+							</archive>
+							<excludes>
+								<!--<exclude>**/*.properties</exclude> -->
+								<exclude>eps.properties</exclude>
+								<exclude>eps-env.properties</exclude>
+								<exclude>**/*.sh</exclude>								
+								<exclude>**/jasypt-config.xml</exclude>
+								<exclude>**/logback*.xml</exclude>
+								<exclude>readme*.txt</exclude>
+								<exclude>*CodesDecode*.xml</exclude>
+								<exclude>PaymentMonths.xml</exclude>
+								<exclude>StatesProrationConfig.xml</exclude>
+							</excludes>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-eclipse-plugin</artifactId>
+						<version>2.8</version>
+						<configuration>
+							<!-- com.springsource.sts.maven Eclipse plugin takes care of Spring 
+								project configuration -->
+							<additionalProjectnatures>
+								<projectnature>org.springframework.ide.eclipse.core.springnature</projectnature>
+							</additionalProjectnatures>
+						</configuration>
+					</plugin>
+				</plugins>
+				<resources>
+					<resource>
+						<directory>../../../eps-spring-batch-config\eps-batch\config\env</directory>
+					</resource> 
+					
+					<resource>
+					<directory>../../../eps-spring-batch-config\eps-batch\config\app</directory>
+					</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+			<resource>
+             <directory>src/main/config/app</directory>
+			</resource>
+			
+			 <resource>
+		    	<directory>src/main/scripts</directory>
+					<targetPath>${project.build.directory}/../../../buildoutput/enrollmentProcessingBatchJob/scripts</targetPath>
+					<includes>
+					 <include>**</include>
+					</includes>
+			</resource>
+			
+			<resource>
+		    	<directory>src/main/config</directory>
+					<targetPath>${project.build.directory}/../../../buildoutput/enrollmentProcessingBatchJob/config</targetPath>
+					<includes>
+					 <include>**</include>
+					</includes>
+			</resource>
+
+				</resources>
+
+				<testResources>
+					<testResource>
+						<directory>src/main/resources</directory>
+					</testResource>
+					<testResource>
+						<directory>src/test/resources</directory>
+					</testResource>
+				</testResources>
+			</build>
+		</profile>
+	</profiles>
+	<dependencies>
+		<!-- spring dependencies -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-oxm</artifactId>
+		</dependency>
+
+		<!-- spring batch -->
+		<dependency>
+			<groupId>org.springframework.batch</groupId>
+			<artifactId>spring-batch-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.batch</groupId>
+			<artifactId>spring-batch-infrastructure</artifactId>
+		</dependency>
+
+		<!-- test related dependencies -->
+		<dependency>
+			<groupId>org.springframework.batch</groupId>
+			<artifactId>spring-batch-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
+		</dependency>
+
+		<!-- fm project dependencies - remove any optional dependency such as business -->
+		<dependency>
+			<groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
+			<artifactId>eps-business</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
+			<artifactId>eps-data</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
+			<artifactId>eps-domain</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jasypt</groupId>
+			<artifactId>jasypt</artifactId>
+			<version>1.9.2</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jasypt</groupId>
+			<artifactId>jasypt-spring3</artifactId>
+			<version>1.9.2</version>
+			<scope>compile</scope>
+		</dependency>
+		
+		<!--  To test ERL Extract Job -->
+		<dependency>
+			<groupId>com.marklogic</groupId>
+			<artifactId>marklogic-corb</artifactId>
+			<version>2.0.3</version>
+			<scope>test</scope>
+		</dependency>	
+		<dependency>
+			<groupId>com.marklogic</groupId>
+			<artifactId>marklogic-xcc</artifactId>
+			<version>7.0.4</version>
+			<scope>test</scope>
+		</dependency>	
+		<dependency>
+			<groupId>gov.hhs.cms.base.base-batch</groupId>
+			<artifactId>base-batch-corb</artifactId>
+			<version>9.9.9.1</version>
+			<scope>test</scope>
+		</dependency>
+		
+		
+	</dependencies>
+	<scm>
+ 		<connection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-batch-jobs</connection>
+ 		<developerConnection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-batch-jobs</developerConnection>
+ 		<url>https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-batch-jobs</url>
+ 	</scm>
+</project>

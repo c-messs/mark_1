@@ -1,0 +1,12 @@
+﻿#
+# Sample manifest file to bundle DB scripts for a release build
+# 
+# App: CMN (PP10)
+# Release: CMN_MOOP
+# Environment: (NONE)
+# Script revision: 1.0.11
+# Sequence Number: 0001 (might increment if have to re-submit)
+
+# List of files to include. Use "/" unix slash in paths.
+EPM_24.1.0/pp_1.00.91_ddl_patch.sql
+EPM_24.1.0/DBCR_EPM_EPM24_1_0002.docx

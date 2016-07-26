@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:CodesTableConfigurations
+	xmlns:p="http://www.example.org/CodesTableConfigurations" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.example.org/CodesTableConfigurations CodesTableConfiguration.xsd">
+	<p:CodesTableConfiguration>
+		<p:referenceName>STATEPRORATIONCONFIGURATION</p:referenceName>
+		<p:tableName>STATEPRORATIONCONFIGURATION</p:tableName>
+		<p:code>STATECD</p:code>
+		<p:decode>MARKETYEAR</p:decode>
+		<p:category>PRORATINGSTATES</p:category>
+		
+		<p:sqlStatement>
+			SELECT 'PRORATINGSTATES' as category, STATECD as code, MARKETYEAR as decode FROM STATEPRORATIONCONFIGURATION WHERE PRORATIONTYPECD='1' ORDER BY category, code, decode
+		</p:sqlStatement>
+	</p:CodesTableConfiguration>
+</p:CodesTableConfigurations>

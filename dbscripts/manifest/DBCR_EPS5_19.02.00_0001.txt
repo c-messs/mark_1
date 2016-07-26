@@ -1,0 +1,18 @@
+﻿#
+# Sample manifest file to bundle DB scripts for a release build
+# 
+# App: CMN (EPS5)
+# Release: CMN_MOOP
+# Environment: (NONE)
+# Script revision: 1.0.11
+# Sequence Number: 0001 (might increment if have to re-submit)
+
+# List of files to include. Use "/" unix slash in paths.
+EPS4_MR2/build0003_appgrants.sql
+EPS4_MR2/build0003_synonyms.sql
+EPS4_MR2/eps_1.00.23_ddl_patch.sql
+EPS4_MR2/eps_1.00.23_dat_patch.sql
+EPS4_MR2/eps_1.00_22_dat_patch.sql
+EPS4_MR2/eps_1.00.27_ddl_patch.sql
+EPS4_MR2/eps_1.00.29_dat_patch.sql
+EPS4_MR2/eps_1.00.31_dat_patch.sql

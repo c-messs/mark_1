@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:encryption="http://www.jasypt.org/schema/encryption"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+		 http://www.jasypt.org/schema/encryption http://www.jasypt.org/schema/encryption/jasypt-spring3-encryption-1.xsd">
+	<import resource="classpath:/jasypt-config.xml" />
+	<context:annotation-config />
+	<context:component-scan base-package="gov.hhs.cms.ff.fm.eps.ep" />
+	<encryption:encryptable-property-placeholder
+		encryptor="stringEnc" location="classpath:test-data.properties"
+		ignore-unresolvable="true" />
+	
+	
+	<bean id="dataSource" class="oracle.ucp.jdbc.PoolDataSourceFactory" factory-method="getPoolDataSource">
+		<property name="URL" value="${jdbc.url}" />
+		<property name="user" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="connectionFactoryClassName" value="oracle.jdbc.pool.OracleDataSource" />
+		<property name="initialPoolSize" value="${jdbc.initialPoolSize:10}" />
+		<property name="minPoolSize" value="${jdbc.minPoolSize:10}" />
+		<property name="maxPoolSize" value="${jdbc.maxPoolSize:30}" />
+		<property name="maxStatements" value="${jdbc.maxStatements:100}" />
+		<property name="validateConnectionOnBorrow" value="true" />
+	</bean>
+		
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<bean id="ppCommonQueryProps"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="locations" value="classpath*:data-query.properties" />
+	</bean>
+	
+	<bean id="batchProcessDAO" class="gov.hhs.cms.ff.fm.eps.rap.dao.BatchProcessDAO">
+		<property name="queryProps" ref="ppCommonQueryProps" />
+		<property name="jdbcTemplate" ref="jdbcTemplate"  />
+	</bean>
+	
+	<bean id="sqlProps"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="locations" value="classpath:sql.properties" />
+	</bean>
+
+</beans>

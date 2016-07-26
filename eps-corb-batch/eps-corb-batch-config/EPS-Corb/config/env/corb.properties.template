@@ -1,0 +1,17 @@
+XCC-CONNECTION-URI=xcc://eps-extract:eps-extract@10.153.158.66:2223
+INSTALL=false
+MODULES-DATABASE=FFE-Report-Modules
+MODULE-ROOT=/eps-corb-xquery-xqy/EPS-Corb/scripts/
+THREAD-COUNT=12
+
+URIS-MODULE=uris.xqy|ADHOC
+URIS-MODULE.numInBatch=75000
+URIS-MODULE.planPolicyYearFilter=2016
+URIS-MODULE.bemsPerFile=10000
+
+EXPORT-FILE-URI-TO-PATH=false
+
+XQUERY-MODULE=transform.xqy|ADHOC
+
+DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter
+PROCESS-TASK=com.marklogic.developer.corb.ExportToFileTask

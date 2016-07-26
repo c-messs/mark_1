@@ -1,0 +1,598 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xsd:schema xmlns:bem="http://bem.dsh.cms.gov" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://bem.dsh.cms.gov" 
+	version="1.0" targetNamespace="http://bem.dsh.cms.gov" elementFormDefault="qualified">
+	<!-- *************************************************************************** -->
+	<!--                       Schema  : Batch Update Utility Schema                 -->
+	<!--                  Base Schema  : Benefit Enrollment Maintenance              -->
+	<!--                     Namespace : bem                                         -->
+	<!--                       Version : 1                                           -->
+	<!--            Last Modified Date : 09/17/2014                                  -->
+	<!-- ==========================================================================  -->
+	<!--                             Revision History                                -->
+	<!-- ==========================================================================  -->
+	<!-- 1. Created the Base version of the BUU schema                               -->
+	<!-- 2. Removed the constraints both for the lengths and the occurances          -->
+	<!-- *************************************************************************** -->
+
+	<xsd:element name="BenefitEnrollmentRequest" type="bem:BenefitEnrollmentRequestType">
+        <xsd:annotation>
+            <xsd:documentation>Request Payload for the SOA service for Enrollment</xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+	
+	<xsd:element name="BenefitEnrollmentMaintenance" type="bem:BenefitEnrollmentMaintenanceType">
+		<xsd:annotation>
+			<xsd:documentation>Contians data related to individual Benefit Enrollment Maintenance information</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="FileInformation" type="bem:FileInformationType">
+		<xsd:annotation>
+			<xsd:documentation>Contains the elements required to identify the file data</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="TransactionInformation" type="bem:TransactionInformationType">
+		<xsd:annotation>
+			<xsd:documentation>Contains the elements required to identify the transaction data.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<!-- Interchange and Group Level Elements -->
+	<xsd:element name="GroupSenderID" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Sender ID of the Group Segment</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="GroupReceiverID" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Receiver ID of the Group Segment</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="GroupControlNumber" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>To transmit the Group Control Number</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="GroupTimeStamp" type="xsd:dateTime">
+		<xsd:annotation>
+			<xsd:documentation>Combination of date and time</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="VersionNumber" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Version Number for the current Schema</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="PolicyStatus" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Policy Status Code for the Transaction</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>	
+	<!-- Transaction Level Elements -->
+	<xsd:element name="ControlNumber" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>To get the unique id for the transaction</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="ExchangeCode" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Identifies whether the transaction is for shop or individual.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<!-- Date & DateTime Elements -->
+	<xsd:element name="CurrentTimeStamp" type="xsd:dateTime">
+		<xsd:annotation>
+			<xsd:documentation>Time Stamp when the file was first created</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="BenefitBeginDate" type="xsd:date">
+		<xsd:annotation>
+			<xsd:documentation>The Begin date for the Benefits</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="BenefitEndDate" type="xsd:date">
+		<xsd:annotation>
+			<xsd:documentation>The End date for the Benefits</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="PolicyStartDate" type="xsd:date">
+		<xsd:annotation>
+			<xsd:documentation>The Start date for the Policy</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="PolicyEndDate" type="xsd:date">
+		<xsd:annotation>
+			<xsd:documentation>The End date for the Policy</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>	
+	<xsd:element name="LastPremiumPaidDate" type="xsd:date">
+		<xsd:annotation>
+			<xsd:documentation>Last Premium Paid Date</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="PremiumPaidToDateEnd" type="xsd:date">
+		<xsd:annotation>
+			<xsd:documentation>Premium Paid to Date End</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="EligibilityBeginDate" type="xsd:date">
+		<xsd:annotation>
+			<xsd:documentation>Eligibility Begin Date</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="EligibilityEndDate" type="xsd:date">
+		<xsd:annotation>
+			<xsd:documentation>Eligibility End Date</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="BirthDate" type="xsd:date">
+		<xsd:annotation>
+			<xsd:documentation>Member Birth date.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="EffectiveStartDate" type="xsd:date">
+		<xsd:annotation>
+			<xsd:documentation>Start Date for the Reporting Category used.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="EffectiveEndDate" type="xsd:date">
+		<xsd:annotation>
+			<xsd:documentation>End Date for the Reporting Category used.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<!-- Amount Elements -->
+	<xsd:element name="APTCAmount" type="bem:AmountSimpleType">
+		<xsd:annotation>
+			<xsd:documentation>APTC Amount</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="CSRAmount" type="bem:AmountSimpleType">
+		<xsd:annotation>
+			<xsd:documentation>CSR Amount</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="TotalPremiumAmount" type="bem:AmountSimpleType">
+		<xsd:annotation>
+			<xsd:documentation>Total Premium Amount</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="TotalIndividualResponsibilityAmount" type="bem:AmountSimpleType">
+		<xsd:annotation>
+			<xsd:documentation>Total Individual Responsibility Amount</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="ProratedAppliedAPTCAmount" type="bem:AmountSimpleType">
+		<xsd:annotation>
+			<xsd:documentation>Prorated APTC Amount</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="ProratedCSRAmount" type="bem:AmountSimpleType">
+		<xsd:annotation>
+			<xsd:documentation>Prorated CSR Amount</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="ProratedMonthlyPremiumAmount" type="bem:AmountSimpleType">
+		<xsd:annotation>
+			<xsd:documentation>Prorated Total Premium Amount</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="ProratedIndividualResponsibleAmount" type="bem:AmountSimpleType">
+		<xsd:annotation>
+			<xsd:documentation>Prorated Individual Responsibility Amount</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>			
+
+	<!-- Federal Identification Formats -->
+	<xsd:element name="TaxPayerIdentificationNumber" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Federal Tax Payer Identification Number</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="SocialSecurityNumber" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Social Security Number</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="SubscriberID" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Insured's or subscriber's unique identification number assigned by the Exchange.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="ExchangeAssignedMemberID" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Client Reporting Category</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="InternalRecordNumber" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Identifier assigned for the record in BUU</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="ContractCode" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Exchange Assigned Plan ID</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="IssuerAssignedSubscriberID" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Insured's or subscriber's unique identification number assigned by a payer.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="IssuerAssignedMemberID" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Client Number</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="GroupPolicyNumber" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Exchange Assigned Policy ID</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="InternalControlNumber" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Issuer Assigned Policy ID</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="MarketplaceGroupPolicyIdentifier" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Global  Policy Tracking  Number</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>	
+	<xsd:element name="RatingArea" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Rating Area Amount</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<!-- Address Type Elements -->
+	<xsd:element name="MemberResidenceAddress" type="bem:ResidentialAddressType">
+		<xsd:annotation>
+			<xsd:documentation>To provide the residential address of the member</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<!-- Identification Number SimpleType Elements -->
+	<xsd:element name="CMSPlanID" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation> Centers for Medicare and Medicaid Services PlanID</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<!-- Note: Using the NamePrefixSuffixSimpleType for NationalProducerNumber as the size matches -->
+	<xsd:element name="NationalProducerNumber" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>National Producer Number for Agents / Brokers</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="HIOSID" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Health Insurance Oversight System Identification Number</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="Issuer" type="bem:IssuerType">
+		<xsd:annotation>
+			<xsd:documentation>This Element contains the information about the Issuer ie., the Payer</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="PolicyInfo" type="bem:PolicyInfoType">
+		<xsd:annotation>
+			<xsd:documentation>This Element contains the information about a Policy Level Information</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>	
+    <xsd:element name="ExtractionStatus" type="bem:ExtractionStatusType">
+		<xsd:annotation>
+			<xsd:documentation>This Element contains the information about a broker when they are involved in this enrollment</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="ExtractionStatusCode" type="xsd:integer">
+		<xsd:annotation>
+			<xsd:documentation>This Element contains the information extraction status code for the BEM</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="ExtractionStatusText" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>This Element contains the information extraction status message for the BEM</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>	
+	<xsd:element name="Name" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Name of the Entity (Used for Sponsor / Issuer / Third Party Administrator / Broker).</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="Member" type="bem:MemberType">
+		<xsd:annotation>
+			<xsd:documentation>This element contains the details of the Member like if the member is a subscriber, his relationship with subscriber etc.,</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="MemberInformation" type="bem:MemberRelatedInfoType">
+		<xsd:annotation>
+			<xsd:documentation>To provide benefit information on insured entities.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="SubscriberIndicator" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Indicates whether the member is the subscriber or a dependent.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="MedicareStatusCode" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Code to Identify whether the member have Medicare coverage or Not</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="MemberAdditionalIdentifier" type="bem:MemberAdditionalIdentifierType">
+		<xsd:annotation>
+			<xsd:documentation>This element contains the additional identifying information for the member</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="MemberRelatedDates" type="bem:MemberRelatedDatesType">
+		<xsd:annotation>
+			<xsd:documentation>This element contains the dates when the sponsor is informed of a change to any applicable dates for the member</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="MemberNameInformation" type="bem:MemberNameInfoType">
+		<xsd:annotation>
+			<xsd:documentation>To supply the member name, his address and his communication information</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="MemberName" type="bem:IndividualNameType">
+		<xsd:annotation>
+			<xsd:documentation>To supply the full name of an individual or organizational entity</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="LastName" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Last name of the Member.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="FirstName" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>First name of the Member.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="MiddleName" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Middle name of the Member.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="NamePrefix" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Prefix for the Member Name.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="NameSuffix" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Suffix for the Member Name.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="StateCode" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>State Code.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="PostalCode" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>The postal zip code of address.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="MemberDemographics" type="bem:MemberDemographicsType">
+		<xsd:annotation>
+			<xsd:documentation>This element contains the Member's Demographic Information</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="GenderCode" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Gender of the Member.</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="HealthCoverage" type="bem:HealthCoverageType">
+		<xsd:annotation>
+			<xsd:documentation>To provide information on health coverage</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="HealthCoverageInformation" type="bem:HealthCoverageInfoType">
+		<xsd:annotation>
+			<xsd:documentation>To provide information on health coverage pertaining to the contract</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="InsuranceLineCode" type="xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Code identifying a group of insurance products like mental health, 24 Hour care etc.,</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="HealthCoverageDates" type="bem:HealthCoverageDatesType">
+		<xsd:annotation>
+			<xsd:documentation>This element contains the dates for the various events like benefit start, end, enrollment signature etc.,</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="HealthCoveragePolicyNumber" type="bem:HealthCoveragePolicyNumberType">
+		<xsd:annotation>
+			<xsd:documentation>This Segment is used to specify the identifying information about the Member Policy</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:element name="AdditionalInfo" type="bem:AdditionalInfoType">
+		<xsd:annotation>
+			<xsd:documentation>To provide additional reporting categories about the member</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:complexType name="BenefitEnrollmentRequestType">
+        <xsd:sequence>
+            <xsd:element ref="bem:FileInformation" minOccurs="0" />
+            <xsd:element ref="bem:BenefitEnrollmentMaintenance" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+   </xsd:complexType>		
+	<xsd:complexType name="BenefitEnrollmentMaintenanceType">
+		<xsd:sequence>
+			<xsd:element ref="bem:TransactionInformation" minOccurs="0" />
+			<xsd:element ref="bem:Issuer" minOccurs="0" />
+			<xsd:element ref="bem:PolicyInfo" minOccurs="0"/>
+			<xsd:element ref="bem:Member" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element ref="bem:ExtractionStatus" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="FileInformationType">
+		<xsd:sequence>
+			<xsd:element ref="bem:GroupSenderID" minOccurs="0" />
+			<xsd:element ref="bem:GroupReceiverID" minOccurs="0" />
+			<xsd:element ref="bem:GroupControlNumber" minOccurs="0"/>
+			<xsd:element ref="bem:GroupTimeStamp" minOccurs="0"/>
+			<xsd:element ref="bem:VersionNumber" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="TransactionInformationType">
+		<xsd:sequence>
+			<xsd:element ref="bem:ControlNumber" minOccurs="0" />
+			<xsd:element ref="bem:CurrentTimeStamp" minOccurs="0" />
+			<xsd:element ref="bem:ExchangeCode" minOccurs="0" />
+			<xsd:element name="PolicySnapshotVersionNumber" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="PolicySnapshotDateTime" type="xsd:dateTime" minOccurs="0"/>			
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MemberType">
+		<xsd:sequence>			
+			<xsd:element ref="bem:InternalRecordNumber" minOccurs="0"/>
+			<xsd:element ref="bem:MemberInformation" minOccurs="0" />
+			<xsd:element ref="bem:SubscriberID" minOccurs="0" />
+			<xsd:element ref="bem:MemberAdditionalIdentifier" minOccurs="0"/>
+			<xsd:element ref="bem:MemberRelatedDates" minOccurs="0"/>
+			<xsd:element ref="bem:MemberNameInformation" minOccurs="0" />
+			<xsd:element ref="bem:HealthCoverage" minOccurs="0" maxOccurs="99"/>
+			<xsd:element ref="bem:AdditionalInfo" minOccurs="0" maxOccurs="20"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="IssuerType">
+		<xsd:sequence>
+			<xsd:element ref="bem:Name" minOccurs="0"/>
+			<xsd:choice minOccurs="0">
+				<xsd:element ref="bem:CMSPlanID" minOccurs="0"/>
+				<xsd:element ref="bem:TaxPayerIdentificationNumber" minOccurs="0"/>
+				<xsd:element ref="bem:HIOSID" minOccurs="0"/>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="PolicyInfoType">
+		<xsd:sequence>
+			<xsd:element ref="bem:GroupPolicyNumber" minOccurs="0"/>
+			<xsd:element ref="bem:MarketplaceGroupPolicyIdentifier" minOccurs="0"/>
+			<xsd:element ref="bem:PolicyStartDate" minOccurs="0"/>
+			<xsd:element ref="bem:PolicyEndDate"  minOccurs="0"/>
+			<xsd:element ref="bem:PolicyStatus" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>	
+	<xsd:complexType name="ExtractionStatusType">
+		<xsd:sequence>
+			<xsd:element ref="bem:ExtractionStatusCode" minOccurs="0"/>
+			<xsd:element ref="bem:ExtractionStatusText" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>	
+	<xsd:complexType name="IndividualNameType">
+		<xsd:sequence>
+			<xsd:element ref="bem:LastName" minOccurs="0" />
+			<xsd:element ref="bem:FirstName" minOccurs="0" />
+			<xsd:element ref="bem:MiddleName" minOccurs="0"/>
+			<xsd:element ref="bem:NamePrefix" minOccurs="0"/>
+			<xsd:element ref="bem:NameSuffix" minOccurs="0"/>
+			<xsd:element ref="bem:SocialSecurityNumber" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="AddressType">
+		<xsd:annotation>
+			<xsd:documentation>To specify the location of the named party</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ref="bem:StateCode" minOccurs="0"/>
+			<xsd:element ref="bem:PostalCode" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ResidentialAddressType">
+		<xsd:complexContent>
+			<xsd:extension base="bem:AddressType"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MemberDemographicsType">
+		<xsd:annotation>
+			<xsd:documentation>To supply demographic information</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ref="bem:BirthDate" minOccurs="0" />
+			<xsd:element ref="bem:GenderCode" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MemberRelatedInfoType">
+		<xsd:annotation>
+			<xsd:documentation>To provide benefit information on insured entities</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ref="bem:SubscriberIndicator" minOccurs="0" />
+			<xsd:element ref="bem:MedicareStatusCode" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MemberAdditionalIdentifierType">
+		<xsd:sequence>
+			<xsd:element ref="bem:ExchangeAssignedMemberID" minOccurs="0" />
+			<xsd:element ref="bem:IssuerAssignedMemberID" minOccurs="0"/>
+			<xsd:element ref="bem:IssuerAssignedSubscriberID" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MemberRelatedDatesType">
+		<xsd:sequence>
+			<xsd:element ref="bem:EligibilityBeginDate" minOccurs="0"/>
+			<xsd:element ref="bem:EligibilityEndDate" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MemberNameInfoType">
+		<xsd:sequence>
+			<xsd:element ref="bem:MemberName" minOccurs="0"/>
+			<xsd:element ref="bem:MemberResidenceAddress" minOccurs="0"/>
+			<xsd:element ref="bem:MemberDemographics" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="HealthCoverageInfoType">
+		<xsd:annotation>
+			<xsd:documentation>To provide information on health coverage</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ref="bem:InsuranceLineCode" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="HealthCoverageDatesType">
+		<xsd:sequence>
+			<xsd:element ref="bem:BenefitBeginDate" minOccurs="0"/>
+			<xsd:element ref="bem:BenefitEndDate" minOccurs="0"/>
+			<xsd:element ref="bem:LastPremiumPaidDate" minOccurs="0"/>
+			<xsd:element ref="bem:PremiumPaidToDateEnd" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="HealthCoveragePolicyNumberType">
+		<xsd:sequence>
+			<xsd:element ref="bem:ContractCode" minOccurs="0"/>
+			<xsd:element ref="bem:InternalControlNumber" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="HealthCoverageType">
+		<xsd:annotation>
+			<xsd:documentation>To provide information on health coverage</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ref="bem:HealthCoverageInformation" minOccurs="0" />
+			<xsd:element ref="bem:HealthCoverageDates" minOccurs="0" />
+			<xsd:element ref="bem:HealthCoveragePolicyNumber" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="AdditionalInfoType">
+		<xsd:sequence>
+			<xsd:element ref="bem:EffectiveStartDate" minOccurs="0"/>
+			<xsd:element ref="bem:EffectiveEndDate" minOccurs="0"/>
+			<xsd:element ref="bem:TotalPremiumAmount" minOccurs="0"/>		
+			<xsd:element ref="bem:TotalIndividualResponsibilityAmount" minOccurs="0"/>
+			<xsd:element ref="bem:RatingArea" minOccurs="0"/>
+			<xsd:element ref="bem:APTCAmount" minOccurs="0"/>
+			<xsd:element ref="bem:CSRAmount" minOccurs="0"/>
+			<xsd:element ref="bem:ProratedMonthlyPremiumAmount" minOccurs="0"/>
+			<xsd:element ref="bem:ProratedIndividualResponsibleAmount" minOccurs="0"/>
+			<xsd:element ref="bem:ProratedAppliedAPTCAmount" minOccurs="0"/>
+			<xsd:element ref="bem:ProratedCSRAmount" minOccurs="0"/>				
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:simpleType name="AmountSimpleType">
+		<xsd:restriction base="xsd:decimal" />
+	</xsd:simpleType>
+
+</xsd:schema>

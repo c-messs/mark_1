@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:CodesTableConfigurations
+   xmlns:p="http://www.example.org/CodesTableConfigurations"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.example.org/CodesTableConfigurations CodesTableConfiguration.xsd">
+  <p:CodesTableConfiguration>
+    <p:referenceName>COVERAGEPERIODPAID</p:referenceName>
+    <p:tableName>COVERAGEPERIODPAID</p:tableName>
+    <p:category>ERC</p:category>
+    <p:code>COVERAGEDATE</p:code>
+    <p:decode>ENROLLMENTRECORDCUTOFFDATETIME</p:decode>
+    <p:sqlStatement>SELECT 'ERC' as category, TO_CHAR(COVERAGEDATE, 'YYYY-MM-DD HH24:MI:SS') as code, 
+                    TO_CHAR(ENROLLMENTRECORDCUTOFFDATETIME, 'YYYY-MM-DD HH24:MI:SS') as decode  
+    				FROM COVERAGEPERIODPAID 
+	                WHERE COVERAGEDATE = (SELECT MAX(COVERAGEDATE) FROM COVERAGEPERIODPAID) order BY category, code, decode
+	</p:sqlStatement>
+  </p:CodesTableConfiguration>
+</p:CodesTableConfigurations>

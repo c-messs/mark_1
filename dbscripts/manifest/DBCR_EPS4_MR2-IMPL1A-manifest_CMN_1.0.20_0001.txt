@@ -1,0 +1,13 @@
+#
+# Manifest file to bundle DB scripts for a release build
+# 
+# App: EPS4
+# Release: MR2
+# Environment: IMPL1A (or NONE)
+# Script revision: 1.0.20
+# Sequence Number: 0001 (might increment if have to re-submit)
+# Comment: ACA Test data for PP4 drop 2.  Adds 45 Insurance Plans 
+
+# List of files to include. Use "/" unix slash in paths.
+unknown/cmn_1.00.20_build_hp_impl1a_20150413.txt
+unknown/cmn_1.00.20_dat_smoke.sql

@@ -1,0 +1,17 @@
+﻿#
+# Sample manifest file to bundle DB scripts for a release build
+# 
+# App: CMN (PP8)
+# Release: CMN_MOOP
+# Environment: (NONE)
+# Script revision: 1.0.11
+# Sequence Number: 0001 (might increment if have to re-submit)
+
+# List of files to include. Use "/" unix slash in paths.
+EPM_22.0.0/partitioning_policyversion.sql
+EPM_22.0.0/partitioning_policypaymenttrans.sql
+EPM_22.0.0/partitiioning_eps_payments_earl.xlsx
+EPM_22.0.0/partitioning_policymemberversion.sql
+EPM_22.0.0/partitioning_gather_stats.sql
+EPM_22.0.0/partitioning_policymember.sql
+EPM_22.0.0/DBCR_EPM_EPM22_0005.docx

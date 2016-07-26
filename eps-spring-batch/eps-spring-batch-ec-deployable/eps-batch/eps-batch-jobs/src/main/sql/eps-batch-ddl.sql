@@ -1,0 +1,54 @@
+CREATE SCHEMA IF NOT EXISTS `eps`;
+
+CREATE  TABLE IF NOT EXISTS `eps`.`eps_audit_log` (
+  `auditID` INT NOT NULL AUTO_INCREMENT ,
+  `fileName` VARCHAR(160) NULL ,
+  `eventDateTime` TIMESTAMP NULL ,
+  `eventStatusCode` VARCHAR(10) NULL ,
+  PRIMARY KEY (`auditID`) );
+
+CREATE  TABLE IF NOT EXISTS `eps`.`eps_834_elements` (
+  `epsID` INT NOT NULL AUTO_INCREMENT ,
+  `SubscriberID` VARCHAR(50) NULL ,
+  `SourceExchangeID` VARCHAR(50) NULL ,
+  `MemberPolicyNumber` VARCHAR(50) NULL ,
+  `TotalPremiumAmount` DECIMAL(10,2) NULL ,
+  PRIMARY KEY (`epsID`) );
+
+  CREATE  TABLE IF NOT EXISTS `eps`.`eps_error_message` (
+  `errorMessageIndex` INT NOT NULL AUTO_INCREMENT ,
+  `dateTime` DATETIME NULL ,
+  `FileName` VARCHAR(200) NULL ,
+  `errorMessageText` VARCHAR(50) NULL ,
+  PRIMARY KEY (`errorMessageIndex`) );
+  
+  
+  --
+  CREATE  TABLE IF NOT EXISTS `EPS`.`EPS_FILE_INDEX` (
+  `FileID` INT NOT NULL AUTO_INCREMENT ,
+  `FileTimeStamp` DATETIME NULL ,
+  `SourceFile` VARCHAR(200) NULL ,
+  `DateTime` DATETIME NULL ,
+  PRIMARY KEY (`File ID`) )
+  ENGINE=INNODB;
+  
+CREATE TABLE IF NOT EXISTS `EPS_BEM_INDEX` (
+  `BEMID` INT NOT NULL AUTO_INCREMENT ,
+  `FileID` INT NOT NULL  ,  
+  `BEMTimeStamp` DATETIME NULL  ,
+  `DateTime` DATETIME NULL ,
+  PRIMARY KEY (`BEMID`, `FileID`),
+    FOREIGN KEY (`FileID`)
+      REFERENCES `EPS_FILE_INDEX`(`FileID`)
+) ENGINE=INNODB;
+
+CREATE TABLE IF NOT EXISTS `EPS_BEM_STATUS` (
+  `BEMID` INT NOT NULL,
+  `FileID` INT NOT NULL  ,  
+  `BEMStatus` VARCHAR(20) NOT NULL ,
+  `DateTime` DATETIME NULL ,
+  PRIMARY KEY (`BEMID`, `FileID`),
+	FOREIGN KEY (`BEMID`) REFERENCES `EPS_BEM_INDEX`(`BEMID`),
+    FOREIGN KEY (`FileID`) REFERENCES `EPS_FILE_INDEX`(`FileID`)
+) ENGINE=INNODB;
+
