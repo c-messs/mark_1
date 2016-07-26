@@ -6,6 +6,10 @@
     <version>25.0.0-SNAPSHOT</version>		
 	<packaging>pom</packaging>
 
+        <properties>
+                <git.url>ssh://git@origin-github.cms.gov:2222</git.url>
+                <git.repo.url>${git.url}/FFM-FM-Dev/fm-epm.git</git.repo.url>
+        </properties>
         <distributionManagement>
                 <repository>
                         <id>nexus.public</id>
