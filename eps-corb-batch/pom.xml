@@ -1,64 +1,54 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	
-	<groupId>gov.hhs.cms.ffe.fm.corb-batch</groupId>
-	<artifactId>eps-corb-batch</artifactId>
-    <version>25.0.0-SNAPSHOT</version>		
-	<packaging>pom</packaging>
-
-        <properties>
-                <git.url>ssh://git@origin-github.cms.gov:2222</git.url>
-                <git.repo.url>${git.url}/FFM-FM-Dev/fm-epm.git</git.repo.url>
-        </properties>
-        <distributionManagement>
-                <repository>
-                        <id>nexus.public</id>
-                        <name>ffm-libs-PRErelease-local</name>
-                        <url>${nexus.url}/content/repositories/ffm-libs-PRErelease-local</url>
-                </repository>
-                <snapshotRepository>
-                                <id>nexus.public</id>
-                                <name>ffm-libs-snapshot-local</name>
-                                <url>${nexus.url}/content/repositories/ffm-libs-snapshot-local</url>
-                </snapshotRepository>
-        </distributionManagement>
-		 
-			
-	<build>
-
-	<plugins>
-	
-        
-		<plugin>
-		<groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-assembly-plugin</artifactId>
-		<configuration>
-			<descriptor>distribution.xml</descriptor>
-			<finalName>eps-corb-batch-jobs</finalName>
-		</configuration>
-		<executions>
-			<execution>
-				<phase>package</phase>
-				<goals>
-					<goal>single</goal>
-				</goals>
-			</execution>
-		</executions>
-		</plugin>
-	</plugins>
-	
-	 </build>
-	
-	
-	<modules>
+<?xml version='1.0'?>
+<project xmlns='http://maven.apache.org/POM/4.0.0' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd'>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>gov.hhs.cms.ffe.fm.corb-batch</groupId>
+  <artifactId>eps-corb-batch</artifactId>
+  <version>25.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <properties>
+    <git.url>ssh://git@origin-github.cms.gov:2222</git.url>
+    <git.repo.url>${git.url}/FFM-FM-Dev/fm-epm.git</git.repo.url>
+  </properties>
+  <distributionManagement>
+    <repository>
+      <id>nexus.public</id>
+      <name>ffm-libs-PRErelease-local</name>
+      <url>${nexus.url}/content/repositories/ffm-libs-PRErelease-local</url>
+    </repository>
+    <snapshotRepository>
+      <id>nexus.public</id>
+      <name>ffm-libs-snapshot-local</name>
+      <url>${nexus.url}/content/repositories/ffm-libs-snapshot-local</url>
+    </snapshotRepository>
+  </distributionManagement>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptor>distribution.xml</descriptor>
+          <finalName>eps-corb-batch-jobs</finalName>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <modules>
     <module>eps-corb-batch-ec-deployable</module>
     <module>eps-corb-batch-config</module>
     <module>eps-corb-xquery-xqy</module>
   </modules>
-
-    <scm>
-        <connection>scm:git:${git.repo.url}</connection>
-        <developerConnection>scm:git:${git.repo.url}</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
+  <scm>
+    <connection>scm:git:${git.repo.url}</connection>
+    <developerConnection>scm:git:${git.repo.url}</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 </project>

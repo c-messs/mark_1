@@ -1,42 +1,42 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
-		<artifactId>eps</artifactId>
-		<version>25.0.0-SNAPSHOT</version>	
-	</parent>
-	<artifactId>eps-domain</artifactId>
-	<name>eps-domain</name>
-
-	<build>
-		<plugins>
-			<!-- Plugin required to build java classes from XSD using XJC -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jaxb2-maven-plugin</artifactId>
-                <version>1.5</version>
-                <executions>
-                    <execution>
-                        <id>xjc</id>
-                        <goals>
-                            <goal>xjc</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                   <packageName>gov.cms.dsh.bem</packageName> <!-- The name of your generated source package -->
-                   <schemaDirectory>${project.basedir}/src/main/resources/xsd</schemaDirectory>
-                   <bindingDirectory>${project.basedir}/src/main/resources/xsd</bindingDirectory>
-                   <bindingFiles>StringTrim.xjb</bindingFiles>
-                   <extension>true</extension>
-                </configuration>
-            </plugin>
-		</plugins>
-	</build>
-    <scm>
-        <connection>scm:git:${git.repo.url}</connection>
-        <developerConnection>scm:git:${git.repo.url}</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
+<?xml version='1.0' encoding='UTF-8'?>
+<project xmlns='http://maven.apache.org/POM/4.0.0' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd'>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
+    <artifactId>eps</artifactId>
+    <version>25.0.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>eps-domain</artifactId>
+  <name>eps-domain</name>
+  <build>
+    <plugins>
+      <!-- Plugin required to build java classes from XSD using XJC -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>jaxb2-maven-plugin</artifactId>
+        <version>1.5</version>
+        <executions>
+          <execution>
+            <id>xjc</id>
+            <goals>
+              <goal>xjc</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <packageName>gov.cms.dsh.bem</packageName>
+          <!-- The name of your generated source package -->
+          <schemaDirectory>${project.basedir}/src/main/resources/xsd</schemaDirectory>
+          <bindingDirectory>${project.basedir}/src/main/resources/xsd</bindingDirectory>
+          <bindingFiles>StringTrim.xjb</bindingFiles>
+          <extension>true</extension>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <scm>
+    <connection>scm:git:${git.repo.url}</connection>
+    <developerConnection>scm:git:${git.repo.url}</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 </project>

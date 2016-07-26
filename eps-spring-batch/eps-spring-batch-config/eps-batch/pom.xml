@@ -1,93 +1,74 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	
-		<groupId>gov.hhs.cms.ffe.fm.spring-batch</groupId>
-		<version>25.0.0-SNAPSHOT</version>		
-	    <artifactId>eps-batch-config</artifactId>
-	<name>eps-batch-config</name>
-	<packaging>pom</packaging>
-        <properties>
-                <git.url>ssh://git@origin-github.cms.gov:2222</git.url>
-                <git.repo.url>${git.url}/FFM-FM-Dev/fm-epm.git</git.repo.url>
-        </properties>
-	
-        <distributionManagement>
-                <repository>
-                        <id>nexus.public</id>
-                        <name>ffm-libs-PRErelease-local</name>
-                        <url>${nexus.url}/content/repositories/ffm-libs-PRErelease-local</url>
-                </repository>
-                <snapshotRepository>
-                                <id>nexus.public</id>
-                                <name>ffm-libs-snapshot-local</name>
-                                <url>${nexus.url}/content/repositories/ffm-libs-snapshot-local</url>
-                </snapshotRepository>
-        </distributionManagement>
-	
-	
-	
-	<build>
-	
-				
-		<plugins>
-			 <plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<executions>
-				
-				<execution>
-						<id>copy-target</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${project.build.directory}</outputDirectory>
-							<resources>
-								<resource>
-									<directory>config</directory>
-									<filtering>true</filtering>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-				
-				
-				
-					<execution>
-						<id>copy-config</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${project.build.directory}/../../buildoutput/enrollmentProcessingBatchJob/config/</outputDirectory>
-							<resources>
-								<resource>
-									<directory>config</directory>
-									<filtering>true</filtering>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					
-					
-					
-				</executions>
-			</plugin> 
-			
-			
-
-			
-			
-			
-		</plugins>
-	</build>
-
-    <scm>
-        <connection>scm:git:${git.repo.url}</connection>
-        <developerConnection>scm:git:${git.repo.url}</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
+<?xml version='1.0' encoding='UTF-8'?>
+<project xmlns='http://maven.apache.org/POM/4.0.0' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd'>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>gov.hhs.cms.ffe.fm.spring-batch</groupId>
+  <version>25.0.0-SNAPSHOT</version>
+  <artifactId>eps-batch-config</artifactId>
+  <name>eps-batch-config</name>
+  <packaging>pom</packaging>
+  <properties>
+    <git.url>ssh://git@origin-github.cms.gov:2222</git.url>
+    <git.repo.url>${git.url}/FFM-FM-Dev/fm-epm.git</git.repo.url>
+  </properties>
+  <distributionManagement>
+    <repository>
+      <id>nexus.public</id>
+      <name>ffm-libs-PRErelease-local</name>
+      <url>${nexus.url}/content/repositories/ffm-libs-PRErelease-local</url>
+    </repository>
+    <snapshotRepository>
+      <id>nexus.public</id>
+      <name>ffm-libs-snapshot-local</name>
+      <url>${nexus.url}/content/repositories/ffm-libs-snapshot-local</url>
+    </snapshotRepository>
+  </distributionManagement>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-target</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>config</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-config</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>
+                ${project.build.directory}/../../buildoutput/enrollmentProcessingBatchJob/config/
+              </outputDirectory>
+              <resources>
+                <resource>
+                  <directory>config</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <scm>
+    <connection>scm:git:${git.repo.url}</connection>
+    <developerConnection>scm:git:${git.repo.url}</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 </project>
