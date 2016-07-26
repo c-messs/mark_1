@@ -1,0 +1,17 @@
+# Git attributes file to force the correct LF EOL regardless of Win/Unix
+
+# auto-detect text files and store as LF. This should allow client-side
+# autocrlf settings to work, if necessary, but re-force them to be LF
+# when put in the repositories.
+* text=auto
+
+# For LF for certain files
+*.sh text eol=lf
+
+# Force Unix EOL on all known file types
+#*.java text eol=lf
+#*.xqy text eol=lf
+#*.properties text eol=lf
+#*.html text eol=lf
+#*.xml text eol=lf
+#*.xjb text eol=lf
