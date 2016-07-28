@@ -5,10 +5,6 @@
   <artifactId>eps-corb-batch-config</artifactId>
   <version>25.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <properties>
-    <git.url>ssh://git@origin-github.cms.gov:2222</git.url>
-    <git.repo.url>${git.url}/FFM-FM-Dev/fm-epm.git</git.repo.url>
-  </properties>
   <distributionManagement>
     <repository>
       <id>nexus.public</id>
@@ -23,6 +19,8 @@
   </distributionManagement>
   <properties>
     <project.build.directory>buildoutput</project.build.directory>
+    <git.url>ssh://git@origin-github.cms.gov:2222</git.url>
+    <git.repo.url>${git.url}/FFM-FM-Dev/fm-epm.git</git.repo.url>
   </properties>
   <build>
     <plugins>
