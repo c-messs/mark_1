@@ -41,16 +41,19 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 
 /**
  * @author shasidar.pabolu
  *
  */
-@RunWith(JUnit4.class)
+@ContextConfiguration(locations={"classpath:/test-batch-application-context.xml"})
+@RunWith(SpringJUnit4ClassRunner.class)
 public class ERLExtractionJobTest {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ERLExtractionJobTest.class);
@@ -63,6 +66,8 @@ public class ERLExtractionJobTest {
 	private static final String HWM = "2050-01-01T00:00:00.000000-05:00";
 	private static final String PAET = "2051-01-01T00:00:00-05:00";
 
+	@Value("${XCC-CONNECTION-URI}")
+	private String xccConnectionUri;
 
 	private File propDir;	
 	private File manifestDir;
@@ -121,7 +126,7 @@ public class ERLExtractionJobTest {
 	{
 
 		Properties props = new Properties();
-		props.setProperty("XCC-CONNECTION-URI", "xcc://avedam:getEPSData!@10.153.167.53:2223/FFE");
+		props.setProperty("XCC-CONNECTION-URI", xccConnectionUri);
 		props.setProperty("INSTALL", "false");
 		props.setProperty("MODULES-DATABASE", "FFE-EE-Maint-Modules");
 		props.setProperty("MODULE-ROOT", "/eps-corb-xquery-xqy/EPS-Corb/scripts/");
