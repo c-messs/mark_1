@@ -62,7 +62,7 @@ adding this blocl here with "<phase>none</phase>" nullifies the parent assembly 
 							<goal>execute</goal>
 						</goals>
 	          			<configuration>
-							<source>
+							<source>l 
 								if (project.version.endsWith("-SNAPSHOT")){
 								  project.properties.targetRepositoryName = project.distributionManagement.snapshotRepository.name;
 								  project.properties.targetRepositoryUrl = project.distributionManagement.snapshotRepository.url;
