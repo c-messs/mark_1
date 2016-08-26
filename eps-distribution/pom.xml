@@ -63,16 +63,16 @@ adding this blocl here with "<phase>none</phase>" nullifies the parent assembly 
 	          			<configuration>
 							<source>
 								if (project.version.endsWith("-SNAPSHOT")){
-								  project.properties.targetrepository_name = project.distributionManagement.snapshotRepository.name;
-								  project.properties.targetrepository_url = project.distributionManagement.snapshotRepository.url;
-								  project.properties.targetrepository_id = project.distributionManagement.snapshotRepository.id;
+								  project.properties.targetRepositoryName = project.distributionManagement.snapshotRepository.name;
+								  project.properties.targetRepositoryURL = project.distributionManagement.snapshotRepository.url;
+								  project.properties.targetRepositoryID = project.distributionManagement.snapshotRepository.id;
 								}
 								else {
-								  project.properties.targetrepository_name = project.distributionManagement.repository.name;
-								  project.properties.targetrepository_url = project.distributionManagement.repository.url;
-								  project.properties.targetrepository_id = project.distributionManagement.repository.id;
+								  project.properties.targetRepositoryName = project.distributionManagement.repository.name;
+								  project.properties.targetRepositoryURL = project.distributionManagement.repository.url;
+								  project.properties.targetRepositoryID = project.distributionManagement.repository.id;
 								}
-								println "Using Maven repository ${project.properties.targetrepository_name}."
+								println "Using Maven repository ${project.properties.targetRepositoryName}."
 							</source>
 						</configuration>
 					</execution>
@@ -115,17 +115,17 @@ eps-corb-batch-config.zip:p
 
 								<checksum file="${project.build.directory}/../../eps-spring-batch/eps-spring-batch-ec-deployable/target/eps-spring-batch.zip" property="eps-spring-batch-MD5" />
 								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-spring-batch-MD5}  eps-spring-batch.zip${line.separator}</echo>
-								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-MD5}  eps-spring-batch.zip ${groupId} eps-spring-batch-reports ${project.version} ${targetrepository_name}${line.separator}</echo>
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-MD5}  eps-spring-batch.zip ${groupId} eps-spring-batch-reports ${project.version} ${targetRepositoryName}${line.separator}</echo>
 							
 								<checksum file="${project.build.directory}/../../eps-spring-batch/eps-spring-batch-config/target/eps-spring-batch-config.zip" property="eps-spring-batch-config-MD5" />
 								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-spring-batch-config-MD5}  eps-spring-batch-config.zip${line.separator}</echo>
-								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-config-MD5}  eps-spring-batch-config.zip ${groupId} eps-spring-batch-config ${project.version} ${targetrepository_name}${line.separator}</echo>
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-config-MD5}  eps-spring-batch-config.zip ${groupId} eps-spring-batch-config ${project.version} ${targetRepositoryName}${line.separator}</echo>
 								<checksum file="${project.build.directory}/../../eps-corb-batch/eps-corb-batch-ec-deployable/target/eps-corb-batch.zip" property="eps-corb-batch-MD5" />
 								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-corb-batch-MD5}  eps-corb-batch.zip${line.separator}</echo>
-								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-MD5}  eps-corb-batch.zip ${groupId} eps-corb-batch ${project.version} ${targetrepository_name}${line.separator}</echo>
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-MD5}  eps-corb-batch.zip ${groupId} eps-corb-batch ${project.version} ${targetRepositoryName}${line.separator}</echo>
                                                                 <checksum file="${project.build.directory}/../../eps-corb-batch/eps-corb-batch-config/target/eps-corb-batch-config.zip" property="eps-corb-batch-config-MD5" />
 								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip${line.separator}</echo>
-								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip ${groupId} eps-corb-batch-config ${project.version} ${targetrepository_name}${line.separator}</echo>
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip ${groupId} eps-corb-batch-config ${project.version} ${targetRepositoryName}${line.separator}</echo>
 								<zip destfile="${project.build.directory}/checksum.${project.version}.zip" basedir="${project.build.directory}/../../target" includes="checksum.txt" />
 								<zip destfile="${project.build.directory}/manifest.${project.version}.zip" basedir="${project.build.directory}/../../target" includes="manifest.txt" />
 
@@ -157,8 +157,8 @@ eps-corb-batch-config.zip:p
 							<goal>deploy-file</goal>
 						</goals>
 						<configuration>
-							<repositoryId>${targetrepository_id}</repositoryId>
-							<url>${targetrepository_url}</url>
+							<repositoryId>${targetRepositoryID}</repositoryId>
+							<url>${targetRepositoryURL}</url>
 							<file>${project.build.directory}/manifest.${project.version}.zip</file>
 							<!-- standard location where we find manifest files -->
 							<groupId>gov.hhs.cms.deploy.${product.release}</groupId>
@@ -177,8 +177,8 @@ eps-corb-batch-config.zip:p
 							<goal>deploy-file</goal>
 						</goals>
 						<configuration>
-							<repositoryId>${targetrepository_id}</repositoryId>
-							<url>${targetrepository_url}</url>
+							<repositoryId>${targetRepositoryID}</repositoryId>
+							<url>${targetRepositoryURL}</url>
 							<file>${project.build.directory}/checksum.${project.version}.zip</file>
 							<groupId>gov.hhs.cms.deploy.${product.release}</groupId>
 							<artifactId>checksum-zip</artifactId>
