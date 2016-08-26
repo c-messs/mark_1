@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="maven-antrun-" default="main"  >
+<target name="main">
+  <delete file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target/checksum.25.50.66-SNAPSHOT.zip"/>
+  <delete file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target/manifest.25.50.66-SNAPSHOT.zip"/>
+  <delete file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target/checksum.txt"/>
+  <delete file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target/manifest.txt"/>
+  <checksum file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../eps-spring-batch/eps-spring-batch-ec-deployable/target/eps-spring-batch.zip" property="eps-spring-batch-MD5"/>
+  <echo append="true" file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target/checksum.txt">${eps-spring-batch-MD5}  eps-spring-batch.zip
+</echo>
+  <echo append="true" file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target/manifest.txt">${eps-spring-batch-MD5}  eps-spring-batch.zip gov.hhs.cms.ffe.fm.eps-batch eps-spring-batch-reports 25.50.66-SNAPSHOT ${targetRepositoryName}
+</echo>
+  <checksum file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../eps-spring-batch/eps-spring-batch-config/target/eps-spring-batch-config.zip" property="eps-spring-batch-config-MD5"/>
+  <echo append="true" file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target/checksum.txt">${eps-spring-batch-config-MD5}  eps-spring-batch-config.zip
+</echo>
+  <echo append="true" file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target/manifest.txt">${eps-spring-batch-config-MD5}  eps-spring-batch-config.zip gov.hhs.cms.ffe.fm.eps-batch eps-spring-batch-config 25.50.66-SNAPSHOT ${targetRepositoryName}
+</echo>
+  <checksum file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../eps-corb-batch/eps-corb-batch-ec-deployable/target/eps-corb-batch.zip" property="eps-corb-batch-MD5"/>
+  <echo append="true" file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target/checksum.txt">${eps-corb-batch-MD5}  eps-corb-batch.zip
+</echo>
+  <echo append="true" file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target/manifest.txt">${eps-corb-batch-MD5}  eps-corb-batch.zip gov.hhs.cms.ffe.fm.eps-batch eps-corb-batch 25.50.66-SNAPSHOT ${targetRepositoryName}
+</echo>
+  <checksum file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../eps-corb-batch/eps-corb-batch-config/target/eps-corb-batch-config.zip" property="eps-corb-batch-config-MD5"/>
+  <echo append="true" file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target/checksum.txt">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip
+</echo>
+  <echo append="true" file="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target/manifest.txt">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip gov.hhs.cms.ffe.fm.eps-batch eps-corb-batch-config 25.50.66-SNAPSHOT ${targetRepositoryName}
+</echo>
+  <zip basedir="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target" includes="checksum.txt" destfile="/home/devuser/git_fm/fm-epm/eps-distribution/target/checksum.25.50.66-SNAPSHOT.zip"/>
+  <zip basedir="/home/devuser/git_fm/fm-epm/eps-distribution/target/../../target" includes="manifest.txt" destfile="/home/devuser/git_fm/fm-epm/eps-distribution/target/manifest.25.50.66-SNAPSHOT.zip"/>
+</target>
+</project>
