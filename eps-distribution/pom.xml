@@ -16,7 +16,7 @@
               <artifactId>eps</artifactId>
               <version>25.50.66-SNAPSHOT</version>
 	</parent>
-	<artifactId>epm-distribution</artifactId>
+	<artifactId>eps-distribution</artifactId>
         <packaging>pom</packaging>
 	     
 	<dependencies />
@@ -25,6 +25,8 @@
 
 		<plugins>
 
+<!-- The assembly plugin is spoecified in the parent pom and this pom tries to inheret the parent properties 
+adding this blocl here with "<phase>none</phase>" nullifies the parent assembly plugin configuration -->
                 <plugin>
 		<groupId>org.apache.maven.plugins</groupId>
 		<artifactId>maven-assembly-plugin</artifactId>
@@ -138,7 +140,7 @@ eps-corb-batch-config.zip:p
 			
 
 	      <!-- Explicitly deploy the manifest.zip and checksum.zip files to the proper location in Nexus.
-	            These have to be in gov.hhs.cms.deploy.{product.release} (e.g., EM_14.5.0.3) so that the 
+	            These have to be in gov.hhs.cms.deploy.{product.release} (e.g., EPM_25.5.0.3) so that the 
 	            Jenkins jobs and Download_From_Nexus scripts know where to find them.
 	            
 	            TODO: We should be able to just declare these dependency artifacts somewhere and have 
@@ -162,7 +164,7 @@ eps-corb-batch-config.zip:p
 							<groupId>gov.hhs.cms.deploy.${product.release}</groupId>
 							<!-- force the name of the manifest artifact -->
 							<artifactId>manifest-zip</artifactId>
-							<!-- force version number similar to EM_14.6.x.x -->
+							<!-- force version number similar to EPM_25.6.x.x -->
 							<version>${release.version}</version>
               				<packaging>zip</packaging>
 							<generatePom>true</generatePom>
