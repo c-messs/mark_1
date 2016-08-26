@@ -4,7 +4,7 @@
   <parent>
     <groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
     <artifactId>eps</artifactId>
-    <version>25.50.63-SNAPSHOT</version>
+    <version>25.50.63</version>
   </parent>
   <artifactId>eps-batch-jobs</artifactId>
   <name>eps-batch-jobs</name>
@@ -303,6 +303,6 @@
   <scm>
     <connection>scm:git:${git.repo.url}</connection>
     <developerConnection>scm:git:${git.repo.url}</developerConnection>
-    <tag>eps-25.50.50-SNAPSHOT</tag>
+    <tag>eps-25.50.63</tag>
   </scm>
 </project>
