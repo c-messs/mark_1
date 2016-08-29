@@ -117,17 +117,20 @@ eps-corb-batch-config.zip:p
 
 								<checksum file="${project.build.directory}/../../eps-spring-batch/eps-spring-batch-ec-deployable/target/eps-spring-batch.zip" property="eps-spring-batch-MD5" />
 								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-spring-batch-MD5}  eps-spring-batch.zip${line.separator}</echo>
-								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-MD5}  eps-spring-batch.zip ${groupId} eps-spring-batch-reports ${project.version} ${targetRepositoryName}${line.separator}</echo>
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-MD5}  eps-spring-batch.zip gov.hhs.cms.ffe.fm.spring-batch.eps-spring-batch-ec-deployable eps-spring-batch-reports ${project.version} ${targetRepositoryName}${line.separator}</echo>
 							
 								<checksum file="${project.build.directory}/../../eps-spring-batch/eps-spring-batch-config/target/eps-spring-batch-config.zip" property="eps-spring-batch-config-MD5" />
 								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-spring-batch-config-MD5}  eps-spring-batch-config.zip${line.separator}</echo>
-								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-config-MD5}  eps-spring-batch-config.zip ${groupId} eps-spring-batch-config ${project.version} ${targetRepositoryName}${line.separator}</echo>
-								<checksum file="${project.build.directory}/../../eps-corb-batch/eps-corb-batch-ec-deployable/target/eps-corb-batch.zip" property="eps-corb-batch-MD5" />
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-config-MD5}  eps-spring-batch-config.zip gov.hhs.cms.ffe.fm.spring-batch eps-spring-batch-config ${project.version} ${targetRepositoryName}${line.separator}</echo>
+								
+<checksum file="${project.build.directory}/../../eps-corb-batch/eps-corb-batch-ec-deployable/target/eps-corb-batch.zip" property="eps-corb-batch-MD5" />
 								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-corb-batch-MD5}  eps-corb-batch.zip${line.separator}</echo>
-								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-MD5}  eps-corb-batch.zip ${groupId} eps-corb-batch ${project.version} ${targetRepositoryName}${line.separator}</echo>
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-MD5}  eps-corb-batch.zip gov.hhs.cms.ffe.fm.corb-batch.eps-corb-batch-ec-deployable eps-corb-batch ${project.version} ${targetRepositoryName}${line.separator}</echo>
+
                                                                 <checksum file="${project.build.directory}/../../eps-corb-batch/eps-corb-batch-config/target/eps-corb-batch-config.zip" property="eps-corb-batch-config-MD5" />
 								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip${line.separator}</echo>
-								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip ${groupId} eps-corb-batch-config ${project.version} ${targetRepositoryName}${line.separator}</echo>
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip gov.hhs.cms.ffe.fm.corb-batch.eps-corb-batch-config eps-corb-batch-config ${project.version} ${targetRepositoryName}${line.separator}</echo>
+
 								<zip destfile="${project.build.directory}/checksum.${project.version}.zip" basedir="${project.build.directory}/../../target" includes="checksum.txt" />
 								<zip destfile="${project.build.directory}/manifest.${project.version}.zip" basedir="${project.build.directory}/../../target" includes="manifest.txt" />
 
