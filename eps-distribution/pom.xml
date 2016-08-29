@@ -124,8 +124,8 @@ adding this blocl here with "<phase>none</phase>" nullifies the parent assembly 
 
                                                                 <checksum file="${project.build.directory}/../../eps-corb-batch/eps-corb-batch-config/target/eps-corb-batch-config.zip" property="eps-corb-batch-config-MD5" />
 								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip${line.separator}</echo>
-								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip gov.hhs.cms.ffe.fm.corb-batch.eps-corb-batch-config eps-corb-batch-config ${project.version} ${targetRepositoryName}${line.separator}</echo>
-
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip gov.hhs.cms.ffe.fm.corb-batch eps-corb-batch-config ${project.version} ${targetRepositoryName}${line.separator}</echo>
+																					      
 								<zip destfile="${project.build.directory}/checksum.${project.version}.zip" basedir="${project.build.directory}/../../target" includes="checksum.txt" />
 								<zip destfile="${project.build.directory}/manifest.${project.version}.zip" basedir="${project.build.directory}/../../target" includes="manifest.txt" />
 
