@@ -109,21 +109,16 @@ adding this blocl here with "<phase>none</phase>" nullifies the parent assembly 
 								<delete file="${project.build.directory}/../../target/checksum.txt" />
 								<delete file="${project.build.directory}/../../target/manifest.txt" />
 
-
-eps-spring-batch.zip:p
-eps-spring-batch-config.zip:p
-eps-corb-batch.zip:p
-eps-corb-batch-config.zip:p
-
+/gov/hhs/cms/ffe/fm/spring-batch/eps-spring-batch-ec-deployable/25.50.68-SNAPSHOT/eps-spring-batch-ec-deployable-25.50.68-20160829.154748-1.zip
 								<checksum file="${project.build.directory}/../../eps-spring-batch/eps-spring-batch-ec-deployable/target/eps-spring-batch.zip" property="eps-spring-batch-MD5" />
 								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-spring-batch-MD5}  eps-spring-batch.zip${line.separator}</echo>
-								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-MD5}  eps-spring-batch.zip gov.hhs.cms.ffe.fm.spring-batch.eps-spring-batch-ec-deployable eps-spring-batch-reports ${project.version} ${targetRepositoryName}${line.separator}</echo>
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-MD5}  eps-spring-batch.zip gov.hhs.cms.ffe.fm.spring-batch eps-spring-batch-ec-deployable ${project.version} ${targetRepositoryName}${line.separator}</echo>
 							
 								<checksum file="${project.build.directory}/../../eps-spring-batch/eps-spring-batch-config/target/eps-spring-batch-config.zip" property="eps-spring-batch-config-MD5" />
 								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-spring-batch-config-MD5}  eps-spring-batch-config.zip${line.separator}</echo>
 								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-config-MD5}  eps-spring-batch-config.zip gov.hhs.cms.ffe.fm.spring-batch eps-spring-batch-config ${project.version} ${targetRepositoryName}${line.separator}</echo>
 								
-<checksum file="${project.build.directory}/../../eps-corb-batch/eps-corb-batch-ec-deployable/target/eps-corb-batch.zip" property="eps-corb-batch-MD5" />
+                                                                <checksum file="${project.build.directory}/../../eps-corb-batch/eps-corb-batch-ec-deployable/target/eps-corb-batch.zip" property="eps-corb-batch-MD5" />
 								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-corb-batch-MD5}  eps-corb-batch.zip${line.separator}</echo>
 								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-MD5}  eps-corb-batch.zip gov.hhs.cms.ffe.fm.corb-batch.eps-corb-batch-ec-deployable eps-corb-batch ${project.version} ${targetRepositoryName}${line.separator}</echo>
 
