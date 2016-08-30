@@ -1,11 +1,12 @@
 package gov.hhs.cms.ff.fm.eps.ep.mappers;
 
+import java.time.LocalDate;
+
 import gov.cms.dsh.bem.HealthCoverageDatesType;
 import gov.cms.dsh.bem.HealthCoverageType;
 import gov.cms.dsh.bem.MemberType;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberDatePO;
 
-import org.joda.time.DateTime;
 import org.junit.Test;
 
 public class PolicyMemberDateMapperTest extends BaseMapperTest {
@@ -21,8 +22,8 @@ public class PolicyMemberDateMapperTest extends BaseMapperTest {
 		boolean isSubscriber = false;
 		MemberType expectedMember = makeMemberType(memId, name, isSubscriber);
 		
-		DateTime expectedHcBBD = APR_1;
-		DateTime expectedHcBED = MAY_31;
+		LocalDate expectedHcBBD = APR_1;
+		LocalDate expectedHcBED = MAY_31;
 		
 		expectedMember.getHealthCoverage().add(new HealthCoverageType());
 		expectedMember.getHealthCoverage().get(0).setHealthCoverageDates(makeHealthCoverageDatesType(expectedHcBBD, expectedHcBED));
@@ -46,8 +47,8 @@ public class PolicyMemberDateMapperTest extends BaseMapperTest {
 		boolean isSubscriber = false;
 		MemberType expectedMember = makeMemberType(memId, name, isSubscriber);
 
-		DateTime expectedHcBBD = APR_1;
-		DateTime expectedHcBED = MAY_31;
+		LocalDate expectedHcBBD = APR_1;
+		LocalDate expectedHcBED = MAY_31;
 		boolean expectedIsChanged = false;
 		
 		expectedMember.getHealthCoverage().add(new HealthCoverageType());
@@ -73,8 +74,8 @@ public class PolicyMemberDateMapperTest extends BaseMapperTest {
 		boolean isSubscriber = false;
 		MemberType expectedMember = makeMemberType(memId, name, isSubscriber);
 
-		DateTime expectedHcBBD = APR_15;
-		DateTime expectedHcBED = MAY_31;
+		LocalDate expectedHcBBD = APR_15;
+		LocalDate expectedHcBED = MAY_31;
 		boolean expectedIsChanged = true;
 		
 		expectedMember.getHealthCoverage().add(new HealthCoverageType());
@@ -100,8 +101,8 @@ public class PolicyMemberDateMapperTest extends BaseMapperTest {
 		boolean isSubscriber = false;
 		MemberType expectedMember = makeMemberType(memId, name, isSubscriber);
 
-		DateTime expectedHcBBD = APR_1;
-		DateTime expectedHcBED = null;
+		LocalDate expectedHcBBD = APR_1;
+		LocalDate expectedHcBED = null;
 		boolean expectedIsChanged = true;
 		
 		expectedMember.getHealthCoverage().add(new HealthCoverageType());
@@ -126,8 +127,8 @@ public class PolicyMemberDateMapperTest extends BaseMapperTest {
 		boolean isSubscriber = false;
 		MemberType expectedMember = makeMemberType(memId, name, isSubscriber);
 
-		DateTime expectedHcBBD = null;
-		DateTime expectedHcBED = MAR_31;
+		LocalDate expectedHcBBD = null;
+		LocalDate expectedHcBED = MAR_31;
 		boolean expectedIsChanged = true;
 		
 		expectedMember.getHealthCoverage().add(new HealthCoverageType());

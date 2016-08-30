@@ -35,7 +35,8 @@ public class PolicyDataRowMapperTest extends TestCase {
 		Mockito.when(resultSetMock.getDate("POLICYENDDATE")).thenReturn(new Date(System.currentTimeMillis()));
 		Mockito.when(resultSetMock.getTimestamp("MAINTENANCESTARTDATETIME"))
 			.thenReturn(new Timestamp(System.currentTimeMillis()));
-
+		Mockito.when(resultSetMock.getDate("ISSUEREFFECTIVEDATE")).thenReturn(new Date(System.currentTimeMillis()));
+		
 		Mockito.doReturn(resultSetMock).when(callableStatementMock).executeQuery();
 		
 		PolicyDataRowMapper pdrm = new PolicyDataRowMapper();
@@ -57,6 +58,7 @@ public class PolicyDataRowMapperTest extends TestCase {
 		Mockito.when(resultSetMock.getDate("POLICYSTARTDATE")).thenReturn(null);
 		Mockito.when(resultSetMock.getDate("POLICYENDDATE")).thenReturn(null);
 		Mockito.when(resultSetMock.getTimestamp("MAINTENANCESTARTDATETIME")).thenReturn(null);
+		Mockito.when(resultSetMock.getTimestamp("ISSUEREFFECTIVEDATE")).thenReturn(null);
 
 		Mockito.doReturn(resultSetMock).when(callableStatementMock).executeQuery();
 		

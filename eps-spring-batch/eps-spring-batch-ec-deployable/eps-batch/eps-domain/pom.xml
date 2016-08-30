@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
 		<artifactId>eps</artifactId>
-		<version>25.0.0-SNAPSHOT</version>	
+		<version>26.0.0-SNAPSHOT</version>	
 	</parent>
 	<artifactId>eps-domain</artifactId>
 	<name>eps-domain</name>
@@ -42,18 +42,28 @@
                     </execution>
                 </executions>
                 <configuration>
-                   <packageName>gov.cms.dsh.bem</packageName> <!-- The name of your generated source package -->
                    <schemaDirectory>${project.basedir}/src/main/resources/xsd</schemaDirectory>
                    <bindingDirectory>${project.basedir}/src/main/resources/xsd</bindingDirectory>
                    <bindingFiles>StringTrim.xjb</bindingFiles>
                    <extension>true</extension>
                 </configuration>
             </plugin>
+          <!-- <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>-->
 		</plugins>
 	</build>
 	<scm>
- 		<connection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-domain</connection>
- 		<developerConnection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-domain</developerConnection>
- 		<url>https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-domain</url>
+ 		<connection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-domain</connection>
+ 		<developerConnection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-domain</developerConnection>
+ 		<url>https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-domain</url>
  	</scm>
 </project>

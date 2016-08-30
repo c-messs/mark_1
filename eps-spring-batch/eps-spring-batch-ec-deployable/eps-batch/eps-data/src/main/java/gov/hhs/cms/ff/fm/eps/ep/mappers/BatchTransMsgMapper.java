@@ -7,7 +7,9 @@ import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentMaintenanceDTO;
 import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.enums.ProcessedToDbInd;
 import gov.hhs.cms.ff.fm.eps.ep.po.BatchTransMsgPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
+
+import java.time.LocalDate;
 
 import com.accenture.foundation.common.exception.ApplicationException;
 
@@ -70,7 +72,7 @@ public class BatchTransMsgMapper {
 					}
 					
 					if (bem.getTransactionInformation().getPolicySnapshotDateTime() != null) {
-						po.setSourceVersionDateTime(EpsDateUtils.getDateTimeFromXmlGC(bem.getTransactionInformation().getPolicySnapshotDateTime()));
+						po.setSourceVersionDateTime(DateTimeUtil.getLocalDateTimeFromXmlGC(bem.getTransactionInformation().getPolicySnapshotDateTime()));
 					}
 				}				
 			}
@@ -79,8 +81,8 @@ public class BatchTransMsgMapper {
 		if (ind != null) {
 			po.setProcessedToDbStatusTypeCd(ind.getValue());
 		}
-		po.setCreateDateTime(EpsDateUtils.getCurrentDateTime());
-		po.setLastModifiedDateTime(EpsDateUtils.getCurrentDateTime());
+		po.setCreateDateTime(LocalDate.now());
+		po.setLastModifiedDateTime(LocalDate.now());
 
 		return po;
 	}

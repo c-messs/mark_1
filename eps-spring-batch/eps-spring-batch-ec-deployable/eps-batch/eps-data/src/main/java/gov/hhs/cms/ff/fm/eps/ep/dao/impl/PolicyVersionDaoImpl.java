@@ -13,9 +13,9 @@ import gov.hhs.cms.ff.fm.eps.ep.vo.PolicyVersionSearchCriteriaVO;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -76,15 +76,14 @@ public class PolicyVersionDaoImpl extends GenericEpsDao<PolicyVersionPO> impleme
 
 		if (policy.getPreviousPolicyVersionId() != null) {
 
-			DateTime msd = policy.getMaintenanceStartDateTime();
-			final Timestamp msdMiunusOneMilli = new Timestamp(msd.getMillis() - 1l);
+			final LocalDateTime msd = policy.getMaintenanceStartDateTime();
 			final long prevId = policy.getPreviousPolicyVersionId();
 			final String userId = userVO.getUserId();
 
 			jdbcTemplate.execute(this.updatePolicyVersionDate, new PreparedStatementCallback<Boolean>() {
 				@Override
 				public Boolean doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
-					ps.setTimestamp(1, msdMiunusOneMilli);
+					ps.setTimestamp(1, Timestamp.valueOf(msd.minusNanos(1000000)));
 					ps.setString(2, userId);
 					ps.setLong(3, prevId);
 					return ps.execute();
@@ -111,8 +110,7 @@ public class PolicyVersionDaoImpl extends GenericEpsDao<PolicyVersionPO> impleme
 				
 				throw new ApplicationException(iex, EProdEnum.EPROD_10.getCode());
 			}
-			DateTime policyMSD = policy.getMaintenanceStartDateTime();
-			policy.setMaintenanceStartDateTime(policyMSD.plusMillis(1));
+			policy.setMaintenanceStartDateTime(policy.getMaintenanceStartDateTime().plusNanos(1000000));
 			pvId = insertPolicy(policy);
 		}
 		return pvId;
@@ -124,7 +122,7 @@ public class PolicyVersionDaoImpl extends GenericEpsDao<PolicyVersionPO> impleme
 	 * Get latest policy match by Exchange Assigned Policy Id (GPN) and Subscriber state cd
 	 */
 	@Override
-	public List<PolicyVersionPO> matchPolicyVersionByPolicyIdAndStateCd(PolicyVersionSearchCriteriaVO criteria) {
+	public List<PolicyVersionPO> findLatestPolicyVersion(PolicyVersionSearchCriteriaVO criteria) {
 
 		Object[] args = new Object[] {
 				criteria.getExchangePolicyId(),
@@ -146,12 +144,12 @@ public class PolicyVersionDaoImpl extends GenericEpsDao<PolicyVersionPO> impleme
 
 
 	@Override
-	public DateTime getLatestPolicyMaintenanceStartDateTime() {
+	public LocalDateTime getLatestPolicyMaintenanceStartDateTime() {
 
 		Timestamp policyMaintStartDateTime = jdbcTemplate.queryForObject(selectMaxPolicyMaintStartDateTime, Timestamp.class);
 
 		if(policyMaintStartDateTime != null) {
-			return new DateTime(policyMaintStartDateTime);
+			return policyMaintStartDateTime.toLocalDateTime();
 		}
 
 		return null;

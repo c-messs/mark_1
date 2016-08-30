@@ -14,10 +14,13 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageDirectionType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageType;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyPremiumPO;
 import gov.hhs.cms.ff.fm.eps.ep.services.impl.TransMsgCompositeDAOImpl;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 
@@ -29,8 +32,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 public abstract class BaseServicesTest extends TestCase {
 
-	protected final DateTime DATETIME = new DateTime();
-	protected final int YEAR = DATETIME.getYear();
+	protected static final LocalDate DATE = LocalDate.now();
+	protected static final LocalDateTime DATETIME = LocalDateTime.now();
+	protected static final int YEAR = DATE.getYear();
 
 	// Interval in milliseconds to make unique file names based on time.
 	protected final int SLEEP_INTERVAL_MS = 5;
@@ -45,19 +49,24 @@ public abstract class BaseServicesTest extends TestCase {
 	protected final String PA1 = "PA1";
 
 	protected final String RA = "RA";
-
-	protected final DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
-	protected final DateTime JAN_15 = new DateTime(YEAR, 1, 15, 0, 0);
-	protected final DateTime JAN_31 = new DateTime(YEAR, 1, 31, 0, 0);
-	protected final DateTime FEB_1 = new DateTime(YEAR, 2, 1, 0, 0);
-	protected final DateTime FEB_MAX = new DateTime(YEAR, 2, FEB_1.dayOfMonth().getMaximumValue(), 0, 0);
-	protected final DateTime MAR_1 = new DateTime(YEAR, 3, 1, 0, 0);
-	protected final DateTime MAR_14 = new DateTime(YEAR, 3, 14, 0, 0);
-	protected final DateTime MAR_15 = new DateTime(YEAR, 3, 15, 0, 0);
-	protected final DateTime MAR_31 = new DateTime(YEAR, 3, 31, 0, 0);
-	protected final DateTime APR_1 = new DateTime(YEAR, 4, 1, 0, 0);
-	protected final DateTime APR_20 = new DateTime(YEAR, 4, 20, 0, 0);
-	protected final DateTime DEC_31 = new DateTime(YEAR, 12, 31, 11, 59);
+	
+	protected final LocalDate JAN_1 = LocalDate.of(YEAR, 1, 1);
+	protected final LocalDate JAN_15 = LocalDate.of(YEAR, 1, 15);
+	protected final LocalDate JAN_31 = LocalDate.of(YEAR, 1, 31);
+	protected final LocalDate FEB_1 = LocalDate.of(YEAR, 2, 1);
+	protected final LocalDate FEB_MAX = DATE.with(TemporalAdjusters.lastDayOfMonth());
+	protected final LocalDate MAR_1 = LocalDate.of(YEAR, 3, 1);
+	protected final LocalDate MAR_14 = LocalDate.of(YEAR, 3, 14);
+	protected final LocalDate MAR_15 = LocalDate.of(YEAR, 3, 15);
+	protected final LocalDate MAR_31 = LocalDate.of(YEAR, 3, 31);
+	protected final LocalDate APR_1 = LocalDate.of(YEAR, 4, 1);
+	protected final LocalDate APR_20 = LocalDate.of(YEAR, 4, 20);
+	protected final LocalDate DEC_31 = LocalDate.of(YEAR, 12, 31);
+	
+	protected final LocalDateTime JAN_1_1am = LocalDateTime.of(YEAR, 1, 1, 1, 0, 0, 111111000);
+	protected final LocalDateTime FEB_1_2am = LocalDateTime.of(YEAR, 2, 1, 2, 0, 0, 222222000);
+	protected final LocalDateTime MAR_1_3am = LocalDateTime.of(YEAR, 3, 1, 3, 0, 0, 333333000);
+	protected final LocalDateTime APR_1_4am = LocalDateTime.of(YEAR, 4, 1, 4, 0, 0, 444444000);
 
 	@Autowired
 	protected JdbcTemplate jdbc;
@@ -82,7 +91,7 @@ public abstract class BaseServicesTest extends TestCase {
 		bemDTO.setBatchId(TestDataUtil.getRandomNumber(5));
 		bemDTO.setBem(new BenefitEnrollmentMaintenanceType());
 		bemDTO.getBem().setTransactionInformation(new TransactionInformationType());
-		bemDTO.getBem().getTransactionInformation().setCurrentTimeStamp(EpsDateUtils.getXMLGregorianCalendar(EpsDateUtils.getCurrentDateTime()));
+		bemDTO.getBem().getTransactionInformation().setCurrentTimeStamp(DateTimeUtil.getXMLGregorianCalendar(LocalDateTime.now()));
 		TransactionInformationType transInfoType = TestDataUtil.makeTransactionInformationType(bemId.toString());
 		transInfoType.setPolicySnapshotVersionNumber("000" + policyInfo.getPolicyStatus());
 		bemDTO.getBem().setTransactionInformation(transInfoType);
@@ -138,12 +147,12 @@ public abstract class BaseServicesTest extends TestCase {
 		return bemDTO;
 	}
 
-	protected AdditionalInfoType makeAdditionalInfoType(String type, DateTime esd, DateTime eed, BigDecimal amt) {
+	protected AdditionalInfoType makeAdditionalInfoType(String type, LocalDate esd, LocalDate eed, BigDecimal amt) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
 		if (eed != null) {
-			ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+			ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		}
 		if (type.equals(APTC)) {
 			ait.setAPTCAmount(amt); 
@@ -157,12 +166,12 @@ public abstract class BaseServicesTest extends TestCase {
 		return ait;
 	}
 
-	protected AdditionalInfoType makeAdditionalInfoType(String type, DateTime esd, DateTime eed, String txt) {
+	protected AdditionalInfoType makeAdditionalInfoType(String type, LocalDate esd, LocalDate eed, String txt) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
 		if (eed != null) {
-			ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+			ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		}
 		if (type.equals(RA)) {
 			ait.setRatingArea(txt);
@@ -171,18 +180,18 @@ public abstract class BaseServicesTest extends TestCase {
 	}
 
 
-	protected AdditionalInfoType makeEpsPremiumMinimal(DateTime esd, BigDecimal tpa) {
+	protected AdditionalInfoType makeEpsPremiumMinimal(LocalDate esd, BigDecimal tpa) {
 
 		return makeEpsPremium(esd, null, null, null, tpa, null, null, null);
 	}
 
-	protected AdditionalInfoType makeEpsPremium(DateTime esd, DateTime eed, BigDecimal aptc, BigDecimal csr, BigDecimal tpa, 
+	protected AdditionalInfoType makeEpsPremium(LocalDate esd, LocalDate eed, BigDecimal aptc, BigDecimal csr, BigDecimal tpa, 
 			BigDecimal tira, BigDecimal opa1, BigDecimal opa2) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
 		if (eed != null) {
-			ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+			ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		}
 		ait.setAPTCAmount(aptc);
 		ait.setCSRAmount(csr);
@@ -278,7 +287,7 @@ public abstract class BaseServicesTest extends TestCase {
 	}
 
 	public void insertBatchTransMsg(Long transMsgId, Long batchId, ProcessedToDbInd ind, String stateCd, 
-			String exchangePolicyId, String hiosId, String srcVerNum, DateTime srcVerDt) {
+			String exchangePolicyId, String hiosId, String srcVerNum, LocalDateTime srcVerDt) {
 
 		String args = "INSERT INTO BATCHTRANSMSG (TRANSMSGID, BATCHID, CREATEBY, LASTMODIFIEDBY";
 		String values = ") VALUES (" + transMsgId + ", " + batchId + ", " + batchId + ", " + batchId;
@@ -342,10 +351,10 @@ public abstract class BaseServicesTest extends TestCase {
 	}
 
 
-	private java.sql.Date convertToDate(DateTime dateTime) {
+	private Timestamp convertToDate(LocalDateTime localDateTime) {
 
-		if(dateTime != null) {
-			return new java.sql.Date(dateTime.getMillis());
+		if(localDateTime != null) {
+			return Timestamp.valueOf(localDateTime);
 		}
 		return null;
 	}

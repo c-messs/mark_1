@@ -2,12 +2,16 @@ package gov.hhs.cms.ff.fm.eps.ep.jobs.retroactivepaymentsjob;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
 import gov.hhs.cms.ff.fm.eps.ep.jobs.BaseJobExecutionListener;
+import gov.hhs.cms.ff.fm.eps.rap.dao.RapDao;
 import gov.hhs.cms.ff.fm.eps.rap.domain.BatchProcessLog;
 import gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants;
+import gov.hhs.cms.ff.fm.eps.rap.util.RapProcessingHelper;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -38,6 +42,7 @@ public class RapJobExecutionListener extends BaseJobExecutionListener {
 	private Long jobId;	
 	private String type;
 	private Map<String,List<String>> blockConcurrentJobExecutionMap;
+	private RapDao rapDao;
 
 	
 	@Override
@@ -92,6 +97,30 @@ public class RapJobExecutionListener extends BaseJobExecutionListener {
         
 		// writes into batch log
 		writeToBatchProcessLog(jobExecution);
+		
+		//Load reference data
+		loadReferenceData();
+	}
+	
+	/*
+	 * Load any static reference data that may be required
+	 */
+	protected void loadReferenceData() {	
+		
+		if(RapConstants.JOBPARAMETER_TYPE_RAP.equalsIgnoreCase(type)) {
+			//load state config data
+			List<StateProrationConfiguration> stateConfigList = rapDao.getProrationConfiguration();
+			
+			for(StateProrationConfiguration stConfig: stateConfigList) {
+				
+				if(RapProcessingHelper.getStateProrationConfigMap().get(stConfig.getMarketYear()) == null) {
+					RapProcessingHelper.getStateProrationConfigMap().put(stConfig.getMarketYear(), new HashMap<>());
+				}
+				
+				RapProcessingHelper.getStateProrationConfigMap().get(stConfig.getMarketYear()).put(stConfig.getStateCd(), stConfig);
+			}
+			LOGGER.info("Ref data StateProrationConfigMap loaded : {}", RapProcessingHelper.getStateProrationConfigMap());
+		}
 	}
 	
 	
@@ -197,5 +226,12 @@ public class RapJobExecutionListener extends BaseJobExecutionListener {
 	 */
 	public void setBlockConcurrentJobExecutionMap(Map<String,List<String>> blockConcurrentJobExecutionMap) {
 		this.blockConcurrentJobExecutionMap = blockConcurrentJobExecutionMap;
+	}
+	
+	/**
+	 * @param rapDao the rapDao to set
+	 */
+	public void setRapDao(RapDao rapDao) {
+		this.rapDao = rapDao;
 	}
 }

@@ -16,9 +16,9 @@ import gov.hhs.cms.ff.fm.eps.ep.po.PolicyVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.services.MemberDataDAO;
 import gov.hhs.cms.ff.fm.eps.ep.services.PolicyDataService;
 import gov.hhs.cms.ff.fm.eps.ep.services.PolicyMatchService;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -160,8 +160,8 @@ public class FFMDataServiceImpl implements PolicyDataService {
 	private void setSystemData(List<GenericPolicyPO<?>> poList) {
 
 		for(GenericPolicyPO<?> po : poList) {
-			po.setCreateDateTime(EpsDateUtils.getCurrentDateTime());
-			po.setLastModifiedDateTime(EpsDateUtils.getCurrentDateTime());
+			po.setCreateDateTime(LocalDate.now());
+			po.setLastModifiedDateTime(LocalDate.now());
 		}
 	}
 

@@ -13,9 +13,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.util.Calendar;
-
-import org.joda.time.DateTime;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 /**
  * DEVELOPER TOOL
@@ -85,7 +85,7 @@ public class TestErlBerFileGenerator2 extends AbstractTestFileGenerator implemen
 
 	public void run() {
 
-		DateTime start = new DateTime();
+		//DateTime start = new DateTime();
 
 		ExchangeType exchngType = ExchangeType.FFM;
 		String FUNC = "IC834";
@@ -103,7 +103,7 @@ public class TestErlBerFileGenerator2 extends AbstractTestFileGenerator implemen
 		MemberType member = null;
 		String fileNmPrefix;
 		String fileNm = "";
-		DateTime currentTimestamp = null;
+		LocalDateTime currentTimestamp = null;
 		String text = "";
 
 		Long berId = null;
@@ -156,7 +156,10 @@ public class TestErlBerFileGenerator2 extends AbstractTestFileGenerator implemen
 				bemId = Long.valueOf("100000000");
 				state = states[i % states.length];
 				groupSenderId = hiosId + state + "0" + hiosId.substring(0, 4) + "01";
-				currentTimestamp = new DateTime();
+				LocalDateTime ldt = LocalDateTime.now();
+				currentTimestamp = ldt.withNano(ldt.getNano() + getRandom3DigitNumber().intValue() * 100);
+				
+
 				// sleep so CurrentTimestamp is different is different between file sets.
 				try {
 					Thread.sleep(SLEEP_INTERVAL);
@@ -164,15 +167,14 @@ public class TestErlBerFileGenerator2 extends AbstractTestFileGenerator implemen
 					System.out.println("EX: " + ex.getMessage());
 				}
 				ber = new BenefitEnrollmentRequest();
-				ber.setFileInformation(makeFileInformationType(berId, exchngType, groupSenderId));
+				ber.setFileInformation(makeFileInformationType(berId, exchngType, groupSenderId, currentTimestamp));
 
-				Calendar cal = Calendar.getInstance();
-				fileNm = fileNmPrefix + sdf.format(cal.getTime()) + ".T";
+				fileNm = fileNmPrefix + LocalDateTime.now().format(DTF_FILE) + ".T";
 
 				File file = new File(TEST_PATH_INPUT_DIR + manifestNums[m] + "/" + fileNm);
 
-				DateTime psd = new DateTime(YEAR, 1, (i + 1), 0, 0);
-				DateTime ped = new DateTime(YEAR, 6, (i + 1), 0, 0);
+				LocalDate psd = LocalDate.of(YEAR, 1, (i + 1));
+				LocalDate ped = LocalDate.of(YEAR, 6, (i + 1));
 
 				for(int j = 0; j < BEM_LEN; ++j) {
 
@@ -246,9 +248,9 @@ public class TestErlBerFileGenerator2 extends AbstractTestFileGenerator implemen
 						}
 
 						ber = new BenefitEnrollmentRequest();
-						ber.setFileInformation(makeFileInformationType(berId, exchngType, groupSenderId));
+						ber.setFileInformation(makeFileInformationType(berId, exchngType, groupSenderId, currentTimestamp));
 
-						fileNm = fileNmPrefix + sdf.format(cal.getTime()) + ".T";
+						fileNm = fileNmPrefix + LocalDateTime.now().format(DTF_FILE) + ".T";
 
 						file = new File(TEST_PATH_INPUT_DIR  + manifestNums[m] + "/" +  fileNm);
 
@@ -281,16 +283,16 @@ public class TestErlBerFileGenerator2 extends AbstractTestFileGenerator implemen
 
 		} // END for m (manifests)
 
-		DateTime end = new DateTime();
+		//DateTime end = new DateTime();
 		System.out.println("\nTestErlBerFileGenerator Summary for Job Set " + jobSetNum + "\n--------------------------------------");
-		double totalSeconds = (end.getMillis() - start.getMillis()) * .001;
-		if (totalSeconds > 60) {
-			double totalMinutes = totalSeconds / 60;
-			double seconds = totalSeconds % 60;
-			System.out.println("Time to generate: " + Math.round(totalMinutes) + "." + Math.round(seconds) +  " (minutes:seconds)");
-		} else {
-			System.out.println("Time to generate: " + Math.round(totalSeconds) + " seconds.");
-		}
+//		double totalSeconds = (end.getMillis() - start.getMillis()) * .001;
+//		if (totalSeconds > 60) {
+//			double totalMinutes = totalSeconds / 60;
+//			double seconds = totalSeconds % 60;
+//			System.out.println("Time to generate: " + Math.round(totalMinutes) + "." + Math.round(seconds) +  " (minutes:seconds)");
+//		} else {
+//			System.out.println("Time to generate: " + Math.round(totalSeconds) + " seconds.");
+//		}
 
 		for (int m = 0; m < manifestNums.length; ++m) {
 
@@ -308,13 +310,18 @@ public class TestErlBerFileGenerator2 extends AbstractTestFileGenerator implemen
 		if (!manifestFile.exists()) {
 			manifestFile.createNewFile();
 		}
-
+		
+		// Add some micros since default is 0.
+		Long microSec = TestDataUtil.getRandom3DigitNumber();
+		ZonedDateTime zdt = ZonedDateTime.now();
+		Long micros = (microSec * 1000);
+		zdt = zdt.plusNanos(micros);
 		PrintWriter writer = new PrintWriter(manifestFile);
 		writer.println("jobid=" + manifestNum);
-		writer.println("BeginHighWaterMark=" + DateTime.now() );
-		writer.println("JobStartTime=" + DateTime.now().minusYears(2));
-		writer.println("JobEndTime=" + DateTime.now().minusYears(2).plusHours(1));
-		writer.println("EndHighWaterMark=" + DateTime.now().plusHours(1));
+		writer.println("BeginHighWaterMark=" + zdt.format(DTF_MANIFEST_MICRO_SEC) );
+		writer.println("JobStartTime=" +zdt.minusYears(1).format(DTF_MANIFEST_MICRO_SEC));
+		writer.println("JobEndTime=" + zdt.minusYears(1).plusHours(1).format(DTF_MANIFEST_MICRO_SEC));
+		writer.println("EndHighWaterMark=" + zdt.plusHours(1).format(DTF_MANIFEST_MICRO_SEC));
 		writer.println("RecordCount=" + recordCount);
 		writer.println("PAETCOMPLETION=N");
 		writer.write("JobStatus=SUCCESS");

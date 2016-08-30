@@ -14,36 +14,37 @@ import gov.cms.dsh.bem.MemberRelatedInfoType;
 import gov.cms.dsh.bem.MemberType;
 import gov.cms.dsh.bem.ResidentialAddressType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.AddressTypeEnum;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 
 import junit.framework.TestCase;
 
-import org.joda.time.DateTime;
-
 public abstract class BaseValidationTest extends TestCase {
 
-	protected final DateTime DATETIME = new DateTime();
-	protected final int YEAR = DATETIME.getYear();
-
-	protected final DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
-	protected final DateTime JAN_15 = new DateTime(YEAR, 1, 15, 0, 0);
-	protected final DateTime JAN_31 = new DateTime(YEAR, 1, 31, 0, 0);
-	protected final DateTime FEB_1 = new DateTime(YEAR, 2, 1, 0, 0);
-	protected final DateTime FEB_MAX = new DateTime(YEAR, 2, FEB_1.dayOfMonth().getMaximumValue(), 0, 0);
-	protected final DateTime MAR_1 = new DateTime(YEAR, 3, 1, 0, 0);
-	protected final DateTime MAR_14 = new DateTime(YEAR, 3, 14, 0, 0);
-	protected final DateTime MAR_15 = new DateTime(YEAR, 3, 15, 0, 0);
-	protected final DateTime MAR_20 = new DateTime(YEAR, 3, 20, 0, 0);
-	protected final DateTime MAR_31 = new DateTime(YEAR, 3, 31, 0, 0);
-	protected final DateTime APR_1 = new DateTime(YEAR, 4, 1, 0, 0);
-	protected final DateTime APR_10 = new DateTime(YEAR, 4, 10, 0, 0);
-	protected final DateTime APR_11 = new DateTime(YEAR, 4, 11, 0, 0);
-	protected final DateTime APR_30 = new DateTime(YEAR, 4, 30, 0, 0);
-	protected final DateTime MAY_1 = new DateTime(YEAR, 5, 1, 0, 0);
-
-	protected final DateTime DEC_31 = new DateTime(YEAR, 12, 31, 0, 0);
+	protected static final LocalDate DATE = LocalDate.now();
+	protected static final LocalDateTime DATETIME = LocalDateTime.now();
+	protected static final int YEAR = DATE.getYear();
+	
+	protected final LocalDate JAN_1 = LocalDate.of(YEAR, 1, 1);
+	protected final LocalDate JAN_15 = LocalDate.of(YEAR, 1, 15);
+	protected final LocalDate JAN_31 = LocalDate.of(YEAR, 1, 31);
+	protected final LocalDate FEB_1 = LocalDate.of(YEAR, 2, 1);
+	protected final LocalDate FEB_MAX = DATE.with(TemporalAdjusters.lastDayOfMonth());
+	protected final LocalDate MAR_1 = LocalDate.of(YEAR, 3, 1);
+	protected final LocalDate MAR_14 = LocalDate.of(YEAR, 3, 14);
+	protected final LocalDate MAR_15 = LocalDate.of(YEAR, 3, 15);
+	protected final LocalDate MAR_20 = LocalDate.of(YEAR, 3, 20);
+	protected final LocalDate MAR_31 = LocalDate.of(YEAR, 3, 31);
+	protected final LocalDate APR_1 = LocalDate.of(YEAR, 4, 1);
+	protected final LocalDate APR_10 = LocalDate.of(YEAR, 4, 10);
+	protected final LocalDate APR_11 = LocalDate.of(YEAR, 4, 11);
+	protected final LocalDate APR_30 = LocalDate.of(YEAR, 4, 30);
+	protected final LocalDate MAY_1 = LocalDate.of(YEAR, 5, 1);
+	protected final LocalDate DEC_31 = LocalDate.of(YEAR, 12, 31);
 
 
 	// Key Financial Elements
@@ -76,18 +77,18 @@ public abstract class BaseValidationTest extends TestCase {
 		return makeSubscriberMaintenance(id, null, null, null, null, null);
 	}
 
-	protected MemberType makeSubscriberMaintenance(String id, String variantId, DateTime hcMED, DateTime hcBBD, DateTime esd, BigDecimal csr) {
+	protected MemberType makeSubscriberMaintenance(String id, String variantId, LocalDate hcMED, LocalDate hcBBD, LocalDate esd, BigDecimal csr) {
 
 		return makeSubscriberMaintenance(id, variantId, hcMED, hcBBD, esd, csr, null);
 	}
 
-	protected MemberType makeSubscriberMaintenance(String id, String variantId, DateTime hcMED, DateTime hcBBD, DateTime esd, BigDecimal csr, DateTime sysSelESD) {
+	protected MemberType makeSubscriberMaintenance(String id, String variantId, LocalDate hcMED, LocalDate hcBBD, LocalDate esd, BigDecimal csr, LocalDate sysSelESD) {
 
 		return makeSubscriber(id,  variantId, hcBBD, null, esd, csr, sysSelESD);
 	}
 
 	
-	protected MemberType makeSubscriber(String id, DateTime hcBBD, DateTime eligEnd) {
+	protected MemberType makeSubscriber(String id, LocalDate hcBBD, LocalDate eligEnd) {
 
 		MemberType subscriber = new MemberType();
 		subscriber.setMemberInformation(new MemberRelatedInfoType());
@@ -96,12 +97,12 @@ public abstract class BaseValidationTest extends TestCase {
 		subscriber.getMemberAdditionalIdentifier().setExchangeAssignedMemberID(id);
 		subscriber.setSubscriberID(id);
 		subscriber.setMemberRelatedDates(new MemberRelatedDatesType());
-		subscriber.getMemberRelatedDates().setEligibilityEndDate(EpsDateUtils.getXMLGregorianCalendar(eligEnd));
+		subscriber.getMemberRelatedDates().setEligibilityEndDate(DateTimeUtil.getXMLGregorianCalendar(eligEnd));
 		subscriber.getHealthCoverage().add(new HealthCoverageType());
 		subscriber.getHealthCoverage().get(0).setHealthCoveragePolicyNumber(new HealthCoveragePolicyNumberType());
 		subscriber.getHealthCoverage().get(0).setHealthCoverageDates(new HealthCoverageDatesType());
 		if (hcBBD != null) {
-			subscriber.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitBeginDate(EpsDateUtils.getXMLGregorianCalendar(hcBBD));
+			subscriber.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitBeginDate(DateTimeUtil.getXMLGregorianCalendar(hcBBD));
 		} 
 		if (id != null) {
 			subscriber.setMemberNameInformation(new MemberNameInfoType());
@@ -113,7 +114,7 @@ public abstract class BaseValidationTest extends TestCase {
 		return subscriber;
 	}
 
-	protected MemberType makeSubscriber(String id, String variantId, DateTime hcBBD, DateTime hcBED, DateTime esd, BigDecimal csr, DateTime sysSelESD) {
+	protected MemberType makeSubscriber(String id, String variantId, LocalDate hcBBD, LocalDate hcBED, LocalDate esd, BigDecimal csr, LocalDate sysSelESD) {
 
 		MemberType subscriber = new MemberType();
 		subscriber.setMemberInformation(new MemberRelatedInfoType());
@@ -130,10 +131,10 @@ public abstract class BaseValidationTest extends TestCase {
 		}
 		subscriber.getHealthCoverage().get(0).setHealthCoverageDates(new HealthCoverageDatesType());
 		if (hcBBD != null) {
-			subscriber.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitBeginDate(EpsDateUtils.getXMLGregorianCalendar(hcBBD));
+			subscriber.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitBeginDate(DateTimeUtil.getXMLGregorianCalendar(hcBBD));
 		} 
 		if (hcBED != null) {
-			subscriber.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitEndDate(EpsDateUtils.getXMLGregorianCalendar(hcBED));
+			subscriber.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitEndDate(DateTimeUtil.getXMLGregorianCalendar(hcBED));
 		} 
 		if (csr != null) {
 			subscriber.getAdditionalInfo().add(makeAdditionalInfoType(CSR, esd, null, csr));
@@ -167,7 +168,7 @@ public abstract class BaseValidationTest extends TestCase {
 	 * @param hcBBD
 	 * @return
 	 */
-	protected MemberType makeMemberType(String id, String subscriberId, DateTime hcBBD, DateTime dob) {
+	protected MemberType makeMemberType(String id, String subscriberId, LocalDate hcBBD, LocalDate dob) {
 
 		MemberType member = new MemberType();
 		member.setMemberInformation(new MemberRelatedInfoType());
@@ -179,7 +180,7 @@ public abstract class BaseValidationTest extends TestCase {
 		member.getMemberNameInformation().setMemberResidenceAddress(makeAddressType(id, AddressTypeEnum.RESIDENTIAL));
 		if (dob != null) {
 			member.getMemberNameInformation().setMemberDemographics(new MemberDemographicsType());
-			member.getMemberNameInformation().getMemberDemographics().setBirthDate(EpsDateUtils.getXMLGregorianCalendar(dob));
+			member.getMemberNameInformation().getMemberDemographics().setBirthDate(DateTimeUtil.getXMLGregorianCalendar(dob));
 		}
 		member.setMemberAdditionalIdentifier(new MemberAdditionalIdentifierType());
 		member.getMemberAdditionalIdentifier().setExchangeAssignedMemberID(id);
@@ -189,7 +190,7 @@ public abstract class BaseValidationTest extends TestCase {
 		}
 		if (hcBBD != null) {
 			member.getHealthCoverage().get(0).setHealthCoverageDates(new HealthCoverageDatesType());
-			member.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitBeginDate(EpsDateUtils.getXMLGregorianCalendar(hcBBD));	
+			member.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitBeginDate(DateTimeUtil.getXMLGregorianCalendar(hcBBD));	
 		}
 		return member;
 	}
@@ -201,22 +202,22 @@ public abstract class BaseValidationTest extends TestCase {
 	 * @param eed
 	 * @return
 	 */
-	protected AdditionalInfoType makeAdditionalInfoType(DateTime esd, DateTime eed) {
+	protected AdditionalInfoType makeAdditionalInfoType(LocalDate esd, LocalDate eed) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
 		if (eed != null) {
-			ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+			ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		}
 		return ait;
 	}
 
-	protected AdditionalInfoType makeAdditionalInfoType(String type, DateTime esd, DateTime eed, BigDecimal amt) {
+	protected AdditionalInfoType makeAdditionalInfoType(String type, LocalDate esd, LocalDate eed, BigDecimal amt) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
 		if (eed != null) {
-			ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+			ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		}
 		if (type.equals(APTC)) {
 			ait.setAPTCAmount(amt); 
@@ -230,13 +231,13 @@ public abstract class BaseValidationTest extends TestCase {
 		return ait;
 	}
 
-	protected AdditionalInfoType makeEpsPremium(DateTime esd, DateTime eed, BigDecimal aptc, BigDecimal csr, BigDecimal tpa, 
+	protected AdditionalInfoType makeEpsPremium(LocalDate esd, LocalDate eed, BigDecimal aptc, BigDecimal csr, BigDecimal tpa, 
 			BigDecimal tira, BigDecimal opa1, BigDecimal opa2) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
 		if (eed != null) {
-			ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+			ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		}
 		ait.setAPTCAmount(aptc);
 		ait.setCSRAmount(csr);

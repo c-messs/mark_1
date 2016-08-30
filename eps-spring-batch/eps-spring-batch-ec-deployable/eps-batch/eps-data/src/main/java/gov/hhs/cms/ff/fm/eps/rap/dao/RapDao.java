@@ -3,6 +3,7 @@
  */
 package gov.hhs.cms.ff.fm.eps.rap.dao;
 
+import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
 import gov.hhs.cms.ff.fm.eps.rap.domain.IssuerUserFeeRate;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDataDTO;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDetailDTO;
@@ -41,5 +42,12 @@ public interface RapDao {
 	 * @return issuerUserFeeRates
 	 */
 	public List<IssuerUserFeeRate> getUserFeeRateForAllStates(DateTime asOfDate, String year);
+
+	/**
+	 * Gets Proration Configuration data for all states
+	 * 
+	 * @return
+	 */
+	public List<StateProrationConfiguration> getProrationConfiguration();
 	
 }

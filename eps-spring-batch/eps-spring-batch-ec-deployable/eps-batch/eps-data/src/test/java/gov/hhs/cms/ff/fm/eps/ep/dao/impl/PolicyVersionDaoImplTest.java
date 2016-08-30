@@ -5,7 +5,8 @@ import gov.hhs.cms.ff.fm.eps.ep.data.util.TestDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyVersionPO;
 
-import org.joda.time.DateTime;
+import java.time.LocalDateTime;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,13 +44,13 @@ public class PolicyVersionDaoImplTest extends BaseDaoTest {
 		String issuerNm1 = "ISSUERNAME 1111";
 		String issuerNm2 = "ISSUERNAME 2222";
 
-		PolicyVersionPO po1 = makePolicyVersion(exchangePolicyId, MAR_1, subscriberStateCd);
+		PolicyVersionPO po1 = makePolicyVersion(exchangePolicyId, MAR_1_3am, subscriberStateCd);
 		po1.setIssuerNm(issuerNm1);
 		Long pvId1 = policyVersionDao.insertPolicyVersion(po1);
 
 		// Attempt to insert with same ExchangePolicyId, SubscriberStateCd and MaintenanceStartDateTime
 		// with other attribute different
-		PolicyVersionPO po2 = makePolicyVersion(exchangePolicyId, MAR_1, subscriberStateCd);
+		PolicyVersionPO po2 = makePolicyVersion(exchangePolicyId, MAR_1_3am, subscriberStateCd);
 		po2.setIssuerNm(issuerNm2);
 		Long pvId2 = policyVersionDao.insertPolicyVersion(po2);
 
@@ -63,7 +64,7 @@ public class PolicyVersionDaoImplTest extends BaseDaoTest {
 		assertEquals("IssuerNm for PV1", issuerNm1, epsPO_1.getIssuerNm());
 		assertEquals("IssuerNm for PV2", issuerNm2, epsPO_2.getIssuerNm());
 
-		assertEquals("MSD for PV1 is 1 millisecond less tha PV2 MSD", epsPO_1.getMaintenanceStartDateTime(), epsPO_2.getMaintenanceStartDateTime().minusMillis(1));
+		assertEquals("MSD for PV1 is 1000000 nanoseconds (1 millisecond) less tha PV2 MSD", epsPO_1.getMaintenanceStartDateTime(), epsPO_2.getMaintenanceStartDateTime().minusNanos(1000000));
 	}
 
 	/**
@@ -81,13 +82,13 @@ public class PolicyVersionDaoImplTest extends BaseDaoTest {
 		String issuerNm1 = "ISSUERNAME 1111";
 		String issuerNm2 = "ISSUERNAME 2222";
 
-		PolicyVersionPO po1 = makePolicyVersion(exchangePolicyId, MAR_1, subscriberStateCd);
+		PolicyVersionPO po1 = makePolicyVersion(exchangePolicyId, MAR_1_3am, subscriberStateCd);
 		po1.setIssuerNm(issuerNm1);
-		Long pvId1 = policyVersionDao.insertPolicyVersion(po1);
+		policyVersionDao.insertPolicyVersion(po1);
 
 		// Attempt to insert with same ExchangePolicyId, SubscriberStateCd and MaintenanceStartDateTime
 		// with other attribute different
-		PolicyVersionPO po2 = makePolicyVersion(exchangePolicyId, MAR_1, subscriberStateCd);
+		PolicyVersionPO po2 = makePolicyVersion(exchangePolicyId, MAR_1_3am, subscriberStateCd);
 		po2.setIssuerNm(issuerNm2);
 		
 		Thread.currentThread().interrupt();
@@ -116,14 +117,14 @@ public class PolicyVersionDaoImplTest extends BaseDaoTest {
 		String subscriberStateCd = "TN";
 		String issuerNm1 = "ISSUERNAME 1111";
 		String issuerNm2 = "ISSUERNAME 2222";
-		PolicyVersionPO po1 = makePolicyVersion(exchangePolicyId, MAR_1, subscriberStateCd);
+		PolicyVersionPO po1 = makePolicyVersion(exchangePolicyId, MAR_1_3am, subscriberStateCd);
 		po1.setIssuerNm(issuerNm1);
 		Long pvId1 = policyVersionDao.insertPolicyVersion(po1);
 
 		// Attempt to insert with same ExchangePolicyId, SubscriberStateCd
 		// but MaintenanceStartDateTime 1 millisecond greater.
 		// with other attribute different
-		PolicyVersionPO po2 = makePolicyVersion(exchangePolicyId, MAR_1.plusMillis(1), subscriberStateCd);
+		PolicyVersionPO po2 = makePolicyVersion(exchangePolicyId, MAR_1_3am.plusNanos(1), subscriberStateCd);
 		po2.setIssuerNm(issuerNm2);
 		Long pvId2 = policyVersionDao.insertPolicyVersion(po2); 
 		assertNotNull("policyVersionId 2", pvId2);
@@ -138,24 +139,24 @@ public class PolicyVersionDaoImplTest extends BaseDaoTest {
 		assertEquals("IssuerNm for PV1", issuerNm1, epsPO_1.getIssuerNm());
 		assertEquals("IssuerNm for PV2", issuerNm2, epsPO_2.getIssuerNm());
 
-		assertEquals("MSD for PV1 is 1 millisecond less tha PV2 MSD", epsPO_1.getMaintenanceStartDateTime(), epsPO_2.getMaintenanceStartDateTime().minusMillis(1));
+		assertEquals("MSD for PV1 is 1 millisecond less tha PV2 MSD", epsPO_1.getMaintenanceStartDateTime(), epsPO_2.getMaintenanceStartDateTime().minusNanos(1000000));
 	}
 
 
 	@Test	
 	public void test_getLatestPolicyMaintStartDateTime() throws InterruptedException {
 
-		PolicyVersionPO po1 = makePolicyVersion("111111", JAN_1);
-		PolicyVersionPO po2 = makePolicyVersion("222222", FEB_1);
-		PolicyVersionPO po3 = makePolicyVersion("333333", MAR_1);
-		PolicyVersionPO po4 = makePolicyVersion("444444", APR_1);
+		PolicyVersionPO po1 = makePolicyVersion("111001", JAN_1_1am.plusYears(3));
+		PolicyVersionPO po2 = makePolicyVersion("222002", FEB_1_2am.plusYears(3));
+		PolicyVersionPO po3 = makePolicyVersion("333003", MAR_1_3am.plusYears(3));
+		PolicyVersionPO po4 = makePolicyVersion("444004", APR_1_4am.plusYears(3));
 
 		insertPolicyVersion(po1);
 		insertPolicyVersion(po4);
 		insertPolicyVersion(po2);
 		insertPolicyVersion(po3);
 
-		DateTime latestMSD = policyVersionDao.getLatestPolicyMaintenanceStartDateTime();
+		LocalDateTime latestMSD = policyVersionDao.getLatestPolicyMaintenanceStartDateTime();
 		assertNotNull("Policy Maintenance Start Date INITIAL", latestMSD);
 
 		assertEquals("LatestPolicyMaintStartDateTime", po4.getMaintenanceStartDateTime(), latestMSD);
@@ -172,7 +173,7 @@ public class PolicyVersionDaoImplTest extends BaseDaoTest {
 		int countPolicies = jdbc.queryForObject("SELECT COUNT(*) FROM POLICYVERSION", Integer.class);
 
 		if (countPolicies == 0) {
-			DateTime latestMSD = policyVersionDao.getLatestPolicyMaintenanceStartDateTime();
+			LocalDateTime latestMSD = policyVersionDao.getLatestPolicyMaintenanceStartDateTime();
 			assertNull("No results for Policy Maintenance Start Date", latestMSD);
 		} else {
 			// In case some test data was left in shema.

@@ -25,26 +25,23 @@ import gov.cms.dsh.bem.ResidentialAddressType;
 import gov.cms.dsh.bem.TransactionInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.ExchangeType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
-import java.util.GregorianCalendar;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.Random;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeConstants;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
-
-import org.joda.time.DateTime;
 
 public class AbstractTestFileGenerator  {
 
@@ -61,41 +58,48 @@ public class AbstractTestFileGenerator  {
 	protected final String EED ="EffectiveEndDate";
 
 	//For Files sent by Partners, the format will be THHMMSSt
-	protected final SimpleDateFormat sdf = new SimpleDateFormat("'D'yyMMdd'.T'HHmmssSSS");
-
-	// Interval in milliseconds to make unique file names based on time.
+	protected final DateTimeFormatter DTF_FILE = DateTimeFormatter.ofPattern("'D'yyMMdd'.T'HHmmssSSS");
+	protected final DateTimeFormatter DTF_MANIFEST_FRAC_SEC_NONE = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
+	
+	// Creates a ZonedDateTime with micro seconds and a colon in the zone offset (XXX = -04:00).
+	protected final DateTimeFormatter DTF_MANIFEST_MICRO_SEC = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HH:mm:ss")
+			.appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true).appendPattern("XXX").toFormatter();
+	
+	// Interval in milliseconds to make unique file names based on time.	
 	protected final int SLEEP_INTERVAL = 1015;
 
-	protected final DateTime DATETIME = new DateTime();
+	protected static final LocalDate DATE = LocalDate.now();
+	protected static final int YEAR = DATE.getYear();
+	protected final LocalDateTime DATETIME = getLocalDateTime();
 
-	protected final int YEAR = DATETIME.getYear();
+	protected final LocalDate JAN_1 = LocalDate.of(YEAR, 1, 1);
+	protected final LocalDate JAN_15 = LocalDate.of(YEAR, 1, 15);
+	protected final LocalDate JAN_31 = LocalDate.of(YEAR, 1, 31);
+	protected final LocalDate FEB_1 = LocalDate.of(YEAR, 2, 1);
+	protected final LocalDate FEB_2 = LocalDate.of(YEAR, 2, 2);
+	protected final LocalDate FEB_15 = LocalDate.of(YEAR, 2, 15);
+	protected final LocalDate MAR_14 = LocalDate.of(YEAR, 3, 14);
+	protected final LocalDate MAR_15 = LocalDate.of(YEAR, 3, 15);
+	protected final LocalDate JUN_29 = LocalDate.of(YEAR, 6, 29);
+	protected final LocalDate JUN_30 = LocalDate.of(YEAR, 6, 30);
+	protected final LocalDate JUL_3_1965 = LocalDate.of(1965, 7, 3);
+	protected final LocalDate JUL_4_1965 = LocalDate.of(1965, 7, 4);
+	protected final LocalDate JUL_7_1970 = LocalDate.of(1970, 7, 7);
+	protected final LocalDate AUG_8_1980 = LocalDate.of(1980, 8, 9);
+	protected final LocalDate SEP_9_1990 = LocalDate.of(1990, 9, 9);
+	protected final LocalDate SEP_11_2001 = LocalDate.of(2001, 9, 11);
+	protected final LocalDate OCT_10_2000 = LocalDate.of(2000, 10, 10);
+	
+	protected final LocalDateTime JUN_1_1am = LocalDateTime.of(YEAR, 6, 1, 1, 0, 0, 666666000);
 
-	protected final DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
-	protected final DateTime JAN_15 = new DateTime(YEAR, 1, 15, 0, 0);
-	protected final DateTime JAN_31 = new DateTime(YEAR, 1, 31, 0, 0);
-	protected final DateTime FEB_1 = new DateTime(YEAR, 2, 1, 0, 0);
-	protected final DateTime FEB_2 = new DateTime(YEAR, 2, 2, 0, 0);
-	protected final DateTime FEB_15 = new DateTime(YEAR, 2, 15, 0, 0);
-	protected final DateTime MAR_14 = new DateTime(YEAR, 3, 14, 0, 0);
-	protected final DateTime MAR_15 = new DateTime(YEAR, 3, 15, 0, 0);
-	protected final DateTime JUN_29 = new DateTime(YEAR, 6, 29, 0, 0);
-	protected final DateTime JUN_30 = new DateTime(YEAR, 6, 30, 0, 0);
-	protected final DateTime JUL_3_1965 = new DateTime(1965, 7, 3, 0, 0);
-	protected final DateTime JUL_4_1965 = new DateTime(1965, 7, 4, 0, 0);
-	protected final DateTime JUL_7_1970 = new DateTime(1970, 7, 7, 0, 0);
-	protected final DateTime AUG_8_1980 = new DateTime(1980, 8, 9, 0, 0);
-	protected final DateTime SEP_9_1990 = new DateTime(1990, 9, 9, 0, 0);
-	protected final DateTime SEP_11_2001 = new DateTime(2001, 9, 11, 0, 0);
-	protected final DateTime OCT_10_2000 = new DateTime(2000, 10, 10, 0, 0);
 
-
-	private DateTime eligibilityBegin = FEB_1;
-	private DateTime eligibilityEnd = JUN_30;
-	private DateTime effectiveStart = FEB_15;
-	private DateTime benefitBeginDate = FEB_2;
-	private DateTime benefitEndDate = JUN_29;
-	private DateTime lastPremiumPaidDate  = JAN_15;
-	private DateTime premiumPaidToDateEnd = JAN_31;
+	private LocalDate eligibilityBegin = FEB_1;
+	private LocalDate eligibilityEnd = JUN_30;
+	private LocalDate effectiveStart = FEB_15;
+	private LocalDate benefitBeginDate = FEB_2;
+	private LocalDate benefitEndDate = JUN_29;
+	private LocalDate lastPremiumPaidDate  = JAN_15;
+	private LocalDate premiumPaidToDateEnd = JAN_31;
 
 	private static Marshaller marshallerBER;
 	private static Marshaller marshallerBEM;
@@ -118,22 +122,13 @@ public class AbstractTestFileGenerator  {
 			System.out.print("EPROD-24 EPS JAXB Marshalling error (BEM to XML).\n" + ex.getMessage());
 		}
 	}
-
-	private static DatatypeFactory dfInstance = null;
-
-	static {
-
-		try {
-			dfInstance = DatatypeFactory.newInstance();
-
-		} catch (DatatypeConfigurationException ex) {
-			throw new IllegalStateException(
-					"Exception in getting instance of DatatypeFactory", ex);
-		}
+	
+	private LocalDateTime getLocalDateTime() {
+		
+		return LocalDateTime.now();
 	}
 
-
-	protected BenefitEnrollmentMaintenanceType makeBenefitEnrollmentMaintenanceType(Long bemId, String versionNum, DateTime versionDT, String hiosId) {
+	protected BenefitEnrollmentMaintenanceType makeBenefitEnrollmentMaintenanceType(Long bemId, String versionNum, LocalDateTime versionDT, String hiosId) {
 
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setTransactionInformation(makeTransactionInformationType(bemId.toString(), versionNum, versionDT));
@@ -142,7 +137,7 @@ public class AbstractTestFileGenerator  {
 	}
 
 
-	private TransactionInformationType makeTransactionInformationType(String bemId, String versionNum, DateTime versionDT) {
+	private TransactionInformationType makeTransactionInformationType(String bemId, String versionNum, LocalDateTime versionDT) {
 
 		TransactionInformationType transInfoType = new TransactionInformationType();
 		// <xsd:minLength value="4" /><xsd:maxLength value="9" /> 
@@ -151,9 +146,9 @@ public class AbstractTestFileGenerator  {
 		transInfoType.setControlNumber(controlNum);
 		//Calendar to String to XMLGregorianCalendar for testing
 		//Real data will be String to XMLGregorianCalendar
-		transInfoType.setCurrentTimeStamp(EpsDateUtils.getXMLGregorianCalendar(versionDT));
+		transInfoType.setCurrentTimeStamp(DateTimeUtil.getXMLGregorianCalendar(versionDT));
 		transInfoType.setExchangeCode(ExchangeCodeSimpleType.INDIVIDUAL);
-		transInfoType.setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(versionDT));
+		transInfoType.setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(versionDT));
 		transInfoType.setPolicySnapshotVersionNumber(versionNum);
 		return transInfoType;
 	}
@@ -166,7 +161,7 @@ public class AbstractTestFileGenerator  {
 		return issType;
 	}
 
-	protected PolicyInfoType makePolicyInfoType(Long bemId, PolicyStatus policyStatus, String gpn, DateTime psd, DateTime ped) {
+	protected PolicyInfoType makePolicyInfoType(Long bemId, PolicyStatus policyStatus, String gpn, LocalDate psd, LocalDate ped) {
 
 		PolicyInfoType policyInfoType = new PolicyInfoType();
 		policyInfoType.setGroupPolicyNumber(gpn);
@@ -181,8 +176,8 @@ public class AbstractTestFileGenerator  {
 		} else {
 			policyInfoType.setMarketplaceGroupPolicyIdentifier(bemId.toString() + "-MPGPID");
 		}
-		policyInfoType.setPolicyStartDate(EpsDateUtils.getXMLGregorianCalendar(psd));
-		policyInfoType.setPolicyEndDate(EpsDateUtils.getXMLGregorianCalendar(ped));
+		policyInfoType.setPolicyStartDate(DateTimeUtil.getXMLGregorianCalendar(psd));
+		policyInfoType.setPolicyEndDate(DateTimeUtil.getXMLGregorianCalendar(ped));
 		
 		if (doSkip) {
 			String strBemId = bemId.toString();
@@ -245,8 +240,8 @@ public class AbstractTestFileGenerator  {
 	private MemberRelatedDatesType makeMemberRelatedDatesType(boolean isSubscriber) {
 
 		MemberRelatedDatesType memRelDatesType = new MemberRelatedDatesType();
-		memRelDatesType.setEligibilityBeginDate(EpsDateUtils.getXMLGregorianCalendar(eligibilityBegin));
-		memRelDatesType.setEligibilityEndDate(EpsDateUtils.getXMLGregorianCalendar(eligibilityEnd));
+		memRelDatesType.setEligibilityBeginDate(DateTimeUtil.getXMLGregorianCalendar(eligibilityBegin));
+		memRelDatesType.setEligibilityEndDate(DateTimeUtil.getXMLGregorianCalendar(eligibilityEnd));
 		return memRelDatesType;
 
 	}
@@ -269,11 +264,11 @@ public class AbstractTestFileGenerator  {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
 
-		DateTime esd = effectiveStart;
-		DateTime eed = eligibilityEnd;
+		LocalDate esd = effectiveStart;
+		LocalDate eed = eligibilityEnd;
 
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 
 		BigDecimal aptc = tpa.multiply(new BigDecimal(".1"));
 		BigDecimal csr = new BigDecimal("0");
@@ -361,32 +356,32 @@ public class AbstractTestFileGenerator  {
 		if (name.indexOf("DAD") != -1) {
 
 			memDemoType.setGenderCode(GenderCodeSimpleType.M);
-			memDemoType.setBirthDate(EpsDateUtils.getXMLGregorianCalendar(JUL_7_1970));
+			memDemoType.setBirthDate(DateTimeUtil.getXMLGregorianCalendar(JUL_7_1970));
 			
 		} else if (name.indexOf("MOM") != -1) {
 
 			memDemoType.setGenderCode(GenderCodeSimpleType.F);
-			memDemoType.setBirthDate(EpsDateUtils.getXMLGregorianCalendar(AUG_8_1980));
+			memDemoType.setBirthDate(DateTimeUtil.getXMLGregorianCalendar(AUG_8_1980));
 			
 		} else if (name.indexOf("SON") != -1) {
 
 			memDemoType.setGenderCode(GenderCodeSimpleType.M);
-			memDemoType.setBirthDate(EpsDateUtils.getXMLGregorianCalendar(SEP_9_1990));
+			memDemoType.setBirthDate(DateTimeUtil.getXMLGregorianCalendar(SEP_9_1990));
 			
 		} else if (name.indexOf("DAU") != -1) {
 
 			memDemoType.setGenderCode(GenderCodeSimpleType.F);
-			memDemoType.setBirthDate(EpsDateUtils.getXMLGregorianCalendar(OCT_10_2000));
+			memDemoType.setBirthDate(DateTimeUtil.getXMLGregorianCalendar(OCT_10_2000));
 			
 		} else if (name.indexOf("BBY") != -1) {
 
 			memDemoType.setGenderCode(GenderCodeSimpleType.M);
-			memDemoType.setBirthDate(EpsDateUtils.getXMLGregorianCalendar(JAN_1));
+			memDemoType.setBirthDate(DateTimeUtil.getXMLGregorianCalendar(JAN_1));
 			
 		} else {
 			
 			memDemoType.setGenderCode(GenderCodeSimpleType.M);
-			memDemoType.setBirthDate(EpsDateUtils.getXMLGregorianCalendar(JUL_4_1965));
+			memDemoType.setBirthDate(DateTimeUtil.getXMLGregorianCalendar(JUL_4_1965));
 		}
 
 		return memDemoType;
@@ -432,15 +427,15 @@ public class AbstractTestFileGenerator  {
 
 		HealthCoverageDatesType healthCovDatesType = new HealthCoverageDatesType();
 
-		healthCovDatesType.setBenefitBeginDate(EpsDateUtils.getXMLGregorianCalendar(benefitBeginDate));
-		healthCovDatesType.setBenefitEndDate(EpsDateUtils.getXMLGregorianCalendar(benefitEndDate));
-		healthCovDatesType.setLastPremiumPaidDate(EpsDateUtils.getXMLGregorianCalendar(lastPremiumPaidDate));
-		healthCovDatesType.setPremiumPaidToDateEnd(EpsDateUtils.getXMLGregorianCalendar(premiumPaidToDateEnd));
+		healthCovDatesType.setBenefitBeginDate(DateTimeUtil.getXMLGregorianCalendar(benefitBeginDate));
+		healthCovDatesType.setBenefitEndDate(DateTimeUtil.getXMLGregorianCalendar(benefitEndDate));
+		healthCovDatesType.setLastPremiumPaidDate(DateTimeUtil.getXMLGregorianCalendar(lastPremiumPaidDate));
+		healthCovDatesType.setPremiumPaidToDateEnd(DateTimeUtil.getXMLGregorianCalendar(premiumPaidToDateEnd));
 
 		return healthCovDatesType;
 	}
 
-	protected FileInformationType makeFileInformationType(Long id, ExchangeType exchangeType, String groupSenderId) {
+	protected FileInformationType makeFileInformationType(Long id, ExchangeType exchangeType, String groupSenderId, LocalDateTime groupTS) {
 
 		FileInformationType fileInfoType = new FileInformationType();
 
@@ -454,32 +449,10 @@ public class AbstractTestFileGenerator  {
 		fileInfoType.setGroupControlNumber(strId5 + "-GCN");
 		//Calendar to String to XMLGregorianCalendar for testing
 		//Real data will be String to XMLGregorianCalendar
-		fileInfoType.setGroupTimeStamp(getXMLGregorianCalendar(DATETIME.getMillis()));
+		fileInfoType.setGroupTimeStamp(DateTimeUtil.getXMLGregorianCalendar(groupTS));
 		String versionNum = "23"; //See bem.xsd 
 		fileInfoType.setVersionNumber(versionNum);
 		return fileInfoType;
-	}
-
-	/**
-	 * Converts a Long millis into an instance of XMLGregorianCalendar
-	 * Marshalled output format is determined by XSD type:
-	 * - xsd:dateTime  YYYY-MM-DDTHH:MM:SS (with no timezone) 
-	 * - xsd:date      YYYY-MM-DD (with no time and no timezone)
-	 * @param millis
-	 * @return
-	 */
-	protected XMLGregorianCalendar getXMLGregorianCalendar(Long millis) {
-		XMLGregorianCalendar xmlGregCal = null;
-		if (millis == null) {
-			return xmlGregCal;
-		} else {
-			GregorianCalendar gc = new GregorianCalendar();
-			gc.setTimeInMillis(millis);
-			xmlGregCal = dfInstance.newXMLGregorianCalendar(gc);
-			xmlGregCal.setTimezone(DatatypeConstants.FIELD_UNDEFINED);
-			xmlGregCal.setMillisecond(DatatypeConstants.FIELD_UNDEFINED);
-			return xmlGregCal;
-		}
 	}
 
 

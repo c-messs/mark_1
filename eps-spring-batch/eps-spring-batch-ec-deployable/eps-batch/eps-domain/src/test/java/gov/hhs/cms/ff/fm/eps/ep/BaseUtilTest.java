@@ -10,7 +10,9 @@ import gov.cms.dsh.bem.MemberRelatedInfoType;
 import gov.cms.dsh.bem.MemberType;
 
 import java.math.BigDecimal;
-import java.util.GregorianCalendar;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 
 import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
@@ -18,20 +20,19 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import junit.framework.TestCase;
 
-import org.joda.time.DateTime;
-
 public abstract class BaseUtilTest extends TestCase {
 
-	protected static final DateTime DATETIME = new DateTime();
-	protected static final int YEAR = DATETIME.getYear();
-
-	protected final DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
-	protected final DateTime JAN_15 = new DateTime(YEAR, 1, 15, 0, 0);
-	protected final DateTime JAN_31 = new DateTime(YEAR, 1, 31, 0, 0);
-	protected final DateTime FEB_1 = new DateTime(YEAR, 2, 1, 0, 0);
-	protected final DateTime FEB_MAX = new DateTime(YEAR, 2, FEB_1.dayOfMonth().getMaximumValue(), 0, 0);
-	protected final DateTime MAR_1 = new DateTime(YEAR, 3, 1, 0, 0);
-	protected final DateTime MAR_31 = new DateTime(YEAR, 3, 31, 0, 0);
+	protected static final LocalDate DATE = LocalDate.now();
+	protected static final LocalDateTime DATETIME = LocalDateTime.now();
+	protected static final int YEAR = DATE.getYear();
+	
+	protected final LocalDate JAN_1 = LocalDate.of(YEAR, 1, 1);
+	protected final LocalDate JAN_15 = LocalDate.of(YEAR, 1, 15);
+	protected final LocalDate JAN_31 = LocalDate.of(YEAR, 1, 31);
+	protected final LocalDate FEB_1 = LocalDate.of(YEAR, 2, 1);
+	protected final LocalDate FEB_MAX = DATE.with(TemporalAdjusters.lastDayOfMonth());
+	protected final LocalDate MAR_1 = LocalDate.of(YEAR, 3, 1);
+	protected final LocalDate MAR_31 = LocalDate.of(YEAR, 3, 31);
 
 	// Key Financial Elements
 	protected final String APTC = "APTC";
@@ -58,27 +59,52 @@ public abstract class BaseUtilTest extends TestCase {
 	public void tearDown() throws Exception {
 
 	}
-
-
-	protected XMLGregorianCalendar getXMLGregorianCalendar(org.joda.time.DateTime date) {
+	
+	
+	
+	/**
+	 * Converts a java.LocalDateTime into an instance of XMLGregorianCalendar
+	 * 
+	 * Marshalled output format is determined by XSD type:
+	 * - xsd:date      YYYY-MM-DD (with no time and no timezone)
+	 * @param date
+	 * @return
+	 */
+	protected XMLGregorianCalendar getXMLGregorianCalendar(LocalDate localDate) {
 		XMLGregorianCalendar xmlGregCal = null;
-		if (date == null) {
-			return xmlGregCal;
-		} else {
-			GregorianCalendar gc = new GregorianCalendar();
-			gc.setTimeInMillis(date.getMillis());
-			xmlGregCal = dfInstance.newXMLGregorianCalendar(gc);
+		if (localDate != null) {
+			xmlGregCal = dfInstance.newXMLGregorianCalendar(localDate.toString());
+			xmlGregCal.setTime(0, 0, 0);
 			xmlGregCal.setTimezone(DatatypeConstants.FIELD_UNDEFINED);
 			xmlGregCal.setMillisecond(DatatypeConstants.FIELD_UNDEFINED);
-			return xmlGregCal;
 		}
+		return xmlGregCal;
 	}
+	
+	protected XMLGregorianCalendar getXMLGregorianCalendar(LocalDateTime localDT) {
+		XMLGregorianCalendar xmlGregCal = null;
+		if (localDT != null) {
+			xmlGregCal = dfInstance.newXMLGregorianCalendar(localDT.toString());
+			xmlGregCal.setTimezone(DatatypeConstants.FIELD_UNDEFINED);
+			xmlGregCal.setMillisecond(DatatypeConstants.FIELD_UNDEFINED);
+		}
+		return xmlGregCal;
+	}
+	
+	protected LocalDate getLocalDateFromXmlGC(XMLGregorianCalendar xmlGC) {
 
-	protected DateTime getDateTimeFromXmlGC(XMLGregorianCalendar xmlGC) {
-
-		DateTime dtTime = null;
+		LocalDate dt = null;
 		if (xmlGC != null ) {
-			dtTime = new DateTime(xmlGC.toGregorianCalendar().getTime());
+			dt = xmlGC.toGregorianCalendar().toZonedDateTime().toLocalDate();
+		}
+		return dt;
+	}
+	
+	protected LocalDateTime getLocalDateTimeFromXmlGC(XMLGregorianCalendar xmlGC) {
+
+		LocalDateTime dtTime = null;
+		if (xmlGC != null ) {
+			dtTime = xmlGC.toGregorianCalendar().toZonedDateTime().toLocalDateTime();
 		}
 		return dtTime;
 	}
@@ -102,7 +128,7 @@ public abstract class BaseUtilTest extends TestCase {
 	}
 
 
-	protected MemberType makeSubscriber(String id, String variantId, DateTime ebd, DateTime esd, BigDecimal csr) {
+	protected MemberType makeSubscriber(String id, String variantId, LocalDate ebd, LocalDate esd, BigDecimal csr) {
 
 		MemberType subscriber = new MemberType();
 		subscriber.setMemberInformation(new MemberRelatedInfoType());
@@ -133,7 +159,7 @@ public abstract class BaseUtilTest extends TestCase {
 		return member;
 	}
 
-	protected AdditionalInfoType makeAdditionalInfoType(String type, DateTime esd, DateTime eed, BigDecimal amt) {
+	protected AdditionalInfoType makeAdditionalInfoType(String type, LocalDate esd, LocalDate eed, BigDecimal amt) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
 		ait.setEffectiveStartDate(getXMLGregorianCalendar(esd));
@@ -152,7 +178,7 @@ public abstract class BaseUtilTest extends TestCase {
 		return ait;
 	}
 	
-	protected AdditionalInfoType makeAdditionalInfoType(String type, DateTime esd, DateTime eed, String txt) {
+	protected AdditionalInfoType makeAdditionalInfoType(String type, LocalDate esd, LocalDate eed, String txt) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
 		ait.setEffectiveStartDate(getXMLGregorianCalendar(esd));

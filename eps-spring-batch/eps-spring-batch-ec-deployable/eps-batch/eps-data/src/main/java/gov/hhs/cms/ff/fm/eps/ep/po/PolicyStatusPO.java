@@ -1,6 +1,6 @@
 package gov.hhs.cms.ff.fm.eps.ep.po;
 
-import org.joda.time.DateTime;
+import java.time.LocalDateTime;
 
 
 
@@ -11,27 +11,35 @@ import org.joda.time.DateTime;
 public class PolicyStatusPO extends GenericPolicyPO<PolicyStatusPO> {
 
 	//Excluded from HashCode and Equals
-	private DateTime transDateTime;
+	private LocalDateTime transDateTime;
 
 	//Attributes included in HashCode and Equals.
 	private String insuranacePolicyStatusTypeCd;
 
-
 	/**
 	 * @return the transDateTime
 	 */
-	public DateTime getTransDateTime() {
+	public LocalDateTime getTransDateTime() {
 		return transDateTime;
 	}
+
 	/**
 	 * @param transDateTime the transDateTime to set
 	 */
-	public void setTransDateTime(DateTime transDateTime) {
+	public void setTransDateTime(LocalDateTime transDateTime) {
 		this.transDateTime = transDateTime;
-	}	
+	}
+
+	/**
+	 * @return the insuranacePolicyStatusTypeCd
+	 */
 	public String getInsuranacePolicyStatusTypeCd() {
 		return insuranacePolicyStatusTypeCd;
 	}
+
+	/**
+	 * @param insuranacePolicyStatusTypeCd the insuranacePolicyStatusTypeCd to set
+	 */
 	public void setInsuranacePolicyStatusTypeCd(String insuranacePolicyStatusTypeCd) {
 		this.insuranacePolicyStatusTypeCd = insuranacePolicyStatusTypeCd;
 	}
@@ -49,7 +57,7 @@ public class PolicyStatusPO extends GenericPolicyPO<PolicyStatusPO> {
 						: insuranacePolicyStatusTypeCd.hashCode());
 		return result;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
@@ -69,7 +77,6 @@ public class PolicyStatusPO extends GenericPolicyPO<PolicyStatusPO> {
 				.equals(other.insuranacePolicyStatusTypeCd))
 			return false;
 		return true;
-	}
-
+	}	
 
 }

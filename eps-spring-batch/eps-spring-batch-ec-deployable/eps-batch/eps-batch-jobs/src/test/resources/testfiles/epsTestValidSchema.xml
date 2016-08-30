@@ -9,7 +9,7 @@
     <ns0:BenefitEnrollmentMaintenance>
         <ns0:TransactionInformation>
             <ns0:ControlNumber>6678</ns0:ControlNumber>
-            <ns0:CurrentTimeStamp>2014-02-03T18:05:00</ns0:CurrentTimeStamp>
+            <ns0:CurrentTimeStamp>2014-02-03T18:05:00.090215-04:00</ns0:CurrentTimeStamp>
             <ns0:ExchangeCode>Individual</ns0:ExchangeCode>
         </ns0:TransactionInformation>
         <ns0:Issuer>
@@ -326,7 +326,7 @@
     <ns0:BenefitEnrollmentMaintenance>
         <ns0:TransactionInformation>
             <ns0:ControlNumber>6688</ns0:ControlNumber>
-            <ns0:CurrentTimeStamp>2014-02-03T18:05:00</ns0:CurrentTimeStamp>
+            <ns0:CurrentTimeStamp>2014-02-03T18:05:00.090215-04:00</ns0:CurrentTimeStamp>
             <ns0:ExchangeCode>Individual</ns0:ExchangeCode>
             <ns0:TransactionCode>ConfirmEnrollment</ns0:TransactionCode>
             <ns0:MaintenanceEffectiveDate>2013-12-02</ns0:MaintenanceEffectiveDate>

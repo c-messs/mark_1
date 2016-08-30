@@ -10,9 +10,9 @@ import gov.hhs.cms.ff.fm.eps.ep.BEMDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.enums.InsuranceApplicationType;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyVersionPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
-import org.joda.time.DateTime;
+import java.time.LocalDateTime;
 
 import com.accenture.foundation.common.exception.ApplicationException;
 /**
@@ -44,7 +44,7 @@ public class PolicyVersionMapper {
 
 			if (bem.getTransactionInformation() != null) {
 				if (bem.getTransactionInformation().getCurrentTimeStamp() != null) {
-					po.setTransDateTime(EpsDateUtils.getDateTimeFromXmlGC(bem.getTransactionInformation().getCurrentTimeStamp()));
+					po.setTransDateTime(DateTimeUtil.getLocalDateTimeFromXmlGC(bem.getTransactionInformation().getCurrentTimeStamp()));
 				}
 
 				po.setTransControlNum(bem.getTransactionInformation().getControlNumber());
@@ -58,7 +58,7 @@ public class PolicyVersionMapper {
 						throw new ApplicationException(EProdEnum.EPROD_99.getCode(), nfEx);
 					}
 				}
-				po.setSourceVersionDateTime(EpsDateUtils.getDateTimeFromXmlGC(bem.getTransactionInformation().getPolicySnapshotDateTime()));
+				po.setSourceVersionDateTime(DateTimeUtil.getLocalDateTimeFromXmlGC(bem.getTransactionInformation().getPolicySnapshotDateTime()));
 			}
 
 			// txnMessageID is set in PolicyDataService.saveBEM
@@ -70,8 +70,8 @@ public class PolicyVersionMapper {
 				po.setIssuerTaxPayerId(issuer.getTaxPayerIdentificationNumber());
 			}
 
-			po.setMaintenanceStartDateTime(new DateTime());
-			po.setMaintenanceEndDateTime(EpsDateUtils.HIGHDATE);
+			po.setMaintenanceStartDateTime(LocalDateTime.now());
+			po.setMaintenanceEndDateTime(DateTimeUtil.HIGHDATE);
 		}
 
 		return po;
@@ -95,8 +95,8 @@ public class PolicyVersionMapper {
 
 			HealthCoverageDatesType healthCoverageDates = BEMDataUtil.getHealthCoverageDatesType(subscriber);
 			if (healthCoverageDates != null) {
-				po.setPremiumPaidToEndDate(EpsDateUtils.getDateTimeFromXmlGC(healthCoverageDates.getPremiumPaidToDateEnd()));
-				po.setLastPremiumPaidDate(EpsDateUtils.getDateTimeFromXmlGC(healthCoverageDates.getLastPremiumPaidDate()));			
+				po.setPremiumPaidToEndDate(DateTimeUtil.getLocalDateFromXmlGC(healthCoverageDates.getPremiumPaidToDateEnd()));
+				po.setLastPremiumPaidDate(DateTimeUtil.getLocalDateFromXmlGC(healthCoverageDates.getLastPremiumPaidDate()));			
 			}
 
 			po.setPlanID(BEMDataUtil.getPlanID(subscriber));

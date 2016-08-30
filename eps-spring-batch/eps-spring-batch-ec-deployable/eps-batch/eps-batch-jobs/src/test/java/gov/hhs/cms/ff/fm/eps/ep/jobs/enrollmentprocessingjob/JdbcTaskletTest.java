@@ -4,6 +4,7 @@
 package gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,8 +61,7 @@ public class JdbcTaskletTest extends TestCase {
 		
 		jdbcTasklet.setJdbcTemplate(jdbcTemplate);
 		
-		sqlArray.add(sql);
-		sqlArray.add(sql2); 
+		sqlArray.addAll(Arrays.asList(sql, sql2));
 		
 		jdbcTasklet.setSqls(sqlArray);
 	}

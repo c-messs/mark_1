@@ -10,9 +10,9 @@ import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberVersionPO;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import org.joda.time.DateTime;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.PreparedStatementCallback;
@@ -68,15 +68,14 @@ public class PolicyMemberVersionDaoImpl extends GenericEpsDao<PolicyMemberVersio
 		
 		if (member.getPolicyMemberVersionId() != null) {
 
-			DateTime msd = member.getMaintenanceStartDateTime();
-			final Timestamp msdMiunusOneMilli = new Timestamp(msd.getMillis() - 1l);
+			final LocalDateTime msd = member.getMaintenanceStartDateTime();
 			final long prevId = member.getPolicyMemberVersionId();
 			final String userId = userVO.getUserId();
 			
 			jdbcTemplate.execute(this.updatePolicyMemberVersion, new PreparedStatementCallback<Boolean>() {
 				@Override
 				public Boolean doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
-					ps.setTimestamp(1, msdMiunusOneMilli);
+					ps.setTimestamp(1, Timestamp.valueOf(msd.minusNanos(1000000)));
 					ps.setString(2, userId);
 					ps.setLong(3, prevId);
 					return ps.execute();

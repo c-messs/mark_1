@@ -46,7 +46,7 @@ public class PolicyVersionSearchCriteriaVO {
 	 */
 	public String getLogMessage() {
 
-		String str = " GroupPolicyNumber(exchangePolicyId)=" + exchangePolicyId +
+		String str = " exchangePolicyId=" + exchangePolicyId +
 				", subscriberStateCd=" + subscriberStateCd;
 		return str;
 	}

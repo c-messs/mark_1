@@ -10,10 +10,10 @@ import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.services.impl.FFMMemberDAOImpl;
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -209,7 +209,7 @@ public class MemberDataDAOImplTest extends BaseServicesTest {
 	}
 
 
-	private PolicyMemberDatePO makePolicyMemberDatePO(Long pmvId, DateTime pmsd, DateTime pmed) {
+	private PolicyMemberDatePO makePolicyMemberDatePO(Long pmvId, LocalDate pmsd, LocalDate pmed) {
 
 		PolicyMemberDatePO po = new PolicyMemberDatePO();
 

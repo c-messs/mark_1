@@ -1,7 +1,7 @@
 package gov.hhs.cms.ff.fm.eps.ep.dao.mappers;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberDatePO;
-import gov.hhs.cms.ff.fm.eps.rap.util.DataCommonUtil;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,8 +21,8 @@ public class PolicyMemberDateRowMapper  implements RowMapper<PolicyMemberDatePO>
 		PolicyMemberDatePO po = new PolicyMemberDatePO();
 
 		po.setPolicyMemberVersionId(rs.getLong("POLICYMEMBERVERSIONID"));
-		po.setPolicyMemberStartDate(DataCommonUtil.convertToDateTime(rs.getDate("POLICYMEMBERSTARTDATE")));
-		po.setPolicyMemberEndDate(DataCommonUtil.convertToDateTime(rs.getDate("POLICYMEMBERENDDATE")));
+		po.setPolicyMemberStartDate(DateTimeUtil.getLocalDateFromSqlDate(rs.getDate("POLICYMEMBERSTARTDATE")));
+		po.setPolicyMemberEndDate(DateTimeUtil.getLocalDateFromSqlDate(rs.getDate("POLICYMEMBERENDDATE")));
 
 		return po;		
 	}

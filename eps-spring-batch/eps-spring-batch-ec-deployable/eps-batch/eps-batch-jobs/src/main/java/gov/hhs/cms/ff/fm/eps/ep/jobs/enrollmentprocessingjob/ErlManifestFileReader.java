@@ -15,6 +15,8 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.PolicyVersionDao;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -23,7 +25,6 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobExecution;
@@ -102,14 +103,18 @@ public class ErlManifestFileReader implements ItemReader<BatchRunControl> {
 			
 			manifestInfo = new BatchRunControl();
 			manifestInfo.setBatchRunControlId(manifestDataMap.get(EPSConstants.JOB_ID));
-			manifestInfo.setHighWaterMarkStartDateTime(
-					DateTime.parse(manifestDataMap.get(EPSConstants.BEGIN_HIGH_WATER_MARK)));
-			manifestInfo.setHighWaterMarkEndDateTime(
-					new DateTime(manifestDataMap.get(EPSConstants.END_HIGH_WATER_MARK)));
-			manifestInfo.setBatchStartDateTime(
-					new DateTime(manifestDataMap.get(EPSConstants.JOB_START_TIME)));
-			manifestInfo.setBatchEndDateTime(
-					new DateTime(manifestDataMap.get(EPSConstants.JOB_END_TIME)));	
+			
+			// Manifest dates contain timezone and do not parse with just LocalDateTime, hence ZonedDateTime parsing.
+			ZonedDateTime begHwmkZdt = ZonedDateTime.parse(manifestDataMap.get(EPSConstants.BEGIN_HIGH_WATER_MARK));
+			ZonedDateTime endHwmkZdt = ZonedDateTime.parse(manifestDataMap.get(EPSConstants.END_HIGH_WATER_MARK));
+			ZonedDateTime jobStartZdt = ZonedDateTime.parse(manifestDataMap.get(EPSConstants.JOB_START_TIME));
+			ZonedDateTime jobEndZdt = ZonedDateTime.parse(manifestDataMap.get(EPSConstants.JOB_END_TIME));
+
+			manifestInfo.setHighWaterMarkStartDateTime(begHwmkZdt.toLocalDateTime());
+			manifestInfo.setHighWaterMarkEndDateTime(endHwmkZdt.toLocalDateTime());
+			manifestInfo.setBatchStartDateTime(jobStartZdt.toLocalDateTime());
+			manifestInfo.setBatchEndDateTime(jobEndZdt.toLocalDateTime());
+			
 			manifestInfo.setRecordCountQuantity(
 					Integer.valueOf(manifestDataMap.get(EPSConstants.RECORD_COUNT)));
 			manifestInfo.setPreAuditExtractCompletionInd(
@@ -142,7 +147,7 @@ public class ErlManifestFileReader implements ItemReader<BatchRunControl> {
 					
 				if(isPreAuditDataProcessed()) {
 					//Query PV And log PVD
-					DateTime maxPolicyMaintDateTime = policyVersionDao.getLatestPolicyMaintenanceStartDateTime();
+					LocalDateTime maxPolicyMaintDateTime = policyVersionDao.getLatestPolicyMaintenanceStartDateTime();
 					
 					LOG.info("Max Policy MaintenanceStartDateTime in EPS for the latest pre-Audit ingest: " + maxPolicyMaintDateTime);
 					

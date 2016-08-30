@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
 		<artifactId>eps</artifactId>
-		<version>25.0.0-SNAPSHOT</version>	
+		<version>26.0.0-SNAPSHOT</version>	
 	</parent>
 	<artifactId>eps-business</artifactId>
 	<name>eps-business</name>
@@ -89,6 +89,15 @@
 			<artifactId>eps-domain</artifactId>
 			<scope>compile</scope>
 		</dependency>
+		
+		<!-- test related dependencies -->
+	<!-- 	<dependency>
+			<groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
+			<artifactId>eps-domain</artifactId>
+			<version>${project.version}</version> 
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>-->
 
 		<!-- spring dependencies -->
 		<dependency>
@@ -140,9 +149,9 @@
 		</dependency>
 	</dependencies>
 	<scm>
- 		<connection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-business</connection>
- 		<developerConnection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-business</developerConnection>
- 		<url>https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-business</url>
+ 		<connection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-business</connection>
+ 		<developerConnection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-business</developerConnection>
+ 		<url>https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-business</url>
  	</scm>
 </project>
 

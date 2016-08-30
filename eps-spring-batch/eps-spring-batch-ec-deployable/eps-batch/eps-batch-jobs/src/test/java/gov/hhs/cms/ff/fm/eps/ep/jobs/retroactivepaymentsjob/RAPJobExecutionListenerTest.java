@@ -6,19 +6,15 @@ package gov.hhs.cms.ff.fm.eps.ep.jobs.retroactivepaymentsjob;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
-import gov.hhs.cms.ff.fm.eps.rap.dao.BatchProcessDAO;
-import gov.hhs.cms.ff.fm.eps.rap.domain.BatchProcessLog;
-import gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.joda.time.DateTime;
@@ -35,6 +31,14 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
+import gov.hhs.cms.ff.fm.eps.rap.dao.BatchProcessDAO;
+import gov.hhs.cms.ff.fm.eps.rap.dao.RapDao;
+import gov.hhs.cms.ff.fm.eps.rap.domain.BatchProcessLog;
+import gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants;
+import gov.hhs.cms.ff.fm.eps.rap.util.RapProcessingHelper;
+import junit.framework.TestCase;
+
 /**
  * Test class for RAPJobExecutionListener
  * 
@@ -47,6 +51,7 @@ public class RAPJobExecutionListenerTest extends TestCase {
 	private RapJobExecutionListener rapJobExecutionListener;
 	private BatchProcessDAO mockBatchProcessDAO;
 	private JdbcTemplate mockJdbcTemplate;
+	private RapDao mockRapDao;
 	
 	@Before
 	public void setup() {
@@ -58,6 +63,9 @@ public class RAPJobExecutionListenerTest extends TestCase {
 		
 		mockJdbcTemplate = EasyMock.createMock(JdbcTemplate.class);
 		rapJobExecutionListener.setJdbcTemplate(mockJdbcTemplate);
+		
+		mockRapDao = EasyMock.createMock(RapDao.class);
+		rapJobExecutionListener.setRapDao(mockRapDao);
 	}
 
 	/**
@@ -77,8 +85,10 @@ public class RAPJobExecutionListenerTest extends TestCase {
 
 		mockBatchProcessDAO.insertBatchProcessLog(EasyMock.anyObject(BatchProcessLog.class));
 		expectLastCall();
-		
 		replay(mockBatchProcessDAO);
+		
+		expect(mockRapDao.getProrationConfiguration()).andReturn(Collections.emptyList()).anyTimes();
+		replay(mockRapDao);
 		
 		JobInstance jobInst = new JobInstance(9999L,"retroActivePaymentsJob");
 		
@@ -114,6 +124,9 @@ public class RAPJobExecutionListenerTest extends TestCase {
 		mockBatchProcessDAO.insertBatchProcessLog(EasyMock.anyObject(BatchProcessLog.class));
 		expectLastCall();
 		replay(mockBatchProcessDAO);
+		
+		expect(mockRapDao.getProrationConfiguration()).andReturn(Collections.emptyList()).anyTimes();
+		replay(mockRapDao);
 
 		JobInstance jobInst = new JobInstance(9999L,"retroActivePaymentsJob");
 		
@@ -138,20 +151,18 @@ public class RAPJobExecutionListenerTest extends TestCase {
 		.andReturn(null).anyTimes();
 		expect(mockBatchProcessDAO.getNextBatchBusinessIdSeq(EasyMock.anyString()))
 		.andReturn(-1).anyTimes();
-
-		
 		
 		EasyMock.expect(mockJdbcTemplate.update(EasyMock.anyString())).andReturn(1);
 		EasyMock.expect(mockJdbcTemplate.queryForObject(
 				EasyMock.anyString(), EasyMock.isA(Timestamp.class.getClass()))).andReturn(new Timestamp(System.currentTimeMillis()));
-
 		replay(mockJdbcTemplate);
-		
 		
 		mockBatchProcessDAO.insertBatchProcessLog(EasyMock.anyObject(BatchProcessLog.class));
 		expectLastCall();
-		
 		replay(mockBatchProcessDAO);
+		
+		expect(mockRapDao.getProrationConfiguration()).andReturn(Collections.emptyList()).anyTimes();
+		replay(mockRapDao);
 		
 		JobInstance jobInst = new JobInstance(9999L,"retroActivePaymentsJob");
 		
@@ -219,10 +230,8 @@ public class RAPJobExecutionListenerTest extends TestCase {
 	@Test
 	public void testRapBeforeJobWhenRapJobAlreadyRunning() throws Exception {
 		
-		
 		List<String> blockConcurrentJobExecutionList = new ArrayList<String>();
 		blockConcurrentJobExecutionList.add("aptcCsrUfRollupJob,aptcCsrUfIssuerTransitionJob");
-
 		
 		Map<String,List<String>> blockConcurrentJobExecutionMap = new HashMap<String,List<String>>();
 		blockConcurrentJobExecutionMap.put("RAP", blockConcurrentJobExecutionList);
@@ -242,10 +251,11 @@ public class RAPJobExecutionListenerTest extends TestCase {
 		.andReturn(runningJobs);
 		
 		mockBatchProcessDAO.insertBatchProcessLog(EasyMock.anyObject(BatchProcessLog.class));
-		
 		expectLastCall();
 		replay(mockBatchProcessDAO);
 		
+		expect(mockRapDao.getProrationConfiguration()).andReturn(Collections.emptyList()).anyTimes();
+		replay(mockRapDao);
 		
 		final Map<String, JobParameter> params = new LinkedHashMap<String, JobParameter>();
 	    params.put("type", new JobParameter("RAP"));
@@ -312,6 +322,9 @@ public class RAPJobExecutionListenerTest extends TestCase {
 		expectLastCall();
 		replay(mockBatchProcessDAO);
 		
+		expect(mockRapDao.getProrationConfiguration()).andReturn(Collections.emptyList()).anyTimes();
+		replay(mockRapDao);
+		
 		JobInstance jobInst = new JobInstance(9999L,"retroActivePaymentsJob");
 		JobExecution jobEx = new JobExecution(jobInst, null);
 		jobEx.setStartTime(DateTime.now().toDate());
@@ -343,6 +356,8 @@ public class RAPJobExecutionListenerTest extends TestCase {
 		mockBatchProcessDAO.insertBatchProcessLog(EasyMock.anyObject(BatchProcessLog.class));
 		expectLastCall();
 		replay(mockBatchProcessDAO);
+		expect(mockRapDao.getProrationConfiguration()).andReturn(Collections.emptyList()).anyTimes();
+		replay(mockRapDao);
 		
 		final Map<String, JobParameter> params = new LinkedHashMap<String, JobParameter>();
 	    params.put("type", new JobParameter("RAP"));
@@ -365,7 +380,6 @@ public class RAPJobExecutionListenerTest extends TestCase {
 	 */
 	@Test(expected=com.accenture.foundation.common.exception.EnvironmentException.class)
 	public void testRapStageBeforeJob_SQLException_BatchProcessLog_Insert() throws Exception {
-
 		
 		EasyMock.expect(mockJdbcTemplate.update(EasyMock.anyString())).andReturn(1);
 		EasyMock.expect(mockJdbcTemplate.queryForObject(
@@ -382,12 +396,9 @@ public class RAPJobExecutionListenerTest extends TestCase {
 		
 		replay(mockBatchProcessDAO);
 		
-
-		
 		final Map<String, JobParameter> params = new LinkedHashMap<String, JobParameter>();
 	    params.put("type", new JobParameter("RAPSTAGE"));
 	    JobParameters jobParameters = new JobParameters(params);
-		
 		
 		JobInstance jobInst = new JobInstance(9999L,"retroActivePaymentsJob");
 		JobExecution jobEx = new JobExecution(jobInst, jobParameters);
@@ -415,10 +426,7 @@ public class RAPJobExecutionListenerTest extends TestCase {
 		.andReturn(-1).anyTimes();
 		mockBatchProcessDAO.insertBatchProcessLog(EasyMock.anyObject(BatchProcessLog.class));
 		expectLastCall().andThrow(new SQLException());
-		
 		replay(mockBatchProcessDAO);
-		
-
 		
 		final Map<String, JobParameter> params = new LinkedHashMap<String, JobParameter>();
 	    params.put("type", new JobParameter("RAP"));
@@ -467,7 +475,6 @@ public class RAPJobExecutionListenerTest extends TestCase {
 	}
 	
 	
-	
 	/**
 	 * 
 	 * Test method for
@@ -494,6 +501,80 @@ public class RAPJobExecutionListenerTest extends TestCase {
 
 		assertNotNull("ApplicationException expected via annotation", jobEx);
 	}
+	
+	//@Test
+	public void test_getStateProrationConfiguration() {
+		
+		StateProrationConfiguration stConfigExpected = new StateProrationConfiguration();
+		stConfigExpected.setStateCd("VA");
+		stConfigExpected.setMarketYear(new DateTime().getYear());
+		stConfigExpected.setProrationTypeCd("2");
+		
+		Map<String, StateProrationConfiguration> stateCdMap = new HashMap<>();
+		
+		stateCdMap.put(stConfigExpected.getStateCd(), stConfigExpected);
+		
+		RapProcessingHelper.getStateProrationConfigMap().put(stConfigExpected.getMarketYear(), stateCdMap);
+		
+		StateProrationConfiguration stateConfigActual = 
+				RapProcessingHelper.getStateProrationConfiguration(stConfigExpected.getMarketYear(), stConfigExpected.getStateCd());
+		
+		assertEquals("ProrationTypeCd", stConfigExpected.getProrationTypeCd(), stateConfigActual.getProrationTypeCd());	
+	}
+	
+	@Test
+	public void testRAPStageBeforeJob_loadStateProrationConfiguration() throws Exception {
+
+		expect(mockBatchProcessDAO.getJobInstanceForBatchProcess(EasyMock.anyString()))
+		.andReturn(null).anyTimes();
+		expect(mockBatchProcessDAO.getNextBatchBusinessIdSeq(EasyMock.anyString()))
+		.andReturn(-1).anyTimes();
+		
+		EasyMock.expect(mockJdbcTemplate.update(EasyMock.anyString())).andReturn(1);
+		EasyMock.expect(mockJdbcTemplate.queryForObject(
+				EasyMock.anyString(), EasyMock.isA(Timestamp.class.getClass()))).andReturn(new Timestamp(System.currentTimeMillis()));
+		replay(mockJdbcTemplate);
+		
+		mockBatchProcessDAO.insertBatchProcessLog(EasyMock.anyObject(BatchProcessLog.class));
+		expectLastCall();
+		replay(mockBatchProcessDAO);
+		
+		StateProrationConfiguration stConfigExpected = new StateProrationConfiguration();
+		stConfigExpected.setStateCd("VA");
+		stConfigExpected.setMarketYear(new DateTime().getYear());
+		stConfigExpected.setProrationTypeCd("2");
+		
+		List<StateProrationConfiguration> stateConfigList = new ArrayList<StateProrationConfiguration>();
+		stateConfigList.add(stConfigExpected);
+
+		expect(mockRapDao.getProrationConfiguration()).andReturn(stateConfigList).anyTimes();
+		replay(mockRapDao);
+		
+		JobInstance jobInst = new JobInstance(9999L,"retroActivePaymentsJob");
+		
+		final Map<String, JobParameter> params = new LinkedHashMap<String, JobParameter>();
+	    params.put("test", new JobParameter(RapConstants.JOBPARAMETER_TYPE_RAPSTAGE));
+	    JobParameters jobParameters = new JobParameters(params);
+	    
+		JobExecution jobEx = new JobExecution(jobInst, jobParameters);
+		
+		jobEx.setStartTime(DateTime.now().toDate());
+		
+		rapJobExecutionListener.setUpdatePendingRecordSql("UPDATE SOME DATA");
+		rapJobExecutionListener.setSelectMaxPolicyMaintStartDateTime("SELECT SOME DATA");
+	
+		rapJobExecutionListener.beforeJob(jobEx);
+
+		assertNotNull("batchBusinessId", jobEx.getExecutionContext().getString("batchBusinessId"));
+		assertTrue("Batch Business ID will be of format RAPSTAGE%", jobEx.getExecutionContext().getString("batchBusinessId").startsWith("RAPRETRO"));
+		
+		StateProrationConfiguration stateConfigActual = 
+				RapProcessingHelper.getStateProrationConfiguration(stConfigExpected.getMarketYear(), stConfigExpected.getStateCd());
+		
+		assertEquals("ProrationTypeCd", stConfigExpected.getProrationTypeCd(), stateConfigActual.getProrationTypeCd());	
+
+	}
+
 	
 	/**
 	 * Test method for

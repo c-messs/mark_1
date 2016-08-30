@@ -11,6 +11,8 @@ import gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.data.util.TestDataU
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -26,7 +28,6 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.Marshaller;
 import javax.xml.namespace.QName;
 
-import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -113,8 +114,8 @@ public class BemProcessorStepTest extends BaseBatchTest {
 		Long mockBatchId = TestDataUtil.getRandomNumber(8);
 		StepExecution stepExec = null;
 		Long jobId = null;
-		String expectedFileNm = makeFileNameERL(APR_1);
-		DateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
+		String expectedFileNm = makeFileNameERL(APR_1_4am);
+		LocalDateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
 		ExchangeType expectedExchangeType = ExchangeType.FFM;
 		ProcessedToDbInd expectedProcessedToDbInd = ProcessedToDbInd.S;
 
@@ -123,7 +124,7 @@ public class BemProcessorStepTest extends BaseBatchTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = TestDataUtil.getRandom3DigitNumber().intValue();
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = MAR_1;
+		LocalDateTime versionDt = MAR_1_3am;
 
 		try {
 			insertBatchRunControl("N");
@@ -147,7 +148,7 @@ public class BemProcessorStepTest extends BaseBatchTest {
 	
 			// Insert "this" transaction into the bemIndexer for processing
 			BenefitEnrollmentMaintenanceDTO bemDTO = makeBemDTO(mockBatchId, transMsgId, versionNumStr, versionDt, PolicyStatus.EFFECTUATED_2, exchangePolicyId);
-			bemDTO.getBem().getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId, versionDt));
+			bemDTO.getBem().getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId));
 	
 			bemDTO.setBemXml(marshallBEM(bemDTO.getBem()));
 	
@@ -200,8 +201,8 @@ public class BemProcessorStepTest extends BaseBatchTest {
 		Long jobId = null;
 		Long mockBatchId = TestDataUtil.getRandomNumber(8);
 
-		String expectedFileNm = makeFileNameERL(APR_1);
-		DateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
+		String expectedFileNm = makeFileNameERL(APR_1_4am);
+		LocalDateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
 		ExchangeType expectedExchangeType = ExchangeType.FFM;
 		//String expectedErrMsg = "EPROD-29";
 		ProcessedToDbInd expectedProcessedToDbInd = ProcessedToDbInd.R;
@@ -211,7 +212,7 @@ public class BemProcessorStepTest extends BaseBatchTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = 1;
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = MAR_1;
+		LocalDateTime versionDt = MAR_1_3am;
 		
 		try {
 			insertBatchRunControl("N");
@@ -240,7 +241,7 @@ public class BemProcessorStepTest extends BaseBatchTest {
 	
 			// Insert "this" transaction into the bemIndexer for processing
 			BenefitEnrollmentMaintenanceDTO bemDTO = makeBemDTO(mockBatchId, transMsgIdV1a, "1", versionDt, PolicyStatus.EFFECTUATED_2, exchangePolicyId);
-			bemDTO.getBem().getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId, versionDt.plusSeconds(1)));
+			bemDTO.getBem().getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId));
 	
 			bemDTO.setBemXml(marshallBEM(bemDTO.getBem()));
 	
@@ -302,8 +303,8 @@ public class BemProcessorStepTest extends BaseBatchTest {
 		Long jobId = null;
 		Long mockBatchId = TestDataUtil.getRandomNumber(8);
 
-		String expectedFileNm = makeFileNameERL(APR_1);
-		DateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
+		String expectedFileNm = makeFileNameERL(APR_1_4am);
+		LocalDateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
 		ExchangeType expectedExchangeType = ExchangeType.FFM;
 		//String expectedErrMsg = "EPROD-29";
 		ProcessedToDbInd expectedProcessedToDbInd = ProcessedToDbInd.R;
@@ -313,7 +314,7 @@ public class BemProcessorStepTest extends BaseBatchTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = 1;
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = MAR_1;
+		LocalDateTime versionDt = MAR_1_3am;
 		
 		try {
 			insertBatchRunControl("N");
@@ -344,7 +345,7 @@ public class BemProcessorStepTest extends BaseBatchTest {
 	
 			// Insert "this" transaction into the bemIndexer for processing
 			BenefitEnrollmentMaintenanceDTO bemDTOV1 = makeBemDTO(mockBatchId, transMsgIdV1a, "1", versionDt, PolicyStatus.EFFECTUATED_2, exchangePolicyId);
-			bemDTOV1.getBem().getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId, versionDt.plusSeconds(1)));
+			bemDTOV1.getBem().getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId));
 	
 			bemDTOV1.setBemXml(marshallBEM(bemDTOV1.getBem()));
 	
@@ -367,7 +368,7 @@ public class BemProcessorStepTest extends BaseBatchTest {
 	
 			// Insert "this" transaction into the bemIndexer for processing
 			BenefitEnrollmentMaintenanceDTO bemDTOV3 = makeBemDTO(mockBatchId, transMsgIdV3a, "3", versionDt, PolicyStatus.EFFECTUATED_2, exchangePolicyId);
-			bemDTOV3.getBem().getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId, versionDt.plusSeconds(3)));
+			bemDTOV3.getBem().getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId));
 	
 			bemDTOV3.setBemXml(marshallBEM(bemDTOV3.getBem()));
 	
@@ -428,8 +429,8 @@ public class BemProcessorStepTest extends BaseBatchTest {
 		Long jobId = null;
 		Long mockBatchId = TestDataUtil.getRandomNumber(8);
 
-		String expectedFileNm = makeFileNameERL(APR_1);
-		DateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
+		String expectedFileNm = makeFileNameERL(APR_1_4am);
+		LocalDateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
 		ExchangeType expectedExchangeType = ExchangeType.FFM;
 		//String expectedErrMsg = "EPROD-29";
 
@@ -439,7 +440,7 @@ public class BemProcessorStepTest extends BaseBatchTest {
 		String planId = exchangePolicyId.substring(0, 14);
 		int versionNum = 1;
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = MAR_1;
+		LocalDateTime versionDt = MAR_1_3am;
 		
 		try {
 			insertBatchRunControl("N");
@@ -454,7 +455,7 @@ public class BemProcessorStepTest extends BaseBatchTest {
 			versionNum++;
 			versionNumStr = versionNum +"";
 			insertBatchTransMsg(transMsgIdV2, mockBatchId, ProcessedToDbInd.Y, stateCd, exchangePolicyId, hiosId, versionNumStr, versionDt);
-			insertPolicyVersion(transMsgIdV2, DateTime.now(), DateTime.now(), DateTime.now().plusYears(1), stateCd, exchangePolicyId, hiosId, planId, new Integer(2));
+			insertPolicyVersion(transMsgIdV2, LocalDateTime.now(), LocalDate.now(), LocalDate.now().plusYears(1), stateCd, exchangePolicyId, hiosId, planId, new Integer(2));
 			
 			// Insert a transMsg and Batch and use versionId representing the first transaction that was skipped and will be processed as "this" transaction.
 			Long transMsgIdV1 = insertTransMsg(mockBatchId);
@@ -464,7 +465,7 @@ public class BemProcessorStepTest extends BaseBatchTest {
 	
 			// Insert "this" transaction into the bemIndexer for processing
 			BenefitEnrollmentMaintenanceDTO bemDTO = makeBemDTO(mockBatchId, transMsgIdV1, "1", versionDt, PolicyStatus.EFFECTUATED_2, exchangePolicyId);
-			bemDTO.getBem().getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId, versionDt.plusSeconds(1)));
+			bemDTO.getBem().getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId));
 	
 			bemDTO.setBemXml(marshallBEM(bemDTO.getBem()));
 	

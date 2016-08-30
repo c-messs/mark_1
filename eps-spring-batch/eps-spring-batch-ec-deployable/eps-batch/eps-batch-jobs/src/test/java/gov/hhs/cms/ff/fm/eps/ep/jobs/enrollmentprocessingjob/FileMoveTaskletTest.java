@@ -3,13 +3,9 @@
  */
 package gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
-
-import junit.framework.TestCase;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -26,6 +22,8 @@ import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import junit.framework.TestCase;
 
 /**
  * Unit test class for the FileMoveTasklet.java
@@ -141,21 +139,4 @@ public class FileMoveTaskletTest extends TestCase {
 		FileUtils.deleteQuietly(new File(ROOT_TEST_PATH));
 	}
 	
-	//@Test
-	public void writeFile() throws IOException, InterruptedException {
-		File file = new File("/Prototype834files/input/FFM.IC834.D140522.T185506987.xml");
-		if (!file.exists()) {
-			file.createNewFile();
-		}
-		FileWriter fw = new FileWriter(file.getAbsoluteFile());
-		BufferedWriter bw = new BufferedWriter(fw);
-		for (int i=0; i<=50; i++) {
-			bw.write("Line "+i);
-			System.out.println("\n\n Wrote: "+i);
-			Thread.sleep(1000);
-		}
-		bw.close();
-		System.out.println("Done");
-
-	}
 }

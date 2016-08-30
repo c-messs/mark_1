@@ -17,12 +17,13 @@ import gov.cms.dsh.bem.TransactionInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -35,42 +36,42 @@ public class BEMDataUtilTest extends BaseUtilTest {
 	@Test
 	public void test_getBenefitBeginDate_NullMember() {
 
-		DateTime expected = null;
+		LocalDate expected = null;
 		MemberType member = null;
-		DateTime actual = BEMDataUtil.getBenefitBeginDate(member);
+		LocalDate actual = BEMDataUtil.getBenefitBeginDate(member);
 		assertEquals("BenefitBeginDate", expected, actual);
 	}
 
 	@Test
 	public void test_getBenefitBeginDate_EmptyHC() {
 
-		DateTime expected = null;
+		LocalDate expected = null;
 		MemberType member = new MemberType();
 		member.getHealthCoverage().add(new HealthCoverageType());
-		DateTime actual = BEMDataUtil.getBenefitBeginDate(member);
+		LocalDate actual = BEMDataUtil.getBenefitBeginDate(member);
 		assertEquals("BenefitBeginDate", expected, actual);
 	}
 
 	@Test
 	public void test_getBenefitBeginDate_EmptyHCDates() {
 
-		DateTime expected = null;
+		LocalDate expected = null;
 		MemberType member = new MemberType();
 		member.getHealthCoverage().add(new HealthCoverageType());
 		member.getHealthCoverage().get(0).setHealthCoverageDates(new HealthCoverageDatesType());
-		DateTime actual = BEMDataUtil.getBenefitBeginDate(member);
+		LocalDate actual = BEMDataUtil.getBenefitBeginDate(member);
 		assertEquals("BenefitBeginDate", expected, actual);
 	}
 
 	@Test
 	public void test_getBenefitBeginDate() {
 
-		DateTime expected = MAR_1;
+		LocalDate expected = MAR_1;
 		MemberType member = new MemberType();
 		member.getHealthCoverage().add(new HealthCoverageType());
 		member.getHealthCoverage().get(0).setHealthCoverageDates(new HealthCoverageDatesType());
 		member.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitBeginDate(getXMLGregorianCalendar(expected));
-		DateTime actual = BEMDataUtil.getBenefitBeginDate(member);
+		LocalDate actual = BEMDataUtil.getBenefitBeginDate(member);
 		assertEquals("BenefitBeginDate", expected, actual);
 	}
 	
@@ -78,42 +79,42 @@ public class BEMDataUtilTest extends BaseUtilTest {
 	@Test
 	public void test_getBenefitEndDate_NullMember() {
 
-		DateTime expected = null;
+		LocalDate expected = null;
 		MemberType member = null;
-		DateTime actual = BEMDataUtil.getBenefitEndDate(member);
+		LocalDate actual = BEMDataUtil.getBenefitEndDate(member);
 		assertEquals("BenefitEndDate", expected, actual);
 	}
 
 	@Test
 	public void test_getBenefitEndDate_EmptyHC() {
 
-		DateTime expected = null;
+		LocalDate expected = null;
 		MemberType member = new MemberType();
 		member.getHealthCoverage().add(new HealthCoverageType());
-		DateTime actual = BEMDataUtil.getBenefitEndDate(member);
+		LocalDate actual = BEMDataUtil.getBenefitEndDate(member);
 		assertEquals("BenefitEndDate", expected, actual);
 	}
 
 	@Test
 	public void test_getBenefitEndDate_EmptyHCDates() {
 
-		DateTime expected = null;
+		LocalDate expected = null;
 		MemberType member = new MemberType();
 		member.getHealthCoverage().add(new HealthCoverageType());
 		member.getHealthCoverage().get(0).setHealthCoverageDates(new HealthCoverageDatesType());
-		DateTime actual = BEMDataUtil.getBenefitEndDate(member);
+		LocalDate actual = BEMDataUtil.getBenefitEndDate(member);
 		assertEquals("BenefitEndDate", expected, actual);
 	}
 
 	@Test
 	public void test_getBenefitEndDate() {
 
-		DateTime expected = MAR_1;
+		LocalDate expected = MAR_1;
 		MemberType member = new MemberType();
 		member.getHealthCoverage().add(new HealthCoverageType());
 		member.getHealthCoverage().get(0).setHealthCoverageDates(new HealthCoverageDatesType());
 		member.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitEndDate(getXMLGregorianCalendar(expected));
-		DateTime actual = BEMDataUtil.getBenefitEndDate(member);
+		LocalDate actual = BEMDataUtil.getBenefitEndDate(member);
 		assertEquals("BenefitEndDate", expected, actual);
 	}
 
@@ -122,7 +123,7 @@ public class BEMDataUtilTest extends BaseUtilTest {
 
 		XMLGregorianCalendar expectedEligBegin = null;
 		MemberType member = null;
-		DateTime actualEligBegin = BEMDataUtil.getEligibilityBeginDate(member);
+		LocalDate actualEligBegin = BEMDataUtil.getEligibilityBeginDate(member);
 		assertEquals("EligibilityBeginDate", expectedEligBegin, actualEligBegin);
 	}
 
@@ -131,7 +132,7 @@ public class BEMDataUtilTest extends BaseUtilTest {
 
 		XMLGregorianCalendar expectedEligBegin = null;
 		MemberType member = new MemberType();
-		DateTime actualEligBegin = BEMDataUtil.getEligibilityBeginDate(member);
+		LocalDate actualEligBegin = BEMDataUtil.getEligibilityBeginDate(member);
 		assertEquals("EligibilityBeginDate", expectedEligBegin, actualEligBegin);
 	}
 
@@ -141,18 +142,18 @@ public class BEMDataUtilTest extends BaseUtilTest {
 		XMLGregorianCalendar expectedEligBegin = null;
 		MemberType member = new MemberType();
 		member.setMemberRelatedDates(new MemberRelatedDatesType());
-		DateTime actualEligBegin = BEMDataUtil.getEligibilityBeginDate(member);
+		LocalDate actualEligBegin = BEMDataUtil.getEligibilityBeginDate(member);
 		assertEquals("EligibilityBeginDate", expectedEligBegin, actualEligBegin);
 	}
 
 	@Test
 	public void test_getEligibilityBeginDate() {
 
-		DateTime expected = JAN_1;
+		LocalDate expected = JAN_1;
 		MemberType member = new MemberType();
 		member.setMemberRelatedDates(new MemberRelatedDatesType());
 		member.getMemberRelatedDates().setEligibilityBeginDate(getXMLGregorianCalendar(expected));
-		DateTime actualEligBegin = BEMDataUtil.getEligibilityBeginDate(member);
+		LocalDate actualEligBegin = BEMDataUtil.getEligibilityBeginDate(member);
 		assertEquals("EligibilityBeginDate", expected, actualEligBegin); 
 	}
 	
@@ -161,7 +162,7 @@ public class BEMDataUtilTest extends BaseUtilTest {
 
 		XMLGregorianCalendar expected = null;
 		MemberType member = null;
-		DateTime actual = BEMDataUtil.getEligibilityEndDate(member);
+		LocalDate actual = BEMDataUtil.getEligibilityEndDate(member);
 		assertEquals("EligibilityEndDate", expected, actual);
 	}
 
@@ -171,7 +172,7 @@ public class BEMDataUtilTest extends BaseUtilTest {
 
 		XMLGregorianCalendar expected = null;
 		MemberType member = new MemberType();
-		DateTime actual = BEMDataUtil.getEligibilityEndDate(member);
+		LocalDate actual = BEMDataUtil.getEligibilityEndDate(member);
 		assertEquals("EligibilityEndDate", expected, actual);
 	}
 
@@ -181,54 +182,54 @@ public class BEMDataUtilTest extends BaseUtilTest {
 		XMLGregorianCalendar expected = null;
 		MemberType member = new MemberType();
 		member.setMemberRelatedDates(new MemberRelatedDatesType());
-		DateTime actual = BEMDataUtil.getEligibilityEndDate(member);
+		LocalDate actual = BEMDataUtil.getEligibilityEndDate(member);
 		assertEquals("EligibilityEndDate", expected, actual);
 	}
 
 	@Test
 	public void test_getEligibilityEndDate() {
 
-		DateTime expected = JAN_1;
+		LocalDate expected = JAN_1;
 		MemberType member = new MemberType();
 		member.setMemberRelatedDates(new MemberRelatedDatesType());
 		member.getMemberRelatedDates().setEligibilityEndDate(getXMLGregorianCalendar(expected));
-		DateTime actual = BEMDataUtil.getEligibilityEndDate(member);
+		LocalDate actual = BEMDataUtil.getEligibilityEndDate(member);
 		assertEquals("EligibilityEndDate", expected, actual); 
 	}
 
 	
 	@Test
 	public void test_getPolicyStartDate_null() {
-		DateTime expected = null;
+		LocalDate expected = null;
 		BenefitEnrollmentMaintenanceType bem = null;
-		DateTime actual = BEMDataUtil.getPolicyStartDate(bem);
+		LocalDate actual = BEMDataUtil.getPolicyStartDate(bem);
 		Assert.assertEquals("getPolicyStartDate null", expected, actual);
 	}
 
 	@Test
 	public void test_getPolicyStartDate_empty() {
-		DateTime expected = null;
+		LocalDate expected = null;
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
-		DateTime actual = BEMDataUtil.getPolicyStartDate(bem);
+		LocalDate actual = BEMDataUtil.getPolicyStartDate(bem);
 		Assert.assertEquals("getPolicyStartDate null", expected, actual);
 	}
 
 	@Test
 	public void test_getPolicyStartDate_empty_dates() {
-		DateTime expected = null;
+		LocalDate expected = null;
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setPolicyInfo(new PolicyInfoType());
-		DateTime actual = BEMDataUtil.getPolicyStartDate(bem);
+		LocalDate actual = BEMDataUtil.getPolicyStartDate(bem);
 		Assert.assertEquals("getPolicyStartDate null", expected, actual);
 	}
 
 	@Test
 	public void test_getPolicyStartDate() {
-		DateTime expected = JAN_15;
+		LocalDate expected = JAN_15;
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setPolicyInfo(new PolicyInfoType());
 		bem.getPolicyInfo().setPolicyStartDate(getXMLGregorianCalendar(expected));
-		DateTime actual = BEMDataUtil.getPolicyStartDate(bem);
+		LocalDate actual = BEMDataUtil.getPolicyStartDate(bem);
 		Assert.assertEquals("getPolicyStartDate null", expected, actual);
 	}
 
@@ -819,8 +820,8 @@ public class BEMDataUtilTest extends BaseUtilTest {
 
 		AdditionalInfoType expected = null;
 		MemberType subscriber = new MemberType();
-		DateTime esd = JAN_1;
-		DateTime eed = null;
+		LocalDate esd = JAN_1;
+		LocalDate eed = null;
 		String txt = "VA0";
 		subscriber.getAdditionalInfo().add(makeAdditionalInfoType(RA, esd, eed, txt));
 		AdditionalInfoType actual = BEMDataUtil.getFinancialElements(subscriber.getAdditionalInfo());
@@ -839,8 +840,8 @@ public class BEMDataUtilTest extends BaseUtilTest {
 	public void test_getFinancialElements() {
 
 		BigDecimal expectedAmount = new BigDecimal("1.11");
-		DateTime esd = JAN_1;
-		DateTime eed = null;
+		LocalDate esd = JAN_1;
+		LocalDate eed = null;
 
 		AdditionalInfoType expected = makeAdditionalInfoType(TPA, esd, eed, expectedAmount);
 
@@ -854,17 +855,17 @@ public class BEMDataUtilTest extends BaseUtilTest {
 
 	@Test
 	public void test_getPolicyEndDate_null() {
-		DateTime expected = null;
+		LocalDate expected = null;
 		BenefitEnrollmentMaintenanceType bem = null;
-		DateTime actual = BEMDataUtil.getPolicyEndDate(bem);
+		LocalDate actual = BEMDataUtil.getPolicyEndDate(bem);
 		Assert.assertEquals("getPolicyEndDate null", expected, actual);
 	}
 
 	@Test
 	public void test_getPolicyEndDate_empty() {
-		DateTime expected = null;
+		LocalDate expected = null;
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
-		DateTime actual = BEMDataUtil.getPolicyEndDate(bem);
+		LocalDate actual = BEMDataUtil.getPolicyEndDate(bem);
 		Assert.assertEquals("getPolicyEndDate null", expected, actual);
 	}
 	
@@ -879,29 +880,29 @@ public class BEMDataUtilTest extends BaseUtilTest {
 
 	@Test
 	public void test_getPolicyEndDate_empty_dates() {
-		DateTime expected = null;
+		LocalDate expected = null;
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setPolicyInfo(new PolicyInfoType());
 		bem.getPolicyInfo().setPolicyEndDate(getXMLGregorianCalendar(expected));
-		DateTime actual = BEMDataUtil.getPolicyEndDate(bem);
+		LocalDate actual = BEMDataUtil.getPolicyEndDate(bem);
 		Assert.assertEquals("getPolicyEndDate null", expected, actual);
 	}
 
 	@Test
 	public void test_getPolicyEndDate() {
-		DateTime expected = JAN_15;
+		LocalDate expected = JAN_15;
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setPolicyInfo(new PolicyInfoType());
 		bem.getPolicyInfo().setPolicyEndDate(getXMLGregorianCalendar(expected));
-		DateTime actual = BEMDataUtil.getPolicyEndDate(bem);
+		LocalDate actual = BEMDataUtil.getPolicyEndDate(bem);
 		Assert.assertEquals("getPolicyEndDate null", expected, actual);
 	}
 
 	@Test
 	public void test_isKeyFinancialElementPresent() {
 		boolean expected = true;
-		DateTime esd = JAN_1;
-		DateTime eed = null;
+		LocalDate esd = JAN_1;
+		LocalDate eed = null;
 		BigDecimal anyAmt = new BigDecimal(".99");
 		MemberType member = new MemberType();
 		member.getAdditionalInfo().add(makeAdditionalInfoType(PA1, esd, eed, anyAmt));
@@ -913,8 +914,8 @@ public class BEMDataUtilTest extends BaseUtilTest {
 	@Test
 	public void test_isKeyFinancialElementPresent_False() {
 		boolean expected = false;
-		DateTime esd = JAN_1;
-		DateTime eed = null;
+		LocalDate esd = JAN_1;
+		LocalDate eed = null;
 		BigDecimal anyAmt = new BigDecimal(".99");
 		MemberType member = new MemberType();
 		member.getAdditionalInfo().add(makeAdditionalInfoType(PA1, esd, eed, anyAmt));
@@ -1033,7 +1034,7 @@ public class BEMDataUtilTest extends BaseUtilTest {
 	@Test
 	public void test_getCurrentTimeStamp() {
 		
-		XMLGregorianCalendar expected = getXMLGregorianCalendar(new DateTime()); 
+		XMLGregorianCalendar expected = getXMLGregorianCalendar(LocalDateTime.now()); 
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setTransactionInformation(new TransactionInformationType());
 		bem.getTransactionInformation().setCurrentTimeStamp(expected);

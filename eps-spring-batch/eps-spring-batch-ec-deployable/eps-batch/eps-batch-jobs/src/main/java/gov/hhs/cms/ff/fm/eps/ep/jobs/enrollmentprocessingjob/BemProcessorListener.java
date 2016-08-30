@@ -175,10 +175,13 @@ public class BemProcessorListener implements StepExecutionListener  {
             }
         });
     	List<FileSystemResource> resources = new ArrayList<FileSystemResource>();
-		for (File file:dirFiles) {
-			FileSystemResource fsResource = new FileSystemResource(file);
-			resources.add(fsResource);
-		}
+    	
+    	if (dirFiles != null) {
+			for (File file:dirFiles) {
+				FileSystemResource fsResource = new FileSystemResource(file);
+				resources.add(fsResource);
+			}
+    	}
 		return resources.toArray(new Resource[resources.size()]);
 	}
 

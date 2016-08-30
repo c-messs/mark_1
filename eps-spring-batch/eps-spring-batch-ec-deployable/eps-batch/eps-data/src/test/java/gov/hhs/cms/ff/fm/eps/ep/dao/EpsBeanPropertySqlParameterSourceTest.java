@@ -2,20 +2,27 @@ package gov.hhs.cms.ff.fm.eps.ep.dao;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyVersionPO;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
+
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import junit.framework.TestCase;
 
-import org.joda.time.DateTime;
 import org.junit.Test;
 
 public class EpsBeanPropertySqlParameterSourceTest extends TestCase {
 	
-	private final DateTime DATETIME = new DateTime();
-	private final int YEAR = DATETIME.getYear();
+	protected final LocalDate DATE = LocalDate.now();
+	protected final LocalDateTime DATETIME = LocalDateTime.now();
+	protected final int YEAR = DATE.getYear();
 	
-	protected final DateTime APR_1 = new DateTime(YEAR, 4, 1, 0, 0);
-	protected final DateTime MAY_1 = new DateTime(YEAR, 5, 1, 0, 0);
+	protected final LocalDate APR_1 = LocalDate.of(YEAR, 4, 1);
+	protected final LocalDate MAY_1 = LocalDate.of(YEAR, 5, 1);
 	
+	protected final LocalDateTime APR_1_4am = LocalDateTime.of(YEAR, 4, 1, 4, 0, 0, 444444000);
 	
 	@Test
 	public void testConstructor() {
@@ -54,7 +61,7 @@ public class EpsBeanPropertySqlParameterSourceTest extends TestCase {
 	@Test
 	public void testGetValue() {
 		
-		DateTime expectedPolicyMemberEligStartDate = APR_1;
+		LocalDate expectedPolicyMemberEligStartDate = APR_1;
 		String expected = "7777777";
 		Long expectedTransMsgId = Long.valueOf(666666);
 		UserVO userVO = new UserVO(expected);
@@ -66,7 +73,8 @@ public class EpsBeanPropertySqlParameterSourceTest extends TestCase {
 		assertNotNull("default userVO", actual.getValue("createBy"));
 		assertEquals("createBy user", expected, actual.getValue("createBy"));
 		assertEquals("lastModifiedBy user", expected, actual.getValue("lastModifiedBy"));
-		assertEquals("BenefitBeginDate", expectedPolicyMemberEligStartDate.toDate().toString(), actual.getValue("PolicyMemberEligStartDate").toString());
+		assertEquals("BenefitBeginDate", expectedPolicyMemberEligStartDate,
+				DateTimeUtil.getLocalDateFromSqlDate((Date) actual.getValue("PolicyMemberEligStartDate")));
 		assertNull("exchangeMemberID", actual.getValue("exchangeMemberID"));
 		assertNotNull("transMsgID", actual.getValue("transMsgID"));
 		assertEquals("transgMsgId", expectedTransMsgId, actual.getValue("transMsgID"));

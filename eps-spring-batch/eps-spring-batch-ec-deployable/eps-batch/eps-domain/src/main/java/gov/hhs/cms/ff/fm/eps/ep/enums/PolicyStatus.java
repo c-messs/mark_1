@@ -14,8 +14,9 @@ public enum PolicyStatus {
 	EFFECTUATED_2 ("2", "Effectuated"),
 	CANCELLED_3 ("3", "Cancelled"),
 	TERMINATED_4 ("4", "Terminated"),
-	SUPERSEDED_5 ("5", "Superseded")
-	;	
+	SUPERSEDED_5 ("5", "Superseded"),
+	SBMVOID_6 ("6", "SBM Void")
+	;
 	
 	private String value;
 	private String description;

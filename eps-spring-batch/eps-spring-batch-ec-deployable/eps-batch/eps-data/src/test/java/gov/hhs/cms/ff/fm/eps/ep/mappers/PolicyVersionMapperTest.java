@@ -18,9 +18,10 @@ import gov.hhs.cms.ff.fm.eps.ep.data.util.TestDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.enums.InsuranceApplicationType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyVersionPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
-import org.joda.time.DateTime;
+import java.time.LocalDate;
+
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -42,13 +43,13 @@ public class PolicyVersionMapperTest extends BaseMapperTest {
 		String name = "ZOE";
 
 		String expectedMGPI = "MGPI";
-		DateTime expectedPSD = JAN_1;
-		DateTime expectedPED = JUN_30;
+		LocalDate expectedPSD = JAN_1;
+		LocalDate expectedPED = JUN_30;
 		String expectedExchangePolicyId = TestDataUtil.getRandomNumberAsString(9);
 		BenefitEnrollmentMaintenanceType expectedBem = TestDataUtil.makeBenefitEnrollmentMaintenanceType(bemId, expectedMGPI, expectedPSD, expectedPED, PolicyStatus.EFFECTUATED_2, expectedExchangePolicyId);
 		
 		expectedBem.getTransactionInformation().setPolicySnapshotVersionNumber(TestDataUtil.getRandomNumberAsString(6));
-		expectedBem.getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(FEB_1));
+		expectedBem.getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(JUN_1_1am));
 		
 		String expectedHiosId = "22222";
 		String expectedState = "VA";
@@ -68,7 +69,7 @@ public class PolicyVersionMapperTest extends BaseMapperTest {
 		assertEquals("MarketplaceGroupPolicyId", expectedMGPI, po.getMarketplaceGroupPolicyId());
 
 		assertNotNull("maintenanceStartDateTime", po.getMaintenanceStartDateTime());
-		assertEquals("maintenanceEndDateTime",EpsDateUtils.HIGHDATE, po.getMaintenanceEndDateTime());
+		assertEquals("maintenanceEndDateTime",DateTimeUtil.HIGHDATE, po.getMaintenanceEndDateTime());
 
 		assertEquals("subscriberStateCd", expectedState , po.getSubscriberStateCd());
 		assertEquals("issuerPolicyId", BEMDataUtil.getInternalControlNumber(expectedMember), po.getIssuerPolicyId());
@@ -76,15 +77,15 @@ public class PolicyVersionMapperTest extends BaseMapperTest {
 		assertEquals("issuerSubscriberID", BEMDataUtil.getIssuerSubscriberID(expectedMember), po.getIssuerSubscriberID());
 		assertEquals("exchangePolicyId", expectedExchangePolicyId, po.getExchangePolicyId());
 		assertEquals("exchangeAssignedSubscriberID", expectedMember.getSubscriberID(), po.getExchangeAssignedSubscriberID());
-		assertEquals("TransDateTime", expectedBem.getTransactionInformation().getCurrentTimeStamp(), EpsDateUtils.getXMLGregorianCalendar(po.getTransDateTime()));
+		assertEquals("TransDateTime", expectedBem.getTransactionInformation().getCurrentTimeStamp(), DateTimeUtil.getXMLGregorianCalendar(po.getTransDateTime()));
 		assertEquals("TransControlNum", expectedBem.getTransactionInformation().getControlNumber(), po.getTransControlNum());
-		assertEquals("EligibilityStartDate", expectedMember.getMemberRelatedDates().getEligibilityBeginDate(), EpsDateUtils.getXMLGregorianCalendar(po.getEligibilityStartDate()));
-		assertEquals("EligibilityEndDate", expectedMember.getMemberRelatedDates().getEligibilityEndDate(), EpsDateUtils.getXMLGregorianCalendar(po.getEligibilityEndDate()));
+		assertEquals("EligibilityStartDate", expectedMember.getMemberRelatedDates().getEligibilityBeginDate(), DateTimeUtil.getXMLGregorianCalendar(po.getEligibilityStartDate()));
+		assertEquals("EligibilityEndDate", expectedMember.getMemberRelatedDates().getEligibilityEndDate(), DateTimeUtil.getXMLGregorianCalendar(po.getEligibilityEndDate()));
 		
 		HealthCoverageDatesType hcDates = BEMDataUtil.getHealthCoverageDatesType(expectedMember);
 
-		assertEquals("premiumPaidToEndDate", hcDates.getPremiumPaidToDateEnd(), EpsDateUtils.getXMLGregorianCalendar(po.getPremiumPaidToEndDate()));
-		assertEquals("lastPremiumPaidDate", hcDates.getLastPremiumPaidDate(), EpsDateUtils.getXMLGregorianCalendar(po.getLastPremiumPaidDate()));
+		assertEquals("premiumPaidToEndDate", hcDates.getPremiumPaidToDateEnd(), DateTimeUtil.getXMLGregorianCalendar(po.getPremiumPaidToEndDate()));
+		assertEquals("lastPremiumPaidDate", hcDates.getLastPremiumPaidDate(), DateTimeUtil.getXMLGregorianCalendar(po.getLastPremiumPaidDate()));
 		
 		assertEquals("planID", BEMDataUtil.getPlanID(expectedMember), po.getPlanID());
 
@@ -100,7 +101,7 @@ public class PolicyVersionMapperTest extends BaseMapperTest {
 		assertEquals("PolicySnapshotVersionNumber", expectedBem.getTransactionInformation().getPolicySnapshotVersionNumber(),
 				po.getSourceVersionId().toString());
 		assertEquals("PolicySnapshotDateTime", expectedBem.getTransactionInformation().getPolicySnapshotDateTime(),
-				EpsDateUtils.getXMLGregorianCalendar(po.getSourceVersionDateTime()));
+				DateTimeUtil.getXMLGregorianCalendar(po.getSourceVersionDateTime()));
 
 	}
 
@@ -112,7 +113,7 @@ public class PolicyVersionMapperTest extends BaseMapperTest {
 		BenefitEnrollmentMaintenanceType expectedBem = new BenefitEnrollmentMaintenanceType();
 		expectedBem.setTransactionInformation(new TransactionInformationType());
 		expectedBem.getTransactionInformation().setPolicySnapshotVersionNumber(TestDataUtil.getRandomNumberAsString(6) + "xxx");
-		expectedBem.getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(FEB_1));		
+		expectedBem.getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(FEB_1));		
 
 		try {
 			mapper.mapFFMToEPS(expectedBem);
@@ -140,7 +141,7 @@ public class PolicyVersionMapperTest extends BaseMapperTest {
 		assertNotNull("PolicyVersionPO", po);
 		assertAllAttributesNull(po);
 		assertNotNull("maintenanceStartDateTime", po.getMaintenanceStartDateTime());
-		assertEquals("maintenanceEndDateTime",EpsDateUtils.HIGHDATE, po.getMaintenanceEndDateTime());
+		assertEquals("maintenanceEndDateTime",DateTimeUtil.HIGHDATE, po.getMaintenanceEndDateTime());
 	}
 
 	@Test
@@ -152,7 +153,7 @@ public class PolicyVersionMapperTest extends BaseMapperTest {
 		assertNotNull("PolicyVersionPO", po);
 		assertAllAttributesNull(po);
 		assertNotNull("maintenanceStartDateTime", po.getMaintenanceStartDateTime());
-		assertEquals("maintenanceEndDateTime",EpsDateUtils.HIGHDATE, po.getMaintenanceEndDateTime());
+		assertEquals("maintenanceEndDateTime",DateTimeUtil.HIGHDATE, po.getMaintenanceEndDateTime());
 	}
 
 	@Test
@@ -164,7 +165,7 @@ public class PolicyVersionMapperTest extends BaseMapperTest {
 		assertNotNull("PolicyVersionPO", po);
 		assertAllAttributesNull(po);
 		assertNotNull("maintenanceStartDateTime", po.getMaintenanceStartDateTime());
-		assertEquals("maintenanceEndDateTime",EpsDateUtils.HIGHDATE, po.getMaintenanceEndDateTime());
+		assertEquals("maintenanceEndDateTime",DateTimeUtil.HIGHDATE, po.getMaintenanceEndDateTime());
 	}
 
 	@Test
@@ -182,7 +183,7 @@ public class PolicyVersionMapperTest extends BaseMapperTest {
 		assertNotNull("PolicyVersionPO", po);
 		assertAllAttributesNull(po);
 		assertNotNull("maintenanceStartDateTime", po.getMaintenanceStartDateTime());
-		assertEquals("maintenanceEndDateTime",EpsDateUtils.HIGHDATE, po.getMaintenanceEndDateTime());
+		assertEquals("maintenanceEndDateTime",DateTimeUtil.HIGHDATE, po.getMaintenanceEndDateTime());
 	}
 
 

@@ -3,7 +3,7 @@
  */
 package gov.hhs.cms.ff.fm.eps.ep;
 
-import org.joda.time.DateTime;
+import java.time.LocalDateTime;
 
 /**
  * Class to hold BatchRunControl table attributes
@@ -15,24 +15,23 @@ public class BatchRunControl {
 	
 	private String batchRunControlId;
 	private String extractFilePath;
-	private DateTime highWaterMarkStartDateTime;
-	private DateTime highWaterMarkEndDateTime;
+	private LocalDateTime highWaterMarkStartDateTime;
+	private LocalDateTime highWaterMarkEndDateTime;
 	private Integer recordCountQuantity;
 	private String preAuditExtractCompletionInd;
-	private DateTime batchStartDateTime;
-	private DateTime batchEndDateTime;
+	private LocalDateTime batchStartDateTime;
+	private LocalDateTime batchEndDateTime;
 	private Long jobInstanceId;
 	private String createdBy;
 	private String lastModifiedBy;
-	
 	/**
-	 * @return the batchRunControlIdentifier
+	 * @return the batchRunControlId
 	 */
 	public String getBatchRunControlId() {
 		return batchRunControlId;
 	}
 	/**
-	 * @param batchRunControlIdentifier the batchRunControlIdentifier to set
+	 * @param batchRunControlId the batchRunControlId to set
 	 */
 	public void setBatchRunControlId(String batchRunControlId) {
 		this.batchRunControlId = batchRunControlId;
@@ -52,25 +51,26 @@ public class BatchRunControl {
 	/**
 	 * @return the highWaterMarkStartDateTime
 	 */
-	public DateTime getHighWaterMarkStartDateTime() {
+	public LocalDateTime getHighWaterMarkStartDateTime() {
 		return highWaterMarkStartDateTime;
 	}
 	/**
 	 * @param highWaterMarkStartDateTime the highWaterMarkStartDateTime to set
 	 */
-	public void setHighWaterMarkStartDateTime(DateTime highWaterMarkStartDateTime) {
+	public void setHighWaterMarkStartDateTime(
+			LocalDateTime highWaterMarkStartDateTime) {
 		this.highWaterMarkStartDateTime = highWaterMarkStartDateTime;
 	}
 	/**
 	 * @return the highWaterMarkEndDateTime
 	 */
-	public DateTime getHighWaterMarkEndDateTime() {
+	public LocalDateTime getHighWaterMarkEndDateTime() {
 		return highWaterMarkEndDateTime;
 	}
 	/**
 	 * @param highWaterMarkEndDateTime the highWaterMarkEndDateTime to set
 	 */
-	public void setHighWaterMarkEndDateTime(DateTime highWaterMarkEndDateTime) {
+	public void setHighWaterMarkEndDateTime(LocalDateTime highWaterMarkEndDateTime) {
 		this.highWaterMarkEndDateTime = highWaterMarkEndDateTime;
 	}
 	/**
@@ -100,25 +100,25 @@ public class BatchRunControl {
 	/**
 	 * @return the batchStartDateTime
 	 */
-	public DateTime getBatchStartDateTime() {
+	public LocalDateTime getBatchStartDateTime() {
 		return batchStartDateTime;
 	}
 	/**
 	 * @param batchStartDateTime the batchStartDateTime to set
 	 */
-	public void setBatchStartDateTime(DateTime batchStartDateTime) {
+	public void setBatchStartDateTime(LocalDateTime batchStartDateTime) {
 		this.batchStartDateTime = batchStartDateTime;
 	}
 	/**
 	 * @return the batchEndDateTime
 	 */
-	public DateTime getBatchEndDateTime() {
+	public LocalDateTime getBatchEndDateTime() {
 		return batchEndDateTime;
 	}
 	/**
 	 * @param batchEndDateTime the batchEndDateTime to set
 	 */
-	public void setBatchEndDateTime(DateTime batchEndDateTime) {
+	public void setBatchEndDateTime(LocalDateTime batchEndDateTime) {
 		this.batchEndDateTime = batchEndDateTime;
 	}
 	/**
@@ -157,5 +157,6 @@ public class BatchRunControl {
 	public void setLastModifiedBy(String lastModifiedBy) {
 		this.lastModifiedBy = lastModifiedBy;
 	}
-
+	
+	
 }

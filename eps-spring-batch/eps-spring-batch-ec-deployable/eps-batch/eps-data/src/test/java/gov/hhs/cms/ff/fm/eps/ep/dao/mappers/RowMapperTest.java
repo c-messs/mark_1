@@ -4,6 +4,7 @@ import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentMaintenanceDTO;
 import gov.hhs.cms.ff.fm.eps.ep.dao.EpsBeanPropertyRowMapper;
 import gov.hhs.cms.ff.fm.eps.ep.po.ErrorWarningLogPO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.Test;
@@ -25,7 +26,8 @@ public class RowMapperTest extends BaseRowMapperTest {
 	public void test_BemDTORowMapper_TransMsgId_EQ_0() {
 
 		Long expected = null;
-		Long id = insertDailyBemIndexerMinimum();
+		LocalDateTime expectedFileDateTime = LocalDateTime.now();
+		Long id = insertDailyBemIndexerMinimum(expectedFileDateTime);
 		String sql = "SELECT * FROM DAILYBEMINDEXER WHERE BEMINDEXID = " + id;
 		List<BenefitEnrollmentMaintenanceDTO> actualList = jdbc.query(sql, new BemDTORowMapper());
 		assertEquals("actual row insert", 1, actualList.size());
@@ -51,7 +53,8 @@ public class RowMapperTest extends BaseRowMapperTest {
 	public void test_EpsBeanPropertyRowMapper_Ids_EQ_0() {
 
 		Long expected = null;
-		Long bemIndexId = insertDailyBemIndexerMinimum();
+		LocalDateTime expectedFileDateTime = LocalDateTime.now();
+		Long bemIndexId = insertDailyBemIndexerMinimum(expectedFileDateTime);
 		String sql = "SELECT * FROM DAILYBEMINDEXER WHERE BEMINDEXID = " + bemIndexId;
 		List<BenefitEnrollmentMaintenanceDTO> actualList = jdbc.query(sql,
 				new EpsBeanPropertyRowMapper<BenefitEnrollmentMaintenanceDTO>(BenefitEnrollmentMaintenanceDTO.class));
@@ -63,7 +66,7 @@ public class RowMapperTest extends BaseRowMapperTest {
 		assertEquals("Null SourceVersionId translated to '0'", expected, actual.getSourceVersionId());
 		assertEquals("Null IngestJobId translated to '0'", expected, actual.getIngestJobId());
 		assertEquals("SourceVersionDateTime", expected, actual.getSourceVersionDateTime());
-		assertEquals("FileNmDateTime", expected, actual.getFileNmDateTime());
+		assertEquals("FileNmDateTime", expectedFileDateTime, actual.getFileNmDateTime());
 	}
 
 }

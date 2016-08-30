@@ -4,9 +4,12 @@ package gov.hhs.cms.ff.fm.eps.rap.util;
  */
 
 
+import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
+import gov.hhs.cms.ff.fm.eps.ep.enums.ProrationType;
 import gov.hhs.cms.ff.fm.eps.rap.dao.RapDao;
 import gov.hhs.cms.ff.fm.eps.rap.domain.IssuerUserFeeRate;
+import gov.hhs.cms.ff.fm.eps.rap.domain.PolicyPremium;
 import gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDataDTO;
 
@@ -45,6 +48,10 @@ public class RapProcessingHelper {
 	public static final String INS_APPLTYPE_6 = "6";
 	
 	private static Map<String, Map<String, List<IssuerUserFeeRate>>> ufRateForRetroCoverageDateMap = new HashMap<String, Map<String, List<IssuerUserFeeRate>>>();
+
+	//StateProrationConfigurationMap Structure Map<coverageYear, Map<stateCd, StateProrationConfiguration>> 
+	private static Map<Integer, Map<String, StateProrationConfiguration>> stateProrationConfigMap = new HashMap<>();
+
 	private static final DateTimeFormatter dateFormat = DateTimeFormat.forPattern(DATE_FORMAT);
 	
 	/**
@@ -214,4 +221,123 @@ public class RapProcessingHelper {
 		return planId.substring(5, 7);
 	}
 	
+	/**
+	 * @return the stateProrationConfigMap
+	 */
+	public static Map<Integer, Map<String, StateProrationConfiguration>> getStateProrationConfigMap() {
+		return stateProrationConfigMap;
+	}
+
+	/**
+	 * Returns StateProrationConfiguration for the given coverageYear and stateCd if exists, otherwise returns null
+	 * @param coverageYear
+	 * @param stateCd
+	 * @return StateProrationConfiguration
+	 */
+	public static StateProrationConfiguration getStateProrationConfiguration(Integer coverageYear, String stateCd) {
+		
+		if(stateProrationConfigMap.get(coverageYear) != null) {
+			return stateProrationConfigMap.get(coverageYear).get(stateCd);
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * Determine whether the state is prorating for the Payment Transaction year
+	 * @param stateCode
+	 * @param paymentTransYear
+	 * @return
+	 */
+	public static ProrationType getProrationType(String stateCode, int paymentTransYear) {
+		
+		StateProrationConfiguration stateConfig = getStateProrationConfiguration(paymentTransYear, stateCode);
+		
+		if(stateConfig != null) {
+			
+			String prorationTypeCd = stateConfig.getProrationTypeCd();
+			
+			return ProrationType.getEnum(prorationTypeCd);
+		}
+		
+		return ProrationType.NON_PRORATING;
+	}
+
+	/**
+	 * Determine whether the SBM Premium records for the month has prorated amounts
+	 * 
+	 * @param subscriberStateCd
+	 * @param year
+	 * @param premiumRecs
+	 * @return
+	 */
+	public static boolean isSbmWithoutProratedAmounts(ProrationType proration,
+			List<PolicyPremium> premiumRecs) {
+
+		if(proration.equals(ProrationType.SBM_PRORATING)) {
+			return hasNoProratedAmounts(premiumRecs);
+		}
+		return false;
+	}
+	
+	/**
+	 * Determine whether the Premium records has prorated amounts
+	 * 
+	 * @param premiumRecs
+	 * @return
+	 */
+	public static boolean hasNoProratedAmounts(List<PolicyPremium> premiumRecs) {
+
+		long count = 
+				premiumRecs.stream()
+				.filter(premium -> ((premium.getProratedAptcAmount() != null && premium.getProratedAptcAmount().compareTo(BigDecimal.ZERO) != 0) 
+						|| (premium.getProratedCsrAmount() != null && premium.getProratedCsrAmount().compareTo(BigDecimal.ZERO) != 0)))
+				.count();
+		
+		if(count == 0) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Determine whether the Premium records has prorated csr amounts
+	 * 
+	 * @param premiumRecs
+	 * @return
+	 */
+	public static boolean hasNoProratedCsr(List<PolicyPremium> premiumRecs) {
+
+		long count = 
+				premiumRecs.stream()
+				.filter(premium -> (premium.getProratedCsrAmount() != null && premium.getProratedCsrAmount().compareTo(BigDecimal.ZERO) != 0))
+				.count();
+		
+		if(count == 0) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Determine whether the Premium records has prorated aptc amounts
+	 * 
+	 * @param premiumRecs
+	 * @return
+	 */
+	public static boolean hasNoProratedAptc(List<PolicyPremium> premiumRecs) {
+
+		long count = 
+				premiumRecs.stream()
+				.filter(premium -> (premium.getProratedAptcAmount() != null && premium.getProratedAptcAmount().compareTo(BigDecimal.ZERO) != 0))
+				.count();
+		
+		if(count == 0) {
+			return true;
+		}
+		
+		return false;
+	}
 }

@@ -2,6 +2,7 @@ package gov.hhs.cms.ff.fm.eps.ep.dao;
 
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,6 +57,24 @@ abstract public class GenericEpsDao<T> {
 			paramsList.add(new EpsBeanPropertySqlParameterSource(po, userVO));
 		}
 		return paramsList.toArray(new EpsBeanPropertySqlParameterSource[paramsList.size()]);
+	}
+	
+	protected int getIntValue(Integer i) {
+
+		int intValue = 0;
+		if (i != null) {
+			intValue = i.intValue();
+		}
+		return intValue;
+	}
+
+	protected Long getLongValue(BigDecimal n) {
+
+		Long lngValue = Long.valueOf(0);
+		if (n != null) {
+			lngValue = n.longValue();
+		}
+		return lngValue;
 	}
 	
 	/**

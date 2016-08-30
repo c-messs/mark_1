@@ -25,13 +25,15 @@ import gov.cms.dsh.bem.ResidentialAddressType;
 import gov.cms.dsh.bem.TransactionInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentRequestDTO;
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Random;
 
 import javax.xml.bind.JAXBContext;
@@ -63,27 +65,29 @@ public class TestDataUtil {
 
 	private static final SimpleDateFormat sdfXmlDateTime = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss");
 
-	private static final DateTime DATETIME = new DateTime();
-	private static final int YEAR = DATETIME.getYear();
+	protected static final LocalDate DATE = LocalDate.now();
+	protected static final LocalDateTime DATETIME = LocalDateTime.now();
+	protected static final int YEAR = DATE.getYear();
 
-	private static final DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
-	private static final DateTime JAN_15 = new DateTime(YEAR, 1, 15, 0, 0);
-	private static final DateTime JAN_31 = new DateTime(YEAR, 1, 31, 0, 0);
-	private static final DateTime FEB_1 = new DateTime(YEAR, 2, 1, 0, 0);
-	private static final DateTime FEB_2 = new DateTime(YEAR, 2, 2, 0, 0);
-	private static final DateTime JUN_29 = new DateTime(YEAR, 6, 29, 0, 0);
-	private static final DateTime JUN_30 = new DateTime(YEAR, 6, 30, 0, 0);
-	private static final DateTime JUL_4_1965 = new DateTime(1965, 7, 4, 0, 0);
-	private static final DateTime DEC_31 = new DateTime(YEAR, 12, 31, 0, 0);
+	
+	protected static final LocalDate JAN_1 = LocalDate.of(YEAR, 1, 1);
+	protected static final LocalDate JAN_15 = LocalDate.of(YEAR, 1, 15);
+	protected static final LocalDate JAN_31 = LocalDate.of(YEAR, 1, 31);
+	protected static final LocalDate FEB_1 = LocalDate.of(YEAR, 2, 1);
+	protected static final LocalDate FEB_2 = LocalDate.of(YEAR, 2, 2);
+	protected static final LocalDate JUN_29 = LocalDate.of(YEAR, 6, 29);
+	protected static final LocalDate JUN_30 = LocalDate.of(YEAR, 6, 30);
+	protected static final LocalDate JUL_4_1965 = LocalDate.of(YEAR, 7, 4);
+	protected static final LocalDate DEC_31 = LocalDate.of(YEAR, 12, 31);
 
 
-	private static DateTime birthDate = JUL_4_1965;
-	private static DateTime eligibilityBegin = FEB_1;
-	private static DateTime eligibilityEnd = JUN_30;
-	private static DateTime benefitBeginDate = FEB_2;
-	private static DateTime benefitEndDate = JUN_29;
-	private static DateTime lastPremiumPaidDate  = JAN_15;
-	private static DateTime premiumPaidToDateEnd = JAN_31;
+	private static LocalDate birthDate = JUL_4_1965;
+	private static LocalDate eligibilityBegin = FEB_1;
+	private static LocalDate eligibilityEnd = JUN_30;
+	private static LocalDate benefitBeginDate = FEB_2;
+	private static LocalDate benefitEndDate = JUN_29;
+	private static LocalDate lastPremiumPaidDate  = JAN_15;
+	private static LocalDate premiumPaidToDateEnd = JAN_31;
 
 	public static BenefitEnrollmentRequestDTO makeBenefitEnrollmentRequestDTO(Long berId, String groupSenderId) {
 
@@ -94,7 +98,7 @@ public class TestDataUtil {
 		return berDTO;		
 	}
 
-	public static BenefitEnrollmentMaintenanceType makeBenefitEnrollmentMaintenanceType(Long bemId, String mgpi, DateTime psd, DateTime ped, PolicyStatus policyStatus, String gpn) {
+	public static BenefitEnrollmentMaintenanceType makeBenefitEnrollmentMaintenanceType(Long bemId, String mgpi, LocalDate psd, LocalDate ped, PolicyStatus policyStatus, String gpn) {
 
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setPolicyInfo(makePolicyInfoType(mgpi, psd, ped, policyStatus, gpn));
@@ -114,12 +118,12 @@ public class TestDataUtil {
 		return bem;
 	}
 
-	public static PolicyInfoType makePolicyInfoType(String mgpi, DateTime psd, DateTime ped, PolicyStatus policyStatus, String gpn) {
+	public static PolicyInfoType makePolicyInfoType(String mgpi, LocalDate psd, LocalDate ped, PolicyStatus policyStatus, String gpn) {
 
 		PolicyInfoType policyInfo = new PolicyInfoType();
 		policyInfo.setMarketplaceGroupPolicyIdentifier(mgpi);
-		policyInfo.setPolicyStartDate(EpsDateUtils.getXMLGregorianCalendar(psd));
-		policyInfo.setPolicyEndDate(EpsDateUtils.getXMLGregorianCalendar(ped));
+		policyInfo.setPolicyStartDate(DateTimeUtil.getXMLGregorianCalendar(psd));
+		policyInfo.setPolicyEndDate(DateTimeUtil.getXMLGregorianCalendar(ped));
 		policyInfo.setPolicyStatus(policyStatus.getValue());
 		policyInfo.setGroupPolicyNumber(gpn);
 		return policyInfo;
@@ -135,7 +139,7 @@ public class TestDataUtil {
 		transInfoType.setControlNumber(controlNum);
 		//Calendar to String to XMLGregorianCalendar for testing
 		//Real data will be String to XMLGregorianCalendar
-		transInfoType.setCurrentTimeStamp(EpsDateUtils.getXMLGregorianCalendar(new DateTime()));
+		transInfoType.setCurrentTimeStamp(DateTimeUtil.getXMLGregorianCalendar(LocalDateTime.now()));
 		transInfoType.setExchangeCode(ExchangeCodeSimpleType.INDIVIDUAL);
 
 		return transInfoType;
@@ -246,8 +250,8 @@ public class TestDataUtil {
 
 		MemberRelatedDatesType memRelDatesType = new MemberRelatedDatesType();
 
-		memRelDatesType.setEligibilityBeginDate(EpsDateUtils.getXMLGregorianCalendar(eligibilityBegin));
-		memRelDatesType.setEligibilityEndDate(EpsDateUtils.getXMLGregorianCalendar(eligibilityEnd));
+		memRelDatesType.setEligibilityBeginDate(DateTimeUtil.getXMLGregorianCalendar(eligibilityBegin));
+		memRelDatesType.setEligibilityEndDate(DateTimeUtil.getXMLGregorianCalendar(eligibilityEnd));
 
 		return memRelDatesType;
 	}
@@ -319,7 +323,7 @@ public class TestDataUtil {
 		MemberDemographicsType memDemoType = new MemberDemographicsType();
 
 		memDemoType.setGenderCode(GenderCodeSimpleType.M);
-		memDemoType.setBirthDate(EpsDateUtils.getXMLGregorianCalendar(birthDate));
+		memDemoType.setBirthDate(DateTimeUtil.getXMLGregorianCalendar(birthDate));
 
 		return memDemoType;
 
@@ -359,10 +363,10 @@ public class TestDataUtil {
 
 		HealthCoverageDatesType healthCovDatesType = new HealthCoverageDatesType();
 
-		healthCovDatesType.setBenefitBeginDate(EpsDateUtils.getXMLGregorianCalendar(benefitBeginDate));
-		healthCovDatesType.setBenefitEndDate(EpsDateUtils.getXMLGregorianCalendar(benefitEndDate));
-		healthCovDatesType.setLastPremiumPaidDate(EpsDateUtils.getXMLGregorianCalendar(lastPremiumPaidDate));
-		healthCovDatesType.setPremiumPaidToDateEnd(EpsDateUtils.getXMLGregorianCalendar(premiumPaidToDateEnd));
+		healthCovDatesType.setBenefitBeginDate(DateTimeUtil.getXMLGregorianCalendar(benefitBeginDate));
+		healthCovDatesType.setBenefitEndDate(DateTimeUtil.getXMLGregorianCalendar(benefitEndDate));
+		healthCovDatesType.setLastPremiumPaidDate(DateTimeUtil.getXMLGregorianCalendar(lastPremiumPaidDate));
+		healthCovDatesType.setPremiumPaidToDateEnd(DateTimeUtil.getXMLGregorianCalendar(premiumPaidToDateEnd));
 
 		return healthCovDatesType;
 	}
@@ -376,7 +380,7 @@ public class TestDataUtil {
 		fileInfoType.setGroupControlNumber(id.toString());
 		//Calendar to String to XMLGregorianCalendar for testing
 		//Real data will be String to XMLGregorianCalendar
-		fileInfoType.setGroupTimeStamp(EpsDateUtils.getXMLGregorianCalendar(DATETIME));
+		fileInfoType.setGroupTimeStamp(DateTimeUtil.getXMLGregorianCalendar(DATETIME));
 		String versionNum = "23"; //See bem.xsd 
 		fileInfoType.setVersionNumber(versionNum);
 
@@ -403,8 +407,8 @@ public class TestDataUtil {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
 
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(JAN_1));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(DEC_31));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(JAN_1));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(DEC_31));
 		ait.setAPTCAmount(new BigDecimal("11.11"));
 		ait.setCSRAmount(new BigDecimal("22.22"));
 		ait.setTotalIndividualResponsibilityAmount(new BigDecimal("33.33"));
@@ -415,12 +419,12 @@ public class TestDataUtil {
 
 	}
 
-	public static AdditionalInfoType makeAdditionalInfoType(DateTime esd, DateTime eed, BigDecimal aptc, BigDecimal csr, BigDecimal tpa, BigDecimal tira, String ra) {
+	public static AdditionalInfoType makeAdditionalInfoType(LocalDate esd, LocalDate eed, BigDecimal aptc, BigDecimal csr, BigDecimal tpa, BigDecimal tira, String ra) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
 
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		ait.setAPTCAmount(aptc);
 		ait.setCSRAmount(csr);
 		ait.setTotalIndividualResponsibilityAmount(tira);

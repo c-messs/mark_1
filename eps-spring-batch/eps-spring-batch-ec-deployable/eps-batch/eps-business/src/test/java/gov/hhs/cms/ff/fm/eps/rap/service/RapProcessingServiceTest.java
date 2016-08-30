@@ -7,7 +7,9 @@ import static gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants.TRANSPERIOD_RETROACT
 import static gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants.UF;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
+
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
+import gov.hhs.cms.ff.fm.eps.ep.enums.ProrationType;
 import gov.hhs.cms.ff.fm.eps.rap.dao.RapDao;
 import gov.hhs.cms.ff.fm.eps.rap.domain.PolicyPremium;
 import gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants;
@@ -16,6 +18,7 @@ import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDetailDTO;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyPaymentTransDTO;
 import gov.hhs.cms.ff.fm.eps.rap.service.impl.RapProcessingServiceImpl;
 import gov.hhs.cms.ff.fm.eps.rap.util.CodeDecodesHelper;
+import gov.hhs.cms.ff.fm.eps.rap.util.RapProcessingHelper;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -30,6 +33,7 @@ import junit.framework.TestCase;
 import org.apache.commons.collections.CollectionUtils;
 import org.easymock.EasyMock;
 import org.joda.time.DateTime;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -76,7 +80,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment();
@@ -111,7 +114,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment_Zero_Amounts();
@@ -141,7 +143,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment_Null_Amounts();
@@ -171,7 +172,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment();
@@ -207,6 +207,8 @@ public class RapProcessingServiceTest extends TestCase {
 		assertEquals("Program Type", "APTC", retroAPTCPaymentTransDTO.getFinancialProgramTypeCd());
 		assertEquals("Trans Type", "PCYC", retroAPTCPaymentTransDTO.getLastPaymentProcStatusTypeCd());
 		assertEquals("APTC Amount", new BigDecimal(50).doubleValue(), retroAPTCPaymentTransDTO.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(100).doubleValue(), retroAPTCPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+		assertEquals("TPA", 31, retroAPTCPaymentTransDTO.getProrationDaysOfCoverageNum().intValue());
 		assertNotNull("MGP Id", retroAPTCPaymentTransDTO.getMarketplaceGroupPolicyId());
 		
 		PolicyPaymentTransDTO retroCSRPaymentTransDTO = paymentTransactions.get(1);
@@ -219,6 +221,8 @@ public class RapProcessingServiceTest extends TestCase {
 		assertEquals("Program Type", "CSR", retroCSRPaymentTransDTO.getFinancialProgramTypeCd());
 		assertEquals("Trans Type", "PCYC", retroAPTCPaymentTransDTO.getLastPaymentProcStatusTypeCd());
 		assertEquals("CSR Amount", new BigDecimal(25).doubleValue(), retroCSRPaymentTransDTO.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(100).doubleValue(), retroCSRPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+		assertEquals("TPA", 31, retroCSRPaymentTransDTO.getProrationDaysOfCoverageNum().intValue());
 		assertNotNull("MGP Id", retroCSRPaymentTransDTO.getMarketplaceGroupPolicyId());
 		
 		if (isFfm) {
@@ -246,10 +250,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChange();
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChange(true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -336,10 +339,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChange_Zero_Amounts();
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChange_Zero_Amounts(true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -369,10 +371,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChange_Null_Amounts();
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChange_Null_Amounts(true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -433,10 +434,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-02-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm("APPV");
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm("APPV", true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -466,10 +466,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-02-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm("NOISE");
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm("NOISE", true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -499,7 +498,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-02-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm_EndDtLTStartDt("APPV");
@@ -532,7 +530,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-02-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm_EndDtLTStartDt("APPV");
@@ -565,10 +562,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-02-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm("PCYC");
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm("PCYC", true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -598,7 +594,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-02-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm_EndDtLTStartDt("PCYC");
@@ -631,7 +626,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2014-11-01 00:00:00", "2014-10-05 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroFutureReversalTerm("APPV");
@@ -644,6 +638,7 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(2, "101", "2014-10-30", "2014-10-31");
 		policyVersion.setPolicyStartDate(new DateTime("2014-10-01"));
+		policyVersion.setIssuerStartDate(policyVersion.getPolicyStartDate().withDayOfYear(1));
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -661,7 +656,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2014-11-01 00:00:00", "2014-10-05 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroFutureReversalTerm("NOISE");
@@ -674,6 +668,7 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(2, "101", "2014-10-30", "2014-10-31");
 		policyVersion.setPolicyStartDate(new DateTime("2014-10-01"));
+		policyVersion.setIssuerStartDate(policyVersion.getPolicyStartDate().withDayOfYear(1));
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -694,7 +689,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2014-11-01 00:00:00", "2014-10-05 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroFutureReversalTerm("PCYC");
@@ -707,6 +701,7 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(2, "101", "2014-10-30", "2014-10-31");
 		policyVersion.setPolicyStartDate(new DateTime("2014-10-01"));
+		policyVersion.setIssuerStartDate(policyVersion.getPolicyStartDate().withDayOfYear(1));
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -727,10 +722,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-02-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm("APPV");
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm("APPV", true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -751,7 +745,7 @@ public class RapProcessingServiceTest extends TestCase {
 		assertTrue("Payment Transaction values comparison", compareRetroActiveTermResult(response.getPolicyPaymentTransactions(), false));
 	}
 
-	private boolean compareRetroActiveTermResult(List<PolicyPaymentTransDTO> paymentTransactions, boolean isSbm) {
+	private boolean compareRetroActiveTermResult(List<PolicyPaymentTransDTO> paymentTransactions, boolean isFfm) {
 
 		PolicyPaymentTransDTO retroAPTC = paymentTransactions.get(0);
 		assertEquals("Policy version id", 3, retroAPTC.getPolicyVersionId().longValue());
@@ -779,7 +773,7 @@ public class RapProcessingServiceTest extends TestCase {
 		assertEquals("Reversal Ref Trans id", 12, retroCSR.getParentPolicyPaymentTransId().longValue());
 		assertNotNull("MGP Id", retroCSR.getMarketplaceGroupPolicyId());
 
-		if(isSbm) {
+		if(isFfm) {
 			PolicyPaymentTransDTO retroUFPaymentTransDTO = paymentTransactions.get(2);
 			assertEquals("Policy version id", 3, retroUFPaymentTransDTO.getPolicyVersionId().longValue());
 			assertEquals("Policy id", "101", retroUFPaymentTransDTO.getExchangePolicyId());
@@ -1191,10 +1185,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-04-01 00:00:00", "2015-03-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroReinstatement("APPV");
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroReinstatement("APPV", true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -1221,10 +1214,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-04-01 00:00:00", "2015-03-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroReinstatement("NOISE");
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroReinstatement("NOISE", true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -1331,10 +1323,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-04-01 00:00:00", "2015-03-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChangePastPeriod("APPV");
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChangePastPeriod("APPV", true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -1361,10 +1352,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-04-01 00:00:00", "2015-03-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChangePastPeriod("NOISE");
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChangePastPeriod("NOISE", true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -1447,10 +1437,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-04-01 00:00:00", "2015-03-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChangeMultiple();
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChangeMultiple(true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -1533,7 +1522,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-04-01 00:00:00", "2015-03-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChangeMultipleAllAmts();
@@ -1643,10 +1631,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroCancel("APPV");
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroCancel("APPV", true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -1666,7 +1653,7 @@ public class RapProcessingServiceTest extends TestCase {
 		assertNotNull("RAPProcessingResponse", response);
 		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
 		assertEquals("PolicyPaymentTransactions size", 3, response.getPolicyPaymentTransactions().size());
-		assertTrue("Payment Transaction values comparison", compareRetroActiveCancelResult(response.getPolicyPaymentTransactions()));
+		assertTrue("Payment Transaction values comparison", compareRetroActiveCancelResult(response.getPolicyPaymentTransactions(), true));
 	}
 
 	/*
@@ -1678,10 +1665,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroCancel("NOISE");
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroCancel("NOISE", true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -1701,10 +1687,10 @@ public class RapProcessingServiceTest extends TestCase {
 		assertNotNull("RAPProcessingResponse", response);
 		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
 		assertEquals("PolicyPaymentTransactions size", 3, response.getPolicyPaymentTransactions().size());
-		assertTrue("Payment Transaction values comparison", compareRetroActiveCancelResult(response.getPolicyPaymentTransactions()));
+		assertTrue("Payment Transaction values comparison", compareRetroActiveCancelResult(response.getPolicyPaymentTransactions(), true));
 	}
 
-	private boolean compareRetroActiveCancelResult(List<PolicyPaymentTransDTO> paymentTransactions) {
+	private boolean compareRetroActiveCancelResult(List<PolicyPaymentTransDTO> paymentTransactions, boolean isFfm) {
 
 		PolicyPaymentTransDTO retroAPTC = paymentTransactions.get(0);
 		assertEquals("Policy version id", 2, retroAPTC.getPolicyVersionId().longValue());
@@ -1732,19 +1718,21 @@ public class RapProcessingServiceTest extends TestCase {
 		assertEquals("Reversal Ref Trans id", 2, retroCSR.getParentPolicyPaymentTransId().longValue());
 		assertNotNull("MGP Id", retroCSR.getMarketplaceGroupPolicyId());
 
-		PolicyPaymentTransDTO retroUFPaymentTransDTO = paymentTransactions.get(2);
-		assertEquals("Policy version id", 2, retroUFPaymentTransDTO.getPolicyVersionId().longValue());
-		assertEquals("Policy id", "201", retroUFPaymentTransDTO.getExchangePolicyId());
-		assertEquals("Trans Type", "R", retroUFPaymentTransDTO.getTransPeriodTypeCd());
-		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroUFPaymentTransDTO.getCoverageDate());
-		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroUFPaymentTransDTO.getPaymentCoverageStartDate());
-		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroUFPaymentTransDTO.getPaymentCoverageEndDate());
-		assertEquals("Program Type", "UF", retroUFPaymentTransDTO.getFinancialProgramTypeCd());
-		assertEquals("Trans Type", "PCYC", retroUFPaymentTransDTO.getLastPaymentProcStatusTypeCd());
-		assertEquals("TP Amount", new BigDecimal(100).doubleValue(), retroUFPaymentTransDTO.getTotalPremiumAmount().doubleValue());
-		assertEquals("UF Amount", new BigDecimal(-100).doubleValue(), retroUFPaymentTransDTO.getPaymentAmount().doubleValue());
-		assertEquals("Reversal Ref Trans id", 3, retroUFPaymentTransDTO.getParentPolicyPaymentTransId().longValue());
-		assertNotNull("MGP Id", retroUFPaymentTransDTO.getMarketplaceGroupPolicyId());
+		if(isFfm) {
+			PolicyPaymentTransDTO retroUFPaymentTransDTO = paymentTransactions.get(2);
+			assertEquals("Policy version id", 2, retroUFPaymentTransDTO.getPolicyVersionId().longValue());
+			assertEquals("Policy id", "201", retroUFPaymentTransDTO.getExchangePolicyId());
+			assertEquals("Trans Type", "R", retroUFPaymentTransDTO.getTransPeriodTypeCd());
+			assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroUFPaymentTransDTO.getCoverageDate());
+			assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroUFPaymentTransDTO.getPaymentCoverageStartDate());
+			assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroUFPaymentTransDTO.getPaymentCoverageEndDate());
+			assertEquals("Program Type", "UF", retroUFPaymentTransDTO.getFinancialProgramTypeCd());
+			assertEquals("Trans Type", "PCYC", retroUFPaymentTransDTO.getLastPaymentProcStatusTypeCd());
+			assertEquals("TP Amount", new BigDecimal(100).doubleValue(), retroUFPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+			assertEquals("UF Amount", new BigDecimal(-100).doubleValue(), retroUFPaymentTransDTO.getPaymentAmount().doubleValue());
+			assertEquals("Reversal Ref Trans id", 3, retroUFPaymentTransDTO.getParentPolicyPaymentTransId().longValue());
+			assertNotNull("MGP Id", retroUFPaymentTransDTO.getMarketplaceGroupPolicyId());
+		}
 		
 		return true;
 	}
@@ -1758,7 +1746,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroCancel_Lastday();
@@ -1837,10 +1824,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroMidMonthChange();
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroMidMonthChange(true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -1850,6 +1836,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(2, "301", "2015-01-28", null);
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -2039,7 +2028,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-02-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChangeInCircums();
@@ -2052,6 +2040,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "401", "2015-02-24", null);
 		policyVersion.setPolicyStartDate(new DateTime("2015-02-22"));
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
 
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
@@ -2151,10 +2142,9 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-11-01 00:00:00", "2015-10-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
-		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForPolicyStartDateChange();
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForPolicyStartDateChange(true);
 		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
 		.andReturn(policyDetailDTO);
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
@@ -2172,10 +2162,10 @@ public class RapProcessingServiceTest extends TestCase {
 		assertNotNull("RAPProcessingResponse", response);
 		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
 		assertEquals("PolicyPaymentTransactions size", 6, response.getPolicyPaymentTransactions().size());
-		assertTrue("Payment Transaction values comparison", compareRetroActivePolicyStartDateChangeResult(response.getPolicyPaymentTransactions()));
+		assertTrue("Payment Transaction values comparison", compareRetroActivePolicyStartDateChangeResult(response.getPolicyPaymentTransactions(), true));
 	}
 
-	private boolean compareRetroActivePolicyStartDateChangeResult(List<PolicyPaymentTransDTO> paymentTransactions) {
+	private boolean compareRetroActivePolicyStartDateChangeResult(List<PolicyPaymentTransDTO> paymentTransactions, boolean isFfm) {
 
 		PolicyPaymentTransDTO retroAPTC = paymentTransactions.get(0);
 		assertEquals("Policy version id", 2, retroAPTC.getPolicyVersionId().longValue());
@@ -2229,33 +2219,35 @@ public class RapProcessingServiceTest extends TestCase {
 		assertNull("Reversal Ref Trans id", retroCSRNew.getParentPolicyPaymentTransId());
 		assertNotNull("MGP Id", retroCSRNew.getMarketplaceGroupPolicyId());
 
-		PolicyPaymentTransDTO retroUFPaymentTransDTO = paymentTransactions.get(4);
-		assertEquals("Policy version id", 2, retroUFPaymentTransDTO.getPolicyVersionId().longValue());
-		assertEquals("Policy id", "201", retroUFPaymentTransDTO.getExchangePolicyId());
-		assertEquals("Trans Type", "R", retroUFPaymentTransDTO.getTransPeriodTypeCd());
-		assertEquals("Coverage Dt", new DateTime("2015-06-01"), retroUFPaymentTransDTO.getCoverageDate());
-		assertEquals("Coverage Start Dt", new DateTime("2015-06-01"), retroUFPaymentTransDTO.getPaymentCoverageStartDate());
-		assertEquals("Coverage End Dt", new DateTime("2015-06-30"), retroUFPaymentTransDTO.getPaymentCoverageEndDate());
-		assertEquals("Program Type", "UF", retroUFPaymentTransDTO.getFinancialProgramTypeCd());
-		assertEquals("Trans Type", "PCYC", retroUFPaymentTransDTO.getLastPaymentProcStatusTypeCd());
-		assertEquals("TP Amount", new BigDecimal(189.01).doubleValue(), retroUFPaymentTransDTO.getTotalPremiumAmount().doubleValue());
-		assertEquals("UF Amount", new BigDecimal(-189.01).doubleValue(), retroUFPaymentTransDTO.getPaymentAmount().doubleValue());
-		assertEquals("Reversal Ref Trans id", 3, retroUFPaymentTransDTO.getParentPolicyPaymentTransId().longValue());
-		assertNotNull("MGP Id", retroUFPaymentTransDTO.getMarketplaceGroupPolicyId());
-		
-		PolicyPaymentTransDTO retroUFNew = paymentTransactions.get(5);
-		assertEquals("Policy version id", 2, retroUFNew.getPolicyVersionId().longValue());
-		assertEquals("Policy id", "201", retroUFNew.getExchangePolicyId());
-		assertEquals("Trans Type", "R", retroUFNew.getTransPeriodTypeCd());
-		assertEquals("Coverage Dt", new DateTime("2015-06-01"), retroUFNew.getCoverageDate());
-		assertEquals("Coverage Start Dt", new DateTime("2015-06-30"), retroUFNew.getPaymentCoverageStartDate());
-		assertEquals("Coverage End Dt", new DateTime("2015-06-30"), retroUFNew.getPaymentCoverageEndDate());
-		assertEquals("Program Type", "UF", retroUFNew.getFinancialProgramTypeCd());
-		assertEquals("Trans Type", "PCYC", retroUFNew.getLastPaymentProcStatusTypeCd());
-		assertEquals("TP Amount", new BigDecimal(189.01).doubleValue(), retroUFNew.getTotalPremiumAmount().doubleValue());
-		assertNull("UF Amount", retroUFNew.getPaymentAmount());
-		assertNull("Reversal Ref Trans id", retroUFNew.getParentPolicyPaymentTransId());
-		assertNotNull("MGP Id", retroUFNew.getMarketplaceGroupPolicyId());
+		if(isFfm) {
+			PolicyPaymentTransDTO retroUFPaymentTransDTO = paymentTransactions.get(4);
+			assertEquals("Policy version id", 2, retroUFPaymentTransDTO.getPolicyVersionId().longValue());
+			assertEquals("Policy id", "201", retroUFPaymentTransDTO.getExchangePolicyId());
+			assertEquals("Trans Type", "R", retroUFPaymentTransDTO.getTransPeriodTypeCd());
+			assertEquals("Coverage Dt", new DateTime("2015-06-01"), retroUFPaymentTransDTO.getCoverageDate());
+			assertEquals("Coverage Start Dt", new DateTime("2015-06-01"), retroUFPaymentTransDTO.getPaymentCoverageStartDate());
+			assertEquals("Coverage End Dt", new DateTime("2015-06-30"), retroUFPaymentTransDTO.getPaymentCoverageEndDate());
+			assertEquals("Program Type", "UF", retroUFPaymentTransDTO.getFinancialProgramTypeCd());
+			assertEquals("Trans Type", "PCYC", retroUFPaymentTransDTO.getLastPaymentProcStatusTypeCd());
+			assertEquals("TP Amount", new BigDecimal(189.01).doubleValue(), retroUFPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+			assertEquals("UF Amount", new BigDecimal(-189.01).doubleValue(), retroUFPaymentTransDTO.getPaymentAmount().doubleValue());
+			assertEquals("Reversal Ref Trans id", 3, retroUFPaymentTransDTO.getParentPolicyPaymentTransId().longValue());
+			assertNotNull("MGP Id", retroUFPaymentTransDTO.getMarketplaceGroupPolicyId());
+			
+			PolicyPaymentTransDTO retroUFNew = paymentTransactions.get(5);
+			assertEquals("Policy version id", 2, retroUFNew.getPolicyVersionId().longValue());
+			assertEquals("Policy id", "201", retroUFNew.getExchangePolicyId());
+			assertEquals("Trans Type", "R", retroUFNew.getTransPeriodTypeCd());
+			assertEquals("Coverage Dt", new DateTime("2015-06-01"), retroUFNew.getCoverageDate());
+			assertEquals("Coverage Start Dt", new DateTime("2015-06-30"), retroUFNew.getPaymentCoverageStartDate());
+			assertEquals("Coverage End Dt", new DateTime("2015-06-30"), retroUFNew.getPaymentCoverageEndDate());
+			assertEquals("Program Type", "UF", retroUFNew.getFinancialProgramTypeCd());
+			assertEquals("Trans Type", "PCYC", retroUFNew.getLastPaymentProcStatusTypeCd());
+			assertEquals("TP Amount", new BigDecimal(189.01).doubleValue(), retroUFNew.getTotalPremiumAmount().doubleValue());
+			assertNull("UF Amount", retroUFNew.getPaymentAmount());
+			assertNull("Reversal Ref Trans id", retroUFNew.getParentPolicyPaymentTransId());
+			assertNotNull("MGP Id", retroUFNew.getMarketplaceGroupPolicyId());
+		}
 
 		return true;
 	}
@@ -2345,7 +2337,8 @@ public class RapProcessingServiceTest extends TestCase {
 		policy.setPolicyStartDate(JAN_16);
 
 		PolicyPaymentTransDTO result = (PolicyPaymentTransDTO)ReflectionTestUtils.invokeMethod(
-				rapProcesssingServiceTest, "createPolicyPaymentTrans", coverageDt, programTypCd, policy, premium, amt, null);
+				rapProcesssingServiceTest, "createPolicyPaymentTrans", 
+				coverageDt, programTypCd, policy, premium, amt, null, ProrationType.NON_PRORATING);
 
 		assertNotNull("result", result);
 		assertEquals("coverageDt value is Jan1", JAN_1, result.getCoverageDate());
@@ -2363,7 +2356,6 @@ public class RapProcessingServiceTest extends TestCase {
 	@Test
 	public void test_createPolicyPaymentTransactions_ProratedAmt() throws Exception {
 
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
@@ -2382,9 +2374,13 @@ public class RapProcessingServiceTest extends TestCase {
 		PolicyDataDTO policy = RapServiceTestUtil.createMockPolicyVersion(
 				1L, policyId, new Date(System.currentTimeMillis()).toString(), "2015-03-01");
 		policy.setPolicyStartDate(JAN_16);
+		
+		RapServiceTestUtil.loadStateConfigMap(policy.getSubscriberStateCd(),
+				policy.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
 
 		PolicyPaymentTransDTO result = (PolicyPaymentTransDTO)ReflectionTestUtils.invokeMethod(
-				rapProcesssingServiceTest, "createPolicyPaymentTrans", coverageDt, programTypCd, policy, premium, amt, new BigDecimal(51.61));
+				rapProcesssingServiceTest, "createPolicyPaymentTrans", 
+				coverageDt, programTypCd, policy, premium, amt, new BigDecimal(51.61), ProrationType.FFM_PRORATING);
 
 		assertNotNull("result", result);
 		assertEquals("Pmt Amount value is ", 51.61, result.getPaymentAmount().doubleValue());
@@ -2402,7 +2398,6 @@ public class RapProcessingServiceTest extends TestCase {
 	@Test
 	public void test_createPolicyPaymentTransactions_ProratedTpaAndAmt() throws Exception {
 
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
@@ -2422,9 +2417,13 @@ public class RapProcessingServiceTest extends TestCase {
 		PolicyDataDTO policy = RapServiceTestUtil.createMockPolicyVersion(
 				1L, policyId, new Date(System.currentTimeMillis()).toString(), "2015-03-01");
 		policy.setPolicyStartDate(JAN_16);
+		
+		RapServiceTestUtil.loadStateConfigMap(policy.getSubscriberStateCd(),
+				policy.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
 
 		PolicyPaymentTransDTO result = (PolicyPaymentTransDTO)ReflectionTestUtils.invokeMethod(
-				rapProcesssingServiceTest, "createPolicyPaymentTrans", coverageDt, programTypCd, policy, premium, amt, new BigDecimal(51.61));
+				rapProcesssingServiceTest, "createPolicyPaymentTrans", 
+				coverageDt, programTypCd, policy, premium, amt, new BigDecimal(51.61), ProrationType.FFM_PRORATING);
 
 		assertNotNull("result", result);
 		assertEquals("Pmt Amount value is ", 51.61, result.getPaymentAmount().doubleValue());
@@ -2459,7 +2458,8 @@ public class RapProcessingServiceTest extends TestCase {
 		policy.setPolicyStartDate(JAN_1);
 
 		PolicyPaymentTransDTO result = (PolicyPaymentTransDTO)ReflectionTestUtils.invokeMethod(
-				rapProcesssingServiceTest, "createPolicyPaymentTrans", coverageDt, programTypCd, policy, premium, amt, null);
+				rapProcesssingServiceTest, "createPolicyPaymentTrans", coverageDt, programTypCd, 
+				policy, premium, amt, null, ProrationType.NON_PRORATING);
 
 		assertNotNull("result", result);
 		assertEquals("coverageDt value is Jan1", JAN_1, result.getCoverageDate());
@@ -2487,6 +2487,7 @@ public class RapProcessingServiceTest extends TestCase {
 		PolicyDataDTO policyVersion = new PolicyDataDTO();
 		policyVersion.setPolicyStartDate(
 				new DateTime(YEAR, 1, 1, 0, 0));
+		policyVersion.setIssuerStartDate(policyVersion.getPolicyStartDate().withDayOfYear(1));
 		policyVersion.setMaintenanceStartDateTime(maintStartDt);
 
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "currentPmtMonth", pmtMonths);
@@ -2515,6 +2516,7 @@ public class RapProcessingServiceTest extends TestCase {
 		PolicyDataDTO policyVersion = new PolicyDataDTO();
 		policyVersion.setPolicyStartDate(
 				new DateTime(YEAR, 1, 1, 0, 0));
+		policyVersion.setIssuerStartDate(policyVersion.getPolicyStartDate().withDayOfYear(1));
 		policyVersion.setMaintenanceStartDateTime(maintStartDt);
 
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "currentPmtMonth", pmtMonths);
@@ -2544,6 +2546,7 @@ public class RapProcessingServiceTest extends TestCase {
 		PolicyDataDTO policyVersion = new PolicyDataDTO();
 		policyVersion.setPolicyStartDate(
 				new DateTime(YEAR, 1, 1, 0, 0));
+		policyVersion.setIssuerStartDate(policyVersion.getPolicyStartDate().withDayOfYear(1));
 		policyVersion.setMaintenanceStartDateTime(maintStartDt);
 
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "currentPmtMonth", pmtMonths);
@@ -2556,6 +2559,33 @@ public class RapProcessingServiceTest extends TestCase {
 		assertEquals("result val", new DateTime(YEAR, 1, 1, 0, 0), result.get(0));
 		assertEquals("result val", new DateTime(YEAR, 2, 1, 0, 0), result.get(1));
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void process_determineMinMaxCoverageMonth_PSDYear_LT_IssuerTransition() throws Exception {
+
+		DateTime ercDate = new DateTime(YEAR, 1, 16, 0, 0);
+		DateTime maintStartDt = ercDate.minusDays(5);
+		List<DateTime> pmtMonths = new ArrayList<DateTime>();
+		pmtMonths.add(ercDate.withDayOfMonth(1).plusMonths(1));
+		pmtMonths.add(ercDate);
+
+		PolicyDataDTO policyVersion = new PolicyDataDTO();
+		policyVersion.setPolicyStartDate(
+				new DateTime(YEAR-1, 1, 1, 0, 0));
+		policyVersion.setIssuerStartDate(new DateTime(YEAR, 2, 1, 0, 0));
+		policyVersion.setMaintenanceStartDateTime(maintStartDt);
+
+		ReflectionTestUtils.setField(rapProcesssingServiceTest, "currentPmtMonth", pmtMonths);
+
+		List<DateTime> result = (List<DateTime>)ReflectionTestUtils.invokeMethod(
+				rapProcesssingServiceTest, "determineMinMaxCoverageMonth", policyVersion);
+
+		assertNotNull("result", result);
+		assertEquals("result size", 1, result.size());
+		assertEquals("result val", new DateTime(YEAR, 1, 1, 0, 0), result.get(0));
+	}
+
 
 	/*
 	 * 
@@ -2596,7 +2626,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-05-01 00:00:00", "2014-04-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment("2015-03-16");
@@ -2645,7 +2674,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-05-01 00:00:00", "2014-04-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment("2015-03-01");
@@ -2683,7 +2711,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-05-01 00:00:00", "2014-04-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment("2015-03-01", "2015-05-15");
@@ -2721,7 +2748,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-05-01 00:00:00", "2014-04-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment("2015-03-01", "2015-05-31");
@@ -2759,7 +2785,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-05-01 00:00:00", "2014-04-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment("2015-03-01", "2015-06-01");
@@ -2811,14 +2836,14 @@ public class RapProcessingServiceTest extends TestCase {
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
 		replay(mockRapDao);
 
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
-		replay(mockCodeDecodesHelper);
-
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversalRefIds", new ArrayList<Long>());
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversedTransIds", new ArrayList<Long>());
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-02-15");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		DateTime coverageDt = new DateTime("2015-02-01");
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario1_APTC();
@@ -2827,7 +2852,7 @@ public class RapProcessingServiceTest extends TestCase {
 
 		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAptcPayments",
 				policyVersion, coverageDt, paymentTransactions,
-				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums());
+				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums(), ProrationType.FFM_PRORATING);
 
 		assertTrue("PolicyPaymentTransactions", CollectionUtils.isNotEmpty(paymentTransactions)); 
 		assertEquals("PolicyPaymentTransactions size", 2, paymentTransactions.size());
@@ -2876,7 +2901,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario1();
@@ -2889,6 +2913,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-02-15");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -2996,7 +3023,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario1_FFM();
@@ -3009,6 +3035,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-02-14");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -3105,7 +3134,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario1A_FFM();
@@ -3118,6 +3146,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -3215,7 +3246,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario1B_FFM();
@@ -3228,6 +3258,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-01-01");
 		policyVersion.setPolicyStatus(PolicyStatus.TERMINATED_4.getValue());
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
 		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
@@ -3288,7 +3321,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario1B_Cancel_FFM();
@@ -3320,7 +3352,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario1B_FFM();
@@ -3394,7 +3425,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario1C_FFM();
@@ -3407,6 +3437,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-03-01");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -3553,7 +3586,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario1();
@@ -3677,14 +3709,14 @@ public class RapProcessingServiceTest extends TestCase {
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
 		replay(mockRapDao);
 
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
-		replay(mockCodeDecodesHelper);
-
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversalRefIds", new ArrayList<Long>());
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversedTransIds", new ArrayList<Long>());
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-16", "2015-02-15");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		DateTime coverageDt = new DateTime("2015-02-01");
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario2_APTC();
@@ -3693,7 +3725,7 @@ public class RapProcessingServiceTest extends TestCase {
 
 		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAptcPayments",
 				policyVersion, coverageDt, paymentTransactions,
-				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums());
+				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums(), ProrationType.FFM_PRORATING);
 
 		assertTrue("PolicyPaymentTransactions", CollectionUtils.isNotEmpty(paymentTransactions)); 
 		assertEquals("PolicyPaymentTransactions size", 1, paymentTransactions.size());
@@ -3731,7 +3763,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario2();
@@ -3744,6 +3775,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-02-16", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -3874,7 +3908,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario2_ProratedAmtExist();
@@ -3887,6 +3920,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-02-16", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -4017,7 +4053,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario2_NonProrating();
@@ -4124,7 +4159,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario2_NonProrating_PmtExists();
@@ -4270,7 +4304,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-02-01 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario2_NonProrating_PmtExists();
@@ -4391,7 +4424,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario2_FFM();
@@ -4404,6 +4436,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-02-15", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -4474,7 +4509,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-04-01 00:00:00", "2015-03-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario3_FFM();
@@ -4487,6 +4521,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-02-15", "2015-04-15");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -4595,13 +4632,15 @@ public class RapProcessingServiceTest extends TestCase {
 	public void testCreateAptcPayments_Scenario3() {
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
 		replay(mockRapDao);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
-		replay(mockCodeDecodesHelper);
+
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversalRefIds", new ArrayList<Long>());
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversedTransIds", new ArrayList<Long>());
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		DateTime coverageDt = new DateTime("2015-02-01");
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario3_APTC();
@@ -4610,7 +4649,7 @@ public class RapProcessingServiceTest extends TestCase {
 
 		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAptcPayments",
 				policyVersion, coverageDt, paymentTransactions,
-				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums());
+				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums(), ProrationType.FFM_PRORATING);
 
 		assertTrue("PolicyPaymentTransactions", CollectionUtils.isNotEmpty(paymentTransactions)); 
 		assertEquals("PolicyPaymentTransactions size", 3, paymentTransactions.size());
@@ -4664,7 +4703,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario3();
@@ -4677,6 +4715,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -4822,14 +4863,15 @@ public class RapProcessingServiceTest extends TestCase {
 	public void testCreateAptcPayments_Scenario4() {
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
 		replay(mockRapDao);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
-		replay(mockCodeDecodesHelper);
 
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversalRefIds", new ArrayList<Long>(Arrays.asList(1L)));
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversedTransIds", new ArrayList<Long>());
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		DateTime coverageDt = new DateTime("2015-02-01");
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario4_APTC();
@@ -4838,7 +4880,7 @@ public class RapProcessingServiceTest extends TestCase {
 
 		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAptcPayments",
 				policyVersion, coverageDt, paymentTransactions,
-				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums());
+				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums(), ProrationType.FFM_PRORATING);
 
 		assertTrue("PolicyPaymentTransactions", CollectionUtils.isNotEmpty(paymentTransactions)); 
 		assertEquals("PolicyPaymentTransactions size", 3, paymentTransactions.size());
@@ -4892,7 +4934,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario4();
@@ -4905,6 +4946,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -5048,13 +5092,14 @@ public class RapProcessingServiceTest extends TestCase {
 	public void testCreateAptcPayments_Scenario5() {
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
 		replay(mockRapDao);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
-		replay(mockCodeDecodesHelper);
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversalRefIds", new ArrayList<Long>());
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversedTransIds", new ArrayList<Long>());
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		DateTime coverageDt = new DateTime("2015-02-01");
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario5_APTC();
@@ -5063,7 +5108,7 @@ public class RapProcessingServiceTest extends TestCase {
 
 		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAptcPayments",
 				policyVersion, coverageDt, paymentTransactions,
-				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums());
+				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums(), ProrationType.FFM_PRORATING);
 
 		assertTrue("PolicyPaymentTransactions", CollectionUtils.isNotEmpty(paymentTransactions)); 
 		assertEquals("PolicyPaymentTransactions size", 4, paymentTransactions.size());
@@ -5123,7 +5168,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario5();
@@ -5136,6 +5180,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -5316,14 +5363,15 @@ public class RapProcessingServiceTest extends TestCase {
 	public void testCreateAptcPayments_Scenario6() {
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
 		replay(mockRapDao);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
-		replay(mockCodeDecodesHelper);
 
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversalRefIds", new ArrayList<Long>());
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversedTransIds", new ArrayList<Long>());
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		DateTime coverageDt = new DateTime("2015-02-01");
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario6_APTC();
@@ -5332,7 +5380,7 @@ public class RapProcessingServiceTest extends TestCase {
 
 		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAptcPayments",
 				policyVersion, coverageDt, paymentTransactions,
-				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums());
+				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums(), ProrationType.FFM_PRORATING);
 
 		assertTrue("PolicyPaymentTransactions", CollectionUtils.isNotEmpty(paymentTransactions)); 
 		assertEquals("PolicyPaymentTransactions size", 3, paymentTransactions.size());
@@ -5383,7 +5431,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario6("APPV", null);
@@ -5396,6 +5443,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -5528,7 +5578,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario6("PCYC", null);
@@ -5541,6 +5590,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -5673,7 +5725,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario6("PCYC", "MGPID_OLD");
@@ -5686,6 +5737,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -5825,14 +5879,15 @@ public class RapProcessingServiceTest extends TestCase {
 	public void testCreateAptcPayments_Scenario6A() {
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
 		replay(mockRapDao);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
-		replay(mockCodeDecodesHelper);
 
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversalRefIds", new ArrayList<Long>());
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversedTransIds", new ArrayList<Long>());
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		DateTime coverageDt = new DateTime("2015-02-01");
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario6A_APTC();
@@ -5841,7 +5896,7 @@ public class RapProcessingServiceTest extends TestCase {
 
 		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAptcPayments",
 				policyVersion, coverageDt, paymentTransactions,
-				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums());
+				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums(), ProrationType.FFM_PRORATING);
 
 		assertTrue("PolicyPaymentTransactions", CollectionUtils.isNotEmpty(paymentTransactions)); 
 		assertEquals("PolicyPaymentTransactions size", 5, paymentTransactions.size());
@@ -5903,7 +5958,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario6A("APPV");
@@ -5916,6 +5970,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -6123,14 +6180,15 @@ public class RapProcessingServiceTest extends TestCase {
 	public void testCreateAptcPayments_Scenario7() {
 		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
 		replay(mockRapDao);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
-		replay(mockCodeDecodesHelper);
 
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversalRefIds", new ArrayList<Long>());
 		ReflectionTestUtils.setField(rapProcesssingServiceTest, "reversedTransIds", new ArrayList<Long>());
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		DateTime coverageDt = new DateTime("2015-02-01");
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario7_APTC();
@@ -6139,7 +6197,7 @@ public class RapProcessingServiceTest extends TestCase {
 
 		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAptcPayments",
 				policyVersion, coverageDt, paymentTransactions,
-				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums());
+				policyDetailDTO.getPolicyPayments(), policyDetailDTO.getPolicyPremiums(), ProrationType.FFM_PRORATING);
 
 		assertTrue("PolicyPaymentTransactions", CollectionUtils.isNotEmpty(paymentTransactions)); 
 		assertEquals("PolicyPaymentTransactions size", 5, paymentTransactions.size());
@@ -6201,7 +6259,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario7();
@@ -6214,6 +6271,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-12-31");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -6395,7 +6455,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario3_FutureCancel("APPV");
@@ -6408,6 +6467,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-02-15");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -6469,7 +6531,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario3_FutureCancel("PCYC");
@@ -6482,6 +6543,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-02-15");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -6542,7 +6606,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario3_FutureCancel_A("APPV");
@@ -6557,6 +6620,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
 
 		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
 
@@ -6615,7 +6681,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroPartialMonth_Scenario3_FutureCancel_A("PCYC");
@@ -6628,6 +6693,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-06-01", "2015-01-01", "2015-02-15");
 
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
+		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
 
@@ -6838,7 +6906,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2016-04-01 00:00:00", "2016-03-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentData(sd, ed, aptc, csr, tpa);
@@ -6852,6 +6919,9 @@ public class RapProcessingServiceTest extends TestCase {
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2016-03-01", sd.toString(), ed.toString());
 		//Status
 		policyVersion.setPolicyStatus(PolicyStatus.EFFECTUATED_2.getValue());
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
 		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
@@ -6921,7 +6991,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2016-04-01 00:00:00", "2016-03-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentData(sd, ed, aptc, csr, tpa);
@@ -6934,6 +7003,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2016-03-01", sd.toString(), ed.toString());
 		policyVersion.setPolicyStatus(PolicyStatus.EFFECTUATED_2.getValue());
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
 		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
@@ -7002,7 +7074,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2016-04-01 00:00:00", "2016-03-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentData(sd, ed, aptc, csr, tpa);
@@ -7015,6 +7086,9 @@ public class RapProcessingServiceTest extends TestCase {
 
 		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2016-03-01", sd.toString(), ed.toString());
 		policyVersion.setPolicyStatus(PolicyStatus.EFFECTUATED_2.getValue());
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.FFM_PRORATING);
 		
 		RAPProcessingRequest request = new RAPProcessingRequest();
 		request.setPolicyDataDTO(policyVersion);
@@ -7077,7 +7151,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2016-04-01 00:00:00", "2016-03-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentData(sd, ed, aptc, csr, tpa);
@@ -7124,7 +7197,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2016-02-01 00:00:00", "2016-01-11 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(true).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentData(sd, ed, aptc, csr, tpa);
@@ -7174,7 +7246,7 @@ public class RapProcessingServiceTest extends TestCase {
 		pmtTransList.add(payment);
 
 		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAdjustmentForMatchingDates", pmtTransList, 
-				coverageDate, programType, policyVersion, payment, policyPremium, epsAmount, proratedAmount);
+				coverageDate, programType, policyVersion, payment, policyPremium, epsAmount, proratedAmount, null);
 
 		assertEquals("PolicyPaymentTransList Size", 2, pmtTransList.size());
 
@@ -7221,7 +7293,7 @@ public class RapProcessingServiceTest extends TestCase {
 		pmtTransList.add(payment);
 
 		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAdjustmentForMatchingDates", pmtTransList, 
-				coverageDate, programType, policyVersion, payment, policyPremium, epsAmount, proratedAmount);
+				coverageDate, programType, policyVersion, payment, policyPremium, epsAmount, proratedAmount, null);
 
 		assertEquals("PolicyPaymentTransList Size", 2, pmtTransList.size());
 
@@ -7279,7 +7351,7 @@ public class RapProcessingServiceTest extends TestCase {
 		pmtTransList.add(payment);
 
 		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAdjustmentForMatchingDates", pmtTransList, 
-				coverageDate, programType, policyVersion, payment, policyPremium, epsAmount, proratedAmount);
+				coverageDate, programType, policyVersion, payment, policyPremium, epsAmount, proratedAmount, ProrationType.NON_PRORATING);
 
 		assertEquals("PolicyPaymentTransList Size", 3, pmtTransList.size());
 
@@ -7391,6 +7463,7 @@ public class RapProcessingServiceTest extends TestCase {
 
 		DateTime coverageDate = new DateTime("2015-01-01");
 		PolicyDataDTO policy = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2015-01-01", "2015-01-01", "2015-01-12");
+		
 		List<PolicyPremium> premiumRecs = new ArrayList<PolicyPremium>();
 		PolicyPremium records = new PolicyPremium();
 
@@ -7406,7 +7479,7 @@ public class RapProcessingServiceTest extends TestCase {
 		premiumRecs.add(records);
 
 		List<PolicyPaymentTransDTO> actual = ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createRetros", coverageDate,
-				policy, premiumRecs);
+				policy, premiumRecs, ProrationType.NON_PRORATING);
 
 		assertTrue("PolicyPaymentTransDTOList", actual.isEmpty());
 
@@ -7434,7 +7507,7 @@ public class RapProcessingServiceTest extends TestCase {
 		premiumRecs.add(records);	
 
 		List<PolicyPaymentTransDTO> actual = ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createRetros", coverageDate,
-				policy, premiumRecs);
+				policy, premiumRecs, ProrationType.NON_PRORATING);
 
 		assertFalse("PolicyPaymentTransDTOList", actual.isEmpty());
 
@@ -7807,7 +7880,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2016-08-01 00:00:00", "2016-07-16 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChangeMGPID();
@@ -7841,7 +7913,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2016-08-01 00:00:00", "2016-07-01 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		//Policy 987
@@ -7923,7 +7994,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2016-08-01 00:00:00", "2016-07-01 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		//Policy 987
@@ -7961,7 +8031,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2016-08-01 00:00:00", "2016-07-01 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		//Policy 987
@@ -7998,7 +8067,6 @@ public class RapProcessingServiceTest extends TestCase {
 		CodeRecord codeRecord = new CodeRecord("ERC", "2016-08-01 00:00:00", "2016-07-01 00:00:00");
 		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
 		.andReturn(codeRecord);
-		expect(mockCodeDecodesHelper.isStateProrating(EasyMock.anyString(), EasyMock.anyInt())).andReturn(false).anyTimes();
 		replay(mockCodeDecodesHelper);
 
 		//Policy 987
@@ -8110,8 +8178,1331 @@ public class RapProcessingServiceTest extends TestCase {
 
 		return true;
 	}
+	
+	//*************** SBM Changes ****************
+	
+	/*
+	 * Retroactive Enrollment
+	 */
+	@Test
+	public void process_RetroActiveEnrollment_SBM_No_ProratedAmounts() throws Exception {
 
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+		
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment();
 
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2014-12-25", null);
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(), policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 2, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveEnrollmentResult(response.getPolicyPaymentTransactions(), false));
+		
+	}
+
+	/*	
+	 * Retroactive Enrollment
+	 */
+	@Test
+	public void process_RetroActiveEnrollment_Zero_Amounts_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment_Zero_Amounts();
+
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2014-12-25", null);
+
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(), policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 0, response.getPolicyPaymentTransactions().size());
+	}
+
+	/*	
+	 * Retroactive Enrollment
+	 */
+	@Test
+	public void process_RetroActiveEnrollment_Null_Amounts_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment_Null_Amounts();
+
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2014-12-25", null);
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(), policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 0, response.getPolicyPaymentTransactions().size());
+	}
+
+	/*
+	 * Retroactive Change
+	 */
+	@Test
+	public void process_RetroActiveChange_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChange(false);
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(2, "101", "2015-01-28", null);
+
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 4, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveChangeResult(response.getPolicyPaymentTransactions()));
+	}
+
+	/*
+	 * Retroactive Change
+	 */
+	@Test
+	public void process_RetroActiveChange_Zero_Amounts_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChange_Zero_Amounts(false);
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(2, "101", "2015-01-28", null);
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 2, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveChnageResult_Zero_Amounts(response.getPolicyPaymentTransactions()));
+	}
+
+	/*
+	 * Retroactive Change
+	 */
+	@Test
+	public void process_RetroActiveChange_Null_Amounts_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChange_Null_Amounts(false);
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(2, "101", "2015-01-28", null);
+
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 2, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveChnageResult_Zero_Amounts(response.getPolicyPaymentTransactions()));
+	}
+
+	/*
+	 * Retroactive Termination
+	 */
+	@Test
+	public void process_RetroTerm_success_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-02-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm("APPV", false);
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(3, "101", "2015-02-22", "2015-02-28");
+
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 2, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveTermResult(response.getPolicyPaymentTransactions(), false));
+	}
+	
+	/*
+	 * Retroactive Termination Pending Cycle
+	 */
+	@Test
+	public void process_RetroTerm_success_PendingCycle_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-03-01 00:00:00", "2015-02-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroTerm("PCYC", true);
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(3, "101", "2015-02-22", "2015-02-28");
+
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 2, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveTermResultPendingCycle(response.getPolicyPaymentTransactions(), false));
+	}
+	
+	/*
+	 * Retroactive Reinstatement
+	 */
+	@Test
+	public void process_RetroReinstatement_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-04-01 00:00:00", "2015-03-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroReinstatement("APPV", false);
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(4, "101", "2015-03-27", null);
+
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 4, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveReinstatementResultSbm(response.getPolicyPaymentTransactions()));
+	}
+	
+	private boolean compareRetroActiveReinstatementResultSbm(List<PolicyPaymentTransDTO> paymentTransactions) {
+
+		PolicyPaymentTransDTO retroAPTC = paymentTransactions.get(0);
+		assertEquals("Policy version id", 4, retroAPTC.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroAPTC.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTC.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-03-01"), retroAPTC.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-03-01"), retroAPTC.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-03-31"), retroAPTC.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "APTC", retroAPTC.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTC.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(80).doubleValue(), retroAPTC.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroAPTC.getMarketplaceGroupPolicyId());
+		
+		PolicyPaymentTransDTO retroCSR = paymentTransactions.get(1);
+		assertEquals("Policy version id", 4, retroCSR.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroCSR.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSR.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-03-01"), retroCSR.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-03-01"), retroCSR.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-03-31"), retroCSR.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSR.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSR.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(50).doubleValue(), retroCSR.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroCSR.getMarketplaceGroupPolicyId());
+
+		PolicyPaymentTransDTO retroAPTC2 = paymentTransactions.get(2);
+		assertEquals("Policy version id", 4, retroAPTC2.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroAPTC2.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTC2.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-04-01"), retroAPTC2.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-04-01"), retroAPTC2.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-04-30"), retroAPTC2.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "APTC", retroAPTC2.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTC2.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(80).doubleValue(), retroAPTC2.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroAPTC2.getMarketplaceGroupPolicyId());
+
+		PolicyPaymentTransDTO retroCSR2 = paymentTransactions.get(3);
+		assertEquals("Policy version id", 4, retroCSR2.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroCSR2.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSR2.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-04-01"), retroCSR2.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-04-01"), retroCSR2.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-04-30"), retroCSR2.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSR2.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSR2.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(50).doubleValue(), retroCSR2.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroCSR2.getMarketplaceGroupPolicyId());
+
+		return true;
+	}
+
+	/*
+	 * Retroactive Change for a Period in the Past
+	 */
+	@Test
+	public void process_RetroChangePastPeriod_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-04-01 00:00:00", "2015-03-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChangePastPeriod("APPV", false);
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(5, "101", "2015-04-02", null);
+
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 4, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveChangePastPeriod(response.getPolicyPaymentTransactions()));
+	}
+	
+	/*
+	 * Multiple Retroactive Change for Multiple Periods in the Past
+	 */
+	@Test
+	public void process_RetroChangeMultipleChnagesForPmtMonth_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-04-01 00:00:00", "2015-03-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroChangeMultiple(false);
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(6, "101", "2015-04-05", null);
+
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 4, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveChangeMultiple(response.getPolicyPaymentTransactions()));
+	}
+	
+	/*
+	 * Retroactive Cancellation - Policy Start Date
+	 */
+	@Test
+	public void process_RetroCancel_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroCancel("APPV", false);
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(2, "201", "2014-12-25", "2015-01-01");
+		//Status
+		policyVersion.setPolicyStatus(PolicyStatus.CANCELLED_3.getValue());
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 2, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveCancelResult(response.getPolicyPaymentTransactions(), false));
+	}
+	
+	/*
+	 * Retroactive Change
+	 */
+	@Test
+	public void process_RetroActiveMidMonthChange_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroMidMonthChange(false);
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(2, "301", "2015-01-28", null);
+
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 8, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveMidMonthChangeResultSbm(response.getPolicyPaymentTransactions()));
+	}
+	
+	private boolean compareRetroActiveMidMonthChangeResultSbm(List<PolicyPaymentTransDTO> paymentTransactions) {
+
+		PolicyPaymentTransDTO retroAPTCJan = paymentTransactions.get(0);
+		assertEquals("Policy version id", 2, retroAPTCJan.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroAPTCJan.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCJan.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroAPTCJan.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroAPTCJan.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroAPTCJan.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "APTC", retroAPTCJan.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCJan.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(-50).doubleValue(), retroAPTCJan.getPaymentAmount().doubleValue());
+		assertEquals("Reversal Ref Trans id", 1, retroAPTCJan.getParentPolicyPaymentTransId().longValue());	
+		assertNotNull("MGP Id", retroAPTCJan.getMarketplaceGroupPolicyId());
+
+		PolicyPaymentTransDTO retroAPTCJan1 = paymentTransactions.get(1);
+		assertEquals("Policy version id", 2, retroAPTCJan1.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroAPTCJan1.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCJan1.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroAPTCJan1.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroAPTCJan1.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-15"), retroAPTCJan1.getPaymentCoverageEndDate());		
+		assertEquals("Program Type", "APTC", retroAPTCJan1.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCJan1.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(50).doubleValue(), retroAPTCJan1.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroAPTCJan1.getMarketplaceGroupPolicyId());
+
+		PolicyPaymentTransDTO retroCSRJan = paymentTransactions.get(2);
+		assertEquals("Policy version id", 2, retroCSRJan.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroCSRJan.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRJan.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroCSRJan.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroCSRJan.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroCSRJan.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSRJan.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSRJan.getLastPaymentProcStatusTypeCd());
+		assertEquals("CSR Amount", new BigDecimal(-25).doubleValue(), retroCSRJan.getPaymentAmount().doubleValue());
+		assertEquals("Reversal Ref Trans id", 2, retroCSRJan.getParentPolicyPaymentTransId().longValue());
+		assertNotNull("MGP Id", retroCSRJan.getMarketplaceGroupPolicyId());
+		
+		PolicyPaymentTransDTO retroCSRJan1 = paymentTransactions.get(3);
+		assertEquals("Policy version id", 2, retroCSRJan1.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroCSRJan1.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRJan1.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroCSRJan1.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroCSRJan1.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-15"), retroCSRJan1.getPaymentCoverageEndDate());		
+		assertEquals("Program Type", "CSR", retroCSRJan1.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSRJan1.getLastPaymentProcStatusTypeCd());
+		assertEquals("CSR Amount", new BigDecimal(25).doubleValue(), retroCSRJan1.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroCSRJan1.getMarketplaceGroupPolicyId());
+		
+		
+		PolicyPaymentTransDTO retroAPTCFeb = paymentTransactions.get(4);
+		assertEquals("Policy version id", 2, retroAPTCFeb.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroAPTCFeb.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCFeb.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-02-01"), retroAPTCFeb.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-02-01"), retroAPTCFeb.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-02-28"), retroAPTCFeb.getPaymentCoverageEndDate());		
+		assertEquals("Program Type", "APTC", retroAPTCFeb.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCFeb.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(-50).doubleValue(), retroAPTCFeb.getPaymentAmount().doubleValue());
+		assertEquals("Reversal Ref Trans id", 4, retroAPTCFeb.getParentPolicyPaymentTransId().longValue());
+		assertNotNull("MGP Id", retroAPTCFeb.getMarketplaceGroupPolicyId());
+		
+		PolicyPaymentTransDTO retroAPTCFeb1 = paymentTransactions.get(5);
+		assertEquals("Policy version id", 2, retroAPTCFeb1.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroAPTCFeb1.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCFeb1.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-02-01"), retroAPTCFeb1.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-02-01"), retroAPTCFeb1.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-02-28"), retroAPTCFeb1.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "APTC", retroAPTCFeb1.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCFeb1.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(100).doubleValue(), retroAPTCFeb1.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroAPTCFeb1.getMarketplaceGroupPolicyId());
+
+		PolicyPaymentTransDTO retroCSRFeb = paymentTransactions.get(6);
+		assertEquals("Policy version id", 2, retroCSRFeb.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroCSRFeb.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRFeb.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-02-01"), retroCSRFeb.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-02-01"), retroCSRFeb.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-02-28"), retroCSRFeb.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSRFeb.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSRFeb.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(-25).doubleValue(), retroCSRFeb.getPaymentAmount().doubleValue());
+		assertEquals("Reversal Ref Trans id", 5, retroCSRFeb.getParentPolicyPaymentTransId().longValue());
+		assertNotNull("MGP Id", retroCSRFeb.getMarketplaceGroupPolicyId());
+		
+		PolicyPaymentTransDTO retroCSRFeb1 = paymentTransactions.get(7);
+		assertEquals("Policy version id", 2, retroCSRFeb1.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroCSRFeb1.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRFeb1.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-02-01"), retroCSRFeb1.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-02-01"), retroCSRFeb1.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-02-28"), retroCSRFeb1.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSRFeb1.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSRFeb1.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(50).doubleValue(), retroCSRFeb1.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroCSRFeb1.getMarketplaceGroupPolicyId());
+
+		return true;
+	}
+
+	/*
+	 * Retroactive Change
+	 */
+	@Test
+	public void process_RetroActiveMidMonthChange_SBM_With_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-02-01 00:00:00", "2015-01-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroMidMonthChangeSbmProrated();
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(2, "301", "2015-01-28", null);
+
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 10, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveMidMonthChangeResultSbmProrated(response.getPolicyPaymentTransactions()));
+	}
+	
+	private boolean compareRetroActiveMidMonthChangeResultSbmProrated(List<PolicyPaymentTransDTO> paymentTransactions) {
+
+		PolicyPaymentTransDTO retroAPTCJan = paymentTransactions.get(0);
+		assertEquals("Policy version id", 2, retroAPTCJan.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroAPTCJan.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCJan.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroAPTCJan.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroAPTCJan.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroAPTCJan.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "APTC", retroAPTCJan.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCJan.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(-50).doubleValue(), retroAPTCJan.getPaymentAmount().doubleValue());
+		assertEquals("Reversal Ref Trans id", 1, retroAPTCJan.getParentPolicyPaymentTransId().longValue());	
+		assertNotNull("MGP Id", retroAPTCJan.getMarketplaceGroupPolicyId());
+
+		PolicyPaymentTransDTO retroAPTCJan1 = paymentTransactions.get(1);
+		assertEquals("Policy version id", 2, retroAPTCJan1.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroAPTCJan1.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCJan1.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroAPTCJan1.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroAPTCJan1.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-15"), retroAPTCJan1.getPaymentCoverageEndDate());		
+		assertEquals("Program Type", "APTC", retroAPTCJan1.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCJan1.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(24.19).doubleValue(), retroAPTCJan1.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroAPTCJan1.getMarketplaceGroupPolicyId());
+		
+		PolicyPaymentTransDTO retroAPTCJan2 = paymentTransactions.get(2);
+		assertEquals("Policy version id", 2, retroAPTCJan2.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroAPTCJan2.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCJan2.getTransPeriodTypeCd());
+		assertEquals("Program Type", "APTC", retroAPTCJan2.getFinancialProgramTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroAPTCJan2.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-16"), retroAPTCJan2.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroAPTCJan2.getPaymentCoverageEndDate());
+		assertEquals("Trans Type", "PCYC", retroAPTCJan2.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(51.61).doubleValue(), retroAPTCJan2.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroAPTCJan2.getMarketplaceGroupPolicyId());
+
+		PolicyPaymentTransDTO retroCSRJan = paymentTransactions.get(3);
+		assertEquals("Policy version id", 2, retroCSRJan.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroCSRJan.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRJan.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroCSRJan.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroCSRJan.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroCSRJan.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSRJan.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSRJan.getLastPaymentProcStatusTypeCd());
+		assertEquals("CSR Amount", new BigDecimal(-25).doubleValue(), retroCSRJan.getPaymentAmount().doubleValue());
+		assertEquals("Reversal Ref Trans id", 2, retroCSRJan.getParentPolicyPaymentTransId().longValue());
+		assertNotNull("MGP Id", retroCSRJan.getMarketplaceGroupPolicyId());
+		
+		PolicyPaymentTransDTO retroCSRJan1 = paymentTransactions.get(4);
+		assertEquals("Policy version id", 2, retroCSRJan1.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroCSRJan1.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRJan1.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroCSRJan1.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroCSRJan1.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-15"), retroCSRJan1.getPaymentCoverageEndDate());		
+		assertEquals("Program Type", "CSR", retroCSRJan1.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSRJan1.getLastPaymentProcStatusTypeCd());
+		assertEquals("CSR Amount", new BigDecimal(12.10).doubleValue(), retroCSRJan1.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroCSRJan1.getMarketplaceGroupPolicyId());
+		
+		PolicyPaymentTransDTO retroCSRJan2 = paymentTransactions.get(5);
+		assertEquals("Policy version id", 2, retroCSRJan2.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroCSRJan2.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRJan2.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroCSRJan2.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-16"), retroCSRJan2.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroCSRJan2.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSRJan2.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSRJan2.getLastPaymentProcStatusTypeCd());
+		assertEquals("CSR Amount", new BigDecimal(25.81).doubleValue(), retroCSRJan2.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroCSRJan2.getMarketplaceGroupPolicyId());
+		
+		
+		PolicyPaymentTransDTO retroAPTCFeb = paymentTransactions.get(6);
+		assertEquals("Policy version id", 2, retroAPTCFeb.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroAPTCFeb.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCFeb.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-02-01"), retroAPTCFeb.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-02-01"), retroAPTCFeb.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-02-28"), retroAPTCFeb.getPaymentCoverageEndDate());		
+		assertEquals("Program Type", "APTC", retroAPTCFeb.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCFeb.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(-50).doubleValue(), retroAPTCFeb.getPaymentAmount().doubleValue());
+		assertEquals("Reversal Ref Trans id", 4, retroAPTCFeb.getParentPolicyPaymentTransId().longValue());
+		assertNotNull("MGP Id", retroAPTCFeb.getMarketplaceGroupPolicyId());
+		
+		PolicyPaymentTransDTO retroAPTCFeb1 = paymentTransactions.get(7);
+		assertEquals("Policy version id", 2, retroAPTCFeb1.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroAPTCFeb1.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCFeb1.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-02-01"), retroAPTCFeb1.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-02-01"), retroAPTCFeb1.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-02-28"), retroAPTCFeb1.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "APTC", retroAPTCFeb1.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCFeb1.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(100).doubleValue(), retroAPTCFeb1.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroAPTCFeb1.getMarketplaceGroupPolicyId());
+
+		PolicyPaymentTransDTO retroCSRFeb = paymentTransactions.get(8);
+		assertEquals("Policy version id", 2, retroCSRFeb.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroCSRFeb.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRFeb.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-02-01"), retroCSRFeb.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-02-01"), retroCSRFeb.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-02-28"), retroCSRFeb.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSRFeb.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSRFeb.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(-25).doubleValue(), retroCSRFeb.getPaymentAmount().doubleValue());
+		assertEquals("Reversal Ref Trans id", 5, retroCSRFeb.getParentPolicyPaymentTransId().longValue());
+		assertNotNull("MGP Id", retroCSRFeb.getMarketplaceGroupPolicyId());
+		
+		PolicyPaymentTransDTO retroCSRFeb1 = paymentTransactions.get(9);
+		assertEquals("Policy version id", 2, retroCSRFeb1.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "301", retroCSRFeb1.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRFeb1.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-02-01"), retroCSRFeb1.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-02-01"), retroCSRFeb1.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-02-28"), retroCSRFeb1.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSRFeb1.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSRFeb1.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(50).doubleValue(), retroCSRFeb1.getPaymentAmount().doubleValue());
+		assertNotNull("MGP Id", retroCSRFeb1.getMarketplaceGroupPolicyId());
+
+		return true;
+	}
+	
+	/*
+	 * Retroactive Change in Policy Start Date to End of a month but Start Date != End Date
+	 */
+	@Test
+	public void process_Retro_PolicyStartDateChange_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-11-01 00:00:00", "2015-10-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForPolicyStartDateChange(false);
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		expect(mockRapDao.getUserFeeRateForAllStates(EasyMock.anyObject(DateTime.class), EasyMock.anyString()))
+		.andReturn(RapServiceTestUtil.createIssuerUserFeeRateList()).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(2, "201", "2015-10-15", "2015-06-30", "2015-10-31");
+
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 4, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActivePolicyStartDateChangeResult(response.getPolicyPaymentTransactions(), false));
+	}
+	
+	@Test
+	public void test_createPolicyPaymentTransactions_SBM_Non_Prorating() throws Exception {
+
+		DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
+		DateTime JAN_16 = new DateTime(YEAR, 1, 16, 0, 0);
+		DateTime JAN_31 = new DateTime(YEAR, 1, 31, 0, 0);
+
+		DateTime coverageDt = JAN_1;
+		String programTypCd = "APTC";
+		String policyId = "POLICYID";
+		BigDecimal amt = new BigDecimal(100.00);
+
+		PolicyPremium premium = new PolicyPremium();
+		premium.setEffectiveStartDate(JAN_16);
+
+		PolicyDataDTO policy = RapServiceTestUtil.createMockPolicyVersion(
+				1L, policyId, new Date(System.currentTimeMillis()).toString(), "2015-03-01");
+		policy.setPolicyStartDate(JAN_16);
+
+		PolicyPaymentTransDTO result = (PolicyPaymentTransDTO)ReflectionTestUtils.invokeMethod(
+				rapProcesssingServiceTest, "createPolicyPaymentTrans", 
+				coverageDt, programTypCd, policy, premium, amt, null, ProrationType.SBM_PRORATING);
+
+		assertNotNull("result", result);
+		assertEquals("coverageDt value is Jan1", JAN_1, result.getCoverageDate());
+		assertEquals("coverage Start Dt value is Jan1", JAN_16, result.getPaymentCoverageStartDate());
+		assertEquals("coverage End Dt value is Jan31", JAN_31, result.getPaymentCoverageEndDate());
+		assertEquals("TransPeriodTypeCd value is R", "R", result.getTransPeriodTypeCd());
+		assertEquals("PmtStatusCd value is PCYC", "PCYC", result.getLastPaymentProcStatusTypeCd());
+		assertEquals("Paymentmount", amt, result.getPaymentAmount());
+		assertEquals("ProrationDays", coverageDt.dayOfMonth().getMaximumValue(), result.getProrationDaysOfCoverageNum().intValue());
+	}
+	
+	@Test
+	public void test_createPolicyPaymentTransactions_SBM_Prorating() throws Exception {
+
+		DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
+		DateTime JAN_16 = new DateTime(YEAR, 1, 16, 0, 0);
+		DateTime JAN_31 = new DateTime(YEAR, 1, 31, 0, 0);
+
+		DateTime coverageDt = JAN_1;
+		String programTypCd = "APTC";
+		String policyId = "POLICYID";
+		BigDecimal amt = new BigDecimal(100.00);
+
+		PolicyPremium premium = new PolicyPremium();
+		premium.setEffectiveStartDate(JAN_16);
+
+		PolicyDataDTO policy = RapServiceTestUtil.createMockPolicyVersion(
+				1L, policyId, new Date(System.currentTimeMillis()).toString(), "2015-03-01");
+		policy.setPolicyStartDate(JAN_16);
+
+		PolicyPaymentTransDTO result = (PolicyPaymentTransDTO)ReflectionTestUtils.invokeMethod(
+				rapProcesssingServiceTest, "createPolicyPaymentTrans", 
+				coverageDt, programTypCd, policy, premium, amt, new BigDecimal("51.61"), ProrationType.SBM_PRORATING);
+
+		assertNotNull("result", result);
+		assertEquals("coverageDt value is Jan1", JAN_1, result.getCoverageDate());
+		assertEquals("coverage Start Dt value is Jan1", JAN_16, result.getPaymentCoverageStartDate());
+		assertEquals("coverage End Dt value is Jan31", JAN_31, result.getPaymentCoverageEndDate());
+		assertEquals("TransPeriodTypeCd value is R", "R", result.getTransPeriodTypeCd());
+		assertEquals("PmtStatusCd value is PCYC", "PCYC", result.getLastPaymentProcStatusTypeCd());
+		assertEquals("Paymentmount", 51.61, result.getPaymentAmount().doubleValue());
+		assertNull("ProrationDays", result.getProrationDaysOfCoverageNum());
+	}
+	
+	//***********SBM - FDD Req. tests*****************/
+	
+	/*
+	 * Retroactive Enrollment - FR-FM-PP-PPMSBMI-073 through FR-FM-PP-PPMSBMI-077
+	 * 
+	 * System shall create a single retroactive policy payment transaction (per applicable program) when proration type is ‘2’ 
+	 * and only one policy premium record exists for the coverage month being evaluated for retroactive payment and 
+	 * payments do not already exist in APPV, PAPPV, PCYC or NOISE Status.
+	 */
+	@Test
+	public void process_RetroActivePayment_SBM_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+		
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollment();
+
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2014-12-25", null);
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 2, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveEnrollmentResult(response.getPolicyPaymentTransactions(), false));
+		
+	}
+	
+	/*
+	 * Retroactive Enrollment - FR-FM-PP-PPMSBMI-073 through FR-FM-PP-PPMSBMI-077, with Prorated Amounts
+	 * 
+	 * System shall create a single retroactive policy payment transaction (per applicable program) when proration type is ‘2’ 
+	 * and only one policy premium record exists for the coverage month being evaluated for retroactive payment and 
+	 * payments do not already exist in APPV, PAPPV, PCYC or NOISE Status.
+	 */
+	@Test
+	public void process_RetroActivePayment_SBM_With_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+		
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createProratedMockPolicyPaymentDataForRetroEnrollment();
+
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2014-12-25", null);
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 2, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetroActiveEnrollmentResultSbmProration(response.getPolicyPaymentTransactions()));
+	}
+	
+	private boolean compareRetroActiveEnrollmentResultSbmProration(List<PolicyPaymentTransDTO> paymentTransactions) {
+
+		PolicyPaymentTransDTO retroAPTCPaymentTransDTO = paymentTransactions.get(0);
+		assertEquals("Policy version id", 1, retroAPTCPaymentTransDTO.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroAPTCPaymentTransDTO.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCPaymentTransDTO.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroAPTCPaymentTransDTO.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-15"), retroAPTCPaymentTransDTO.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroAPTCPaymentTransDTO.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "APTC", retroAPTCPaymentTransDTO.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCPaymentTransDTO.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(25).doubleValue(), retroAPTCPaymentTransDTO.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(50).doubleValue(), retroAPTCPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+		assertNull("TPA", retroAPTCPaymentTransDTO.getProrationDaysOfCoverageNum());
+		
+		PolicyPaymentTransDTO retroCSRPaymentTransDTO = paymentTransactions.get(1);
+		assertEquals("Policy version id", 1, retroCSRPaymentTransDTO.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroCSRPaymentTransDTO.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRPaymentTransDTO.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroCSRPaymentTransDTO.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-15"), retroAPTCPaymentTransDTO.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroAPTCPaymentTransDTO.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSRPaymentTransDTO.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCPaymentTransDTO.getLastPaymentProcStatusTypeCd());
+		assertEquals("CSR Amount", new BigDecimal(12.5).doubleValue(), retroCSRPaymentTransDTO.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(50).doubleValue(), retroCSRPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+		assertNull("TPA", retroCSRPaymentTransDTO.getProrationDaysOfCoverageNum());
+		
+		return true;
+	}
+
+	/*
+	 * Retroactive Enrollment Multiple Premiums - FR-FM-PP-PPMSBMI-078 through FR-FM-PP-PPMSBMI-082
+	 * 
+	 * System shall create just one retroactive policy payment transaction (per applicable program) for the 
+	 * missing coverage month when proration type is ‘2’ and no prorated APTC/CSR amounts exist, 
+	 * despite the presence of multiple policy premium records for the coverage month being evaluated for retroactive payment.
+	 */
+	@Test
+	public void process_RetroActivePayment_SBM_Multiple_Premiums_No_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+		
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createMockPolicyPaymentDataForRetroEnrollmentMultiplePremiumsForMonth();
+
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2014-12-25", null);
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 2, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareResultSbmMultiplePremiums(response.getPolicyPaymentTransactions()));
+	}
+	
+	private boolean compareResultSbmMultiplePremiums(List<PolicyPaymentTransDTO> paymentTransactions) {
+
+		PolicyPaymentTransDTO retroAPTCPaymentTransDTO = paymentTransactions.get(0);
+		assertEquals("Policy version id", 1, retroAPTCPaymentTransDTO.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroAPTCPaymentTransDTO.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCPaymentTransDTO.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroAPTCPaymentTransDTO.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroAPTCPaymentTransDTO.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-15"), retroAPTCPaymentTransDTO.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "APTC", retroAPTCPaymentTransDTO.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCPaymentTransDTO.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(50).doubleValue(), retroAPTCPaymentTransDTO.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(100).doubleValue(), retroAPTCPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+		assertEquals("Proration days", 31, retroAPTCPaymentTransDTO.getProrationDaysOfCoverageNum().intValue());
+		
+		PolicyPaymentTransDTO retroCSRPaymentTransDTO = paymentTransactions.get(1);
+		assertEquals("Policy version id", 1, retroCSRPaymentTransDTO.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroCSRPaymentTransDTO.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRPaymentTransDTO.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroCSRPaymentTransDTO.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroAPTCPaymentTransDTO.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-15"), retroAPTCPaymentTransDTO.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSRPaymentTransDTO.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCPaymentTransDTO.getLastPaymentProcStatusTypeCd());
+		assertEquals("CSR Amount", new BigDecimal(25).doubleValue(), retroCSRPaymentTransDTO.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(100).doubleValue(), retroCSRPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+		assertEquals("Proration days", 31, retroCSRPaymentTransDTO.getProrationDaysOfCoverageNum().intValue());
+		
+		return true;
+	}
+
+	/*
+	 * Retroactive Enrollment - FR-FM-PP-PPMSBMI-083
+	 * 
+	 * System shall create a retroactive policy payment (per applicable program) for each policy premium record 
+	 * with prorated amounts when proration type is ‘2’ and multiple policy premium records exist for the 
+	 * coverage month being evaluated for retroactive payment.
+	 */
+	@Test
+	public void process_RetroActivePayment_SBM_Multiple_Premiums_With_ProratedAmounts() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+		
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createProratedMockPolicyPaymentDataForRetroEnrollmentMultiplePremiumsForMonth();
+
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2014-12-25", null);
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 4, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetrosSbmProrationMultiplePremiums(response.getPolicyPaymentTransactions()));
+	}
+	
+	private boolean compareRetrosSbmProrationMultiplePremiums(List<PolicyPaymentTransDTO> paymentTransactions) {
+
+		PolicyPaymentTransDTO retroAPTCPaymentTransDTO = paymentTransactions.get(0);
+		assertEquals("Policy version id", 1, retroAPTCPaymentTransDTO.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroAPTCPaymentTransDTO.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCPaymentTransDTO.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroAPTCPaymentTransDTO.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroAPTCPaymentTransDTO.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-15"), retroAPTCPaymentTransDTO.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "APTC", retroAPTCPaymentTransDTO.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCPaymentTransDTO.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(25).doubleValue(), retroAPTCPaymentTransDTO.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(50).doubleValue(), retroAPTCPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+		assertNull("Proration days ", retroAPTCPaymentTransDTO.getProrationDaysOfCoverageNum());
+		
+		PolicyPaymentTransDTO retroAPTCPaymentTransDTO1 = paymentTransactions.get(1);
+		assertEquals("Policy version id", 1, retroAPTCPaymentTransDTO1.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroAPTCPaymentTransDTO1.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCPaymentTransDTO1.getTransPeriodTypeCd());
+		assertEquals("Program Type", "APTC", retroAPTCPaymentTransDTO1.getFinancialProgramTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroAPTCPaymentTransDTO1.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-16"), retroAPTCPaymentTransDTO1.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroAPTCPaymentTransDTO1.getPaymentCoverageEndDate());
+		assertEquals("Trans Type", "PCYC", retroAPTCPaymentTransDTO1.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(37.5).doubleValue(), retroAPTCPaymentTransDTO1.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(75).doubleValue(), retroAPTCPaymentTransDTO1.getTotalPremiumAmount().doubleValue());
+		assertNull("Proration days", retroAPTCPaymentTransDTO1.getProrationDaysOfCoverageNum());
+		
+
+		PolicyPaymentTransDTO retroCSRPaymentTransDTO = paymentTransactions.get(2);
+		assertEquals("Policy version id", 1, retroCSRPaymentTransDTO.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroCSRPaymentTransDTO.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRPaymentTransDTO.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroCSRPaymentTransDTO.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroCSRPaymentTransDTO.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-15"), retroCSRPaymentTransDTO.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSRPaymentTransDTO.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSRPaymentTransDTO.getLastPaymentProcStatusTypeCd());
+		assertEquals("CSR Amount", new BigDecimal(12.5).doubleValue(), retroCSRPaymentTransDTO.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(50).doubleValue(), retroCSRPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+		assertNull("Proration days", retroCSRPaymentTransDTO.getProrationDaysOfCoverageNum());
+		
+		PolicyPaymentTransDTO retroCSRPaymentTransDTO1 = paymentTransactions.get(3);
+		assertEquals("Policy version id", 1, retroCSRPaymentTransDTO1.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroCSRPaymentTransDTO1.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRPaymentTransDTO1.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroCSRPaymentTransDTO1.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-16"), retroCSRPaymentTransDTO1.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroCSRPaymentTransDTO1.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSRPaymentTransDTO1.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSRPaymentTransDTO1.getLastPaymentProcStatusTypeCd());
+		assertEquals("CSR Amount", new BigDecimal(25).doubleValue(), retroCSRPaymentTransDTO1.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(75).doubleValue(), retroCSRPaymentTransDTO1.getTotalPremiumAmount().doubleValue());
+		assertNull("Proration days", retroCSRPaymentTransDTO1.getProrationDaysOfCoverageNum());
+		
+		return true;
+	}
+
+	/*
+	 * Retroactive Enrollment - FR-FM-PP-PPMSBMI-083, Only Csr prorated
+	 * 
+	 * System shall create a retroactive policy payment (per applicable program) for each policy premium record 
+	 * with prorated amounts when proration type is ‘2’ and multiple policy premium records exist for the 
+	 * coverage month being evaluated for retroactive payment.
+	 */
+	@Test
+	public void process_RetroActivePayment_SBM_Multiple_Premiums_With_ProratedCsrOnly() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+		
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createProratedMockPolicyPaymentDataForRetroEnrollmentMultiplePremiumsForMonth("CSR");
+
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2014-12-25", null);
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 3, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetrosSbmProrationMultiplePremiumsAptcNotProrated(response.getPolicyPaymentTransactions()));
+	}
+	
+	private boolean compareRetrosSbmProrationMultiplePremiumsAptcNotProrated(List<PolicyPaymentTransDTO> paymentTransactions) {
+
+		PolicyPaymentTransDTO retroAPTCPaymentTransDTO = paymentTransactions.get(0);
+		assertEquals("Policy version id", 1, retroAPTCPaymentTransDTO.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroAPTCPaymentTransDTO.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCPaymentTransDTO.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroAPTCPaymentTransDTO.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroAPTCPaymentTransDTO.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-15"), retroAPTCPaymentTransDTO.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "APTC", retroAPTCPaymentTransDTO.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCPaymentTransDTO.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(50).doubleValue(), retroAPTCPaymentTransDTO.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(100).doubleValue(), retroAPTCPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+		assertEquals("Proration days ", 31, retroAPTCPaymentTransDTO.getProrationDaysOfCoverageNum().intValue());
+
+		PolicyPaymentTransDTO retroCSRPaymentTransDTO = paymentTransactions.get(1);
+		assertEquals("Policy version id", 1, retroCSRPaymentTransDTO.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroCSRPaymentTransDTO.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRPaymentTransDTO.getTransPeriodTypeCd());
+		assertEquals("Program Type", "CSR", retroCSRPaymentTransDTO.getFinancialProgramTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroCSRPaymentTransDTO.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroCSRPaymentTransDTO.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-15"), retroCSRPaymentTransDTO.getPaymentCoverageEndDate());
+		assertEquals("Trans Type", "PCYC", retroCSRPaymentTransDTO.getLastPaymentProcStatusTypeCd());
+		assertEquals("CSR Amount", new BigDecimal(12.5).doubleValue(), retroCSRPaymentTransDTO.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(50).doubleValue(), retroCSRPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+		assertNull("Proration days", retroCSRPaymentTransDTO.getProrationDaysOfCoverageNum());
+		
+		PolicyPaymentTransDTO retroCSRPaymentTransDTO1 = paymentTransactions.get(2);
+		assertEquals("Policy version id", 1, retroCSRPaymentTransDTO1.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroCSRPaymentTransDTO1.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRPaymentTransDTO1.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroCSRPaymentTransDTO1.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-16"), retroCSRPaymentTransDTO1.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroCSRPaymentTransDTO1.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "CSR", retroCSRPaymentTransDTO1.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroCSRPaymentTransDTO1.getLastPaymentProcStatusTypeCd());
+		assertEquals("CSR Amount", new BigDecimal(25).doubleValue(), retroCSRPaymentTransDTO1.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(75).doubleValue(), retroCSRPaymentTransDTO1.getTotalPremiumAmount().doubleValue());
+		assertNull("Proration days", retroCSRPaymentTransDTO1.getProrationDaysOfCoverageNum());
+		
+		return true;
+	}
+	
+	/*
+	 * Retroactive Enrollment - FR-FM-PP-PPMSBMI-083, Only Aptc prorated
+	 * 
+	 * System shall create a retroactive policy payment (per applicable program) for each policy premium record 
+	 * with prorated amounts when proration type is ‘2’ and multiple policy premium records exist for the 
+	 * coverage month being evaluated for retroactive payment.
+	 */
+	@Test
+	public void process_RetroActivePayment_SBM_Multiple_Premiums_With_ProratedAptcOnly() throws Exception {
+
+		CodeRecord codeRecord = new CodeRecord("ERC", "2015-01-01 00:00:00", "2014-12-16 00:00:00");
+		expect(mockCodeDecodesHelper.getDecode(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(codeRecord);
+		replay(mockCodeDecodesHelper);
+		
+		PolicyDetailDTO policyDetailDTO = RapServiceTestUtil.createProratedMockPolicyPaymentDataForRetroEnrollmentMultiplePremiumsForMonth("APTC");
+
+		expect(mockRapDao.retrievePolicyPaymentData(EasyMock.anyObject(PolicyDataDTO.class)))
+		.andReturn(policyDetailDTO);
+
+		expect(mockRapDao.getPolicyPaymentTransNextSeq()).andReturn(1L).anyTimes();
+		replay(mockRapDao);
+
+		PolicyDataDTO policyVersion = RapServiceTestUtil.createMockPolicyVersion(1, "101", "2014-12-25", null);
+		
+		RapServiceTestUtil.loadStateConfigMap(policyVersion.getSubscriberStateCd(),
+				policyVersion.getPolicyStartDate().getYear(), ProrationType.SBM_PRORATING);
+		
+		RAPProcessingRequest request = new RAPProcessingRequest();
+		request.setPolicyDataDTO(policyVersion);
+
+		RAPProcessingResponse response = rapProcesssingServiceTest.processRetroActivePayments(request);
+
+		assertNotNull("RAPProcessingResponse", response);
+		assertNotNull("PolicyPaymentTransactions", response.getPolicyPaymentTransactions()); 
+		assertEquals("PolicyPaymentTransactions size", 3, response.getPolicyPaymentTransactions().size());
+		assertTrue("Payment Transaction values comparison", compareRetrosSbmProrationMultiplePremiumsCsrNotProrated(response.getPolicyPaymentTransactions()));
+	}
+	
+	private boolean compareRetrosSbmProrationMultiplePremiumsCsrNotProrated(List<PolicyPaymentTransDTO> paymentTransactions) {
+
+		PolicyPaymentTransDTO retroAPTCPaymentTransDTO = paymentTransactions.get(0);
+		assertEquals("Policy version id", 1, retroAPTCPaymentTransDTO.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroAPTCPaymentTransDTO.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCPaymentTransDTO.getTransPeriodTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroAPTCPaymentTransDTO.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroAPTCPaymentTransDTO.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-15"), retroAPTCPaymentTransDTO.getPaymentCoverageEndDate());
+		assertEquals("Program Type", "APTC", retroAPTCPaymentTransDTO.getFinancialProgramTypeCd());
+		assertEquals("Trans Type", "PCYC", retroAPTCPaymentTransDTO.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(25).doubleValue(), retroAPTCPaymentTransDTO.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(50).doubleValue(), retroAPTCPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+		assertNull("Proration days ", retroAPTCPaymentTransDTO.getProrationDaysOfCoverageNum());
+		
+		PolicyPaymentTransDTO retroAPTCPaymentTransDTO1 = paymentTransactions.get(1);
+		assertEquals("Policy version id", 1, retroAPTCPaymentTransDTO1.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroAPTCPaymentTransDTO1.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroAPTCPaymentTransDTO1.getTransPeriodTypeCd());
+		assertEquals("Program Type", "APTC", retroAPTCPaymentTransDTO1.getFinancialProgramTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroAPTCPaymentTransDTO1.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-16"), retroAPTCPaymentTransDTO1.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-31"), retroAPTCPaymentTransDTO1.getPaymentCoverageEndDate());
+		assertEquals("Trans Type", "PCYC", retroAPTCPaymentTransDTO1.getLastPaymentProcStatusTypeCd());
+		assertEquals("APTC Amount", new BigDecimal(37.5).doubleValue(), retroAPTCPaymentTransDTO1.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(75).doubleValue(), retroAPTCPaymentTransDTO1.getTotalPremiumAmount().doubleValue());
+		assertNull("Proration days", retroAPTCPaymentTransDTO1.getProrationDaysOfCoverageNum());
+
+		PolicyPaymentTransDTO retroCSRPaymentTransDTO = paymentTransactions.get(2);
+		assertEquals("Policy version id", 1, retroCSRPaymentTransDTO.getPolicyVersionId().longValue());
+		assertEquals("Policy id", "101", retroCSRPaymentTransDTO.getExchangePolicyId());
+		assertEquals("Trans Type", "R", retroCSRPaymentTransDTO.getTransPeriodTypeCd());
+		assertEquals("Program Type", "CSR", retroCSRPaymentTransDTO.getFinancialProgramTypeCd());
+		assertEquals("Coverage Dt", new DateTime("2015-01-01"), retroCSRPaymentTransDTO.getCoverageDate());
+		assertEquals("Coverage Start Dt", new DateTime("2015-01-01"), retroCSRPaymentTransDTO.getPaymentCoverageStartDate());
+		assertEquals("Coverage End Dt", new DateTime("2015-01-15"), retroCSRPaymentTransDTO.getPaymentCoverageEndDate());
+		assertEquals("Trans Type", "PCYC", retroCSRPaymentTransDTO.getLastPaymentProcStatusTypeCd());
+		assertEquals("CSR Amount", new BigDecimal(25).doubleValue(), retroCSRPaymentTransDTO.getPaymentAmount().doubleValue());
+		assertEquals("TPA", new BigDecimal(100).doubleValue(), retroCSRPaymentTransDTO.getTotalPremiumAmount().doubleValue());
+		assertEquals("Proration days", 31, retroCSRPaymentTransDTO.getProrationDaysOfCoverageNum().intValue());
+		
+		return true;
+	}
+
+	
 	@Test
 	public void test_HighDate() {
 
@@ -8124,4 +9515,9 @@ public class RapProcessingServiceTest extends TestCase {
 		assertEquals("expected DateTime Day", 31, actualHighDate.getDayOfMonth());
 	}
 
+	@After
+	public void tearDown() {
+		
+		RapProcessingHelper.getStateProrationConfigMap().clear();
+	}
 }

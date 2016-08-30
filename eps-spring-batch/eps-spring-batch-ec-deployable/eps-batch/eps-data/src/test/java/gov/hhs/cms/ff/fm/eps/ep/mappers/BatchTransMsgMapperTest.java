@@ -14,9 +14,10 @@ import gov.hhs.cms.ff.fm.eps.ep.data.util.TestDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.enums.ProcessedToDbInd;
 import gov.hhs.cms.ff.fm.eps.ep.po.BatchTransMsgPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
-import org.joda.time.DateTime;
+import java.time.LocalDateTime;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,7 +50,7 @@ public class BatchTransMsgMapperTest extends BaseMapperTest {
 		String expectedContractCode = expectedIssuerHiosId.concat(expectedStateCd).concat(expectedExchangePolicyID);
 		String srcVerId = "555555";
 		Long expectedSourceVersionId = Long.valueOf(srcVerId);
-		DateTime expectedSourceVersionDateTime = JUN_1;
+		LocalDateTime expectedSourceVersionDateTime = JUN_1_1am;
 
 		bemDTO.setBatchId(expectedBatchId);
 		bemDTO.setTransMsgId(expectedTransMsgId);
@@ -67,7 +68,7 @@ public class BatchTransMsgMapperTest extends BaseMapperTest {
 		bemDTO.getBem().getMember().add(member);
 		bemDTO.getBem().setTransactionInformation(new TransactionInformationType());
 		bemDTO.getBem().getTransactionInformation().setPolicySnapshotVersionNumber(srcVerId);
-		bemDTO.getBem().getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(expectedSourceVersionDateTime));
+		bemDTO.getBem().getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(expectedSourceVersionDateTime));
 		bemDTO.getBem().setPolicyInfo(new PolicyInfoType());
 		bemDTO.getBem().getPolicyInfo().setGroupPolicyNumber(expectedExchangePolicyID);
 		
@@ -106,7 +107,7 @@ public class BatchTransMsgMapperTest extends BaseMapperTest {
 		String expectedContractCode = expectedIssuerHiosId.concat(expectedStateCd).concat(expectedExchangePolicyID);
 		String srcVerId = "555555";
 		Long expectedSourceVersionId = Long.valueOf(srcVerId);
-		DateTime expectedSourceVersionDateTime = JUN_1;
+		LocalDateTime expectedSourceVersionDateTime = JUN_1_1am;
 
 		bemDTO.setBatchId(expectedBatchId);
 		bemDTO.setTransMsgId(expectedTransMsgId);
@@ -124,7 +125,7 @@ public class BatchTransMsgMapperTest extends BaseMapperTest {
 		bemDTO.getBem().getMember().add(member);
 		bemDTO.getBem().setTransactionInformation(new TransactionInformationType());
 		bemDTO.getBem().getTransactionInformation().setPolicySnapshotVersionNumber(srcVerId);
-		bemDTO.getBem().getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(expectedSourceVersionDateTime));
+		bemDTO.getBem().getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(expectedSourceVersionDateTime));
 		bemDTO.getBem().setPolicyInfo(new PolicyInfoType());
 		bemDTO.getBem().getPolicyInfo().setGroupPolicyNumber(expectedExchangePolicyID);
 		
@@ -496,7 +497,7 @@ public class BatchTransMsgMapperTest extends BaseMapperTest {
 		bemDTO.setBem(new BenefitEnrollmentMaintenanceType());
 		bemDTO.getBem().setTransactionInformation(new TransactionInformationType());
 		bemDTO.getBem().getTransactionInformation().setPolicySnapshotVersionNumber(TestDataUtil.getRandomNumberAsString(6) + "XXX");
-		bemDTO.getBem().getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(FEB_1));		
+		bemDTO.getBem().getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(FEB_1));		
 
 		try {
 			mapper.mapDTOToPO(bemDTO);

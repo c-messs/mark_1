@@ -3,7 +3,8 @@ package gov.hhs.cms.ff.fm.eps.ep.mappers;
 
 import gov.hhs.cms.ff.fm.eps.ep.ErrorWarningLogDTO;
 import gov.hhs.cms.ff.fm.eps.ep.po.ErrorWarningLogPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+
+import java.time.LocalDate;
 
 /**
  * @author EPS
@@ -31,8 +32,8 @@ public class ErrorWarningLogMapper {
 			errWarnLogPO.setTransMsgFileInfoId(errWarnLogDTO.getTransMsgFileInfoId());
 			errWarnLogPO.setBatchId(errWarnLogDTO.getBatchId());
 		}
-		errWarnLogPO.setCreateDateTime(EpsDateUtils.getCurrentDateTime());
-		errWarnLogPO.setLastModifiedDateTime(EpsDateUtils.getCurrentDateTime());
+		errWarnLogPO.setCreateDateTime(LocalDate.now());
+		errWarnLogPO.setLastModifiedDateTime(LocalDate.now());
 
 		return errWarnLogPO;
 	}

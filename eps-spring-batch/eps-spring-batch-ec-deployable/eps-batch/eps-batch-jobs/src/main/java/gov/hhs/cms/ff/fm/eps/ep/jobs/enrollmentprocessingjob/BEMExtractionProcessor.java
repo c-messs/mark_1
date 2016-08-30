@@ -4,10 +4,11 @@ import gov.cms.dsh.bem.FileInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentRequestDTO;
 import gov.hhs.cms.ff.fm.eps.ep.EPSConstants;
 import gov.hhs.cms.ff.fm.eps.ep.enums.ExchangeType;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.io.FileInputStream;
 import java.io.StringWriter;
+import java.time.LocalDateTime;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -21,7 +22,6 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobParameters;
@@ -43,7 +43,7 @@ public class BEMExtractionProcessor implements ItemProcessor<BenefitEnrollmentRe
 	String filePath;
 	String fileInfoXml;
 	String berXML;
-	DateTime fileNameTimeStamp;
+	LocalDateTime fileNameTimeStamp;
 	String exchangeType;
 	String stateCode;
 	JobParameters jobParameters;
@@ -123,7 +123,7 @@ public class BEMExtractionProcessor implements ItemProcessor<BenefitEnrollmentRe
 						break;
 					}
 					if ("GroupTimeStamp".equals(xmlr.getLocalName())) {
-						fileInformationType.setGroupTimeStamp(EpsDateUtils.getXMLGregorianCalendar(tagContent));
+						fileInformationType.setGroupTimeStamp(DateTimeUtil.getXMLGregorianCalendar(tagContent));
 						break;
 					}					
 					if ("VersionNumber".equals(xmlr.getLocalName())) {

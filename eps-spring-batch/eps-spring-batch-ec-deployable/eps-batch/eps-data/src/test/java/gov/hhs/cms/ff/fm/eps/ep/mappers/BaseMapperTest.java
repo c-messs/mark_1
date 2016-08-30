@@ -13,19 +13,21 @@ import gov.cms.dsh.bem.MemberRelatedInfoType;
 import gov.cms.dsh.bem.MemberType;
 import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentMaintenanceDTO;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyPremiumPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 
 import junit.framework.TestCase;
 
-import org.joda.time.DateTime;
-
 public abstract class BaseMapperTest extends TestCase {
 
-	protected static final DateTime DATETIME = new DateTime();
-	protected static final int YEAR = DATETIME.getYear();
+	protected static final LocalDate DATE = LocalDate.now();
+	protected static final LocalDateTime DATETIME = LocalDateTime.now();
+	protected static final int YEAR = DATE.getYear();
 
 	protected final SimpleDateFormat sdfYMD = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -51,23 +53,26 @@ public abstract class BaseMapperTest extends TestCase {
 	protected final String PRO_MPA = "PRO_MPA";
 	protected final String PRO_TIRA = "PRO_TIRA";
 
-	protected final DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
-	protected final DateTime JAN_15 = new DateTime(YEAR, 1, 15, 0, 0);
-	protected final DateTime JAN_31 = new DateTime(YEAR, 1, 31, 0, 0);
-	protected final DateTime FEB_1 = new DateTime(YEAR, 2, 1, 0, 0);
-	protected final DateTime FEB_MAX = new DateTime(YEAR, 2, FEB_1.dayOfMonth().getMaximumValue(), 0, 0);
-	protected final DateTime MAR_1 = new DateTime(YEAR, 3, 1, 0, 0);
-	protected final DateTime MAR_14 = new DateTime(YEAR, 3, 14, 0, 0);
-	protected final DateTime MAR_15 = new DateTime(YEAR, 3, 15, 0, 0);
-	protected final DateTime MAR_31 = new DateTime(YEAR, 3, 31, 0, 0);
-	protected final DateTime APR_1 = new DateTime(YEAR, 4, 1, 0, 0);
-	protected final DateTime APR_15 = new DateTime(YEAR, 4, 15, 0, 0);
-	protected final DateTime APR_30 = new DateTime(YEAR, 4, 30, 0, 0);
-	protected final DateTime MAY_1 = new DateTime(YEAR, 5, 1, 0, 0);
-	protected final DateTime MAY_31 = new DateTime(YEAR, 5, 31, 0, 0);
-	protected final DateTime JUN_1 = new DateTime(YEAR, 6, 1, 0, 0);
-	protected final DateTime JUN_30 = new DateTime(YEAR, 6, 30, 0, 0);
-	protected final DateTime DEC_31 = new DateTime(YEAR, 12, 31, 0, 0);
+	protected final LocalDate JAN_1 = LocalDate.of(YEAR, 1, 1);
+	protected final LocalDate JAN_15 = LocalDate.of(YEAR, 1, 15);
+	protected final LocalDate JAN_31 = LocalDate.of(YEAR, 1, 31);
+	protected final LocalDate FEB_1 = LocalDate.of(YEAR, 2, 1);
+	protected final LocalDate FEB_MAX = DATE.with(TemporalAdjusters.lastDayOfMonth());
+	protected final LocalDate MAR_1 = LocalDate.of(YEAR, 3, 1);
+	protected final LocalDate MAR_14 = LocalDate.of(YEAR, 3, 14);
+	protected final LocalDate MAR_15 = LocalDate.of(YEAR, 3, 15);
+	protected final LocalDate MAR_31 = LocalDate.of(YEAR, 3, 31);
+	protected final LocalDate APR_1 = LocalDate.of(YEAR, 4, 1);
+	protected final LocalDate APR_15 = LocalDate.of(YEAR, 4, 15);
+	protected final LocalDate APR_30 = LocalDate.of(YEAR, 4, 30);
+	protected final LocalDate MAY_1 = LocalDate.of(YEAR, 5, 1);
+	protected final LocalDate MAY_31 = LocalDate.of(YEAR, 5, 31);
+	protected final LocalDate JUN_1 = LocalDate.of(YEAR, 6, 1);
+	protected final LocalDate JUN_30 = LocalDate.of(YEAR, 6, 30);
+	protected final LocalDate DEC_31 = LocalDate.of(YEAR, 12, 31);
+	
+	protected final LocalDateTime JUN_1_1am = LocalDateTime.of(YEAR, 6, 1, 1, 0, 0, 666666000);
+	
 
 	protected BenefitEnrollmentMaintenanceDTO makeBemDTO() {
 
@@ -167,11 +172,11 @@ public abstract class BaseMapperTest extends TestCase {
 
 	}
 
-	public  HealthCoverageDatesType makeHealthCoverageDatesType(DateTime hcBBD, DateTime hcBED) {
+	public  HealthCoverageDatesType makeHealthCoverageDatesType(LocalDate hcBBD, LocalDate hcBED) {
 
 		HealthCoverageDatesType hcDates = new HealthCoverageDatesType();
-		hcDates.setBenefitBeginDate(EpsDateUtils.getXMLGregorianCalendar(hcBBD));
-		hcDates.setBenefitEndDate(EpsDateUtils.getXMLGregorianCalendar(hcBED));
+		hcDates.setBenefitBeginDate(DateTimeUtil.getXMLGregorianCalendar(hcBBD));
+		hcDates.setBenefitEndDate(DateTimeUtil.getXMLGregorianCalendar(hcBED));
 		return hcDates;
 	}
 
@@ -183,22 +188,22 @@ public abstract class BaseMapperTest extends TestCase {
 	 * @param eed
 	 * @return
 	 */
-	protected AdditionalInfoType makeAdditionalInfoType(DateTime esd, DateTime eed) {
+	protected AdditionalInfoType makeAdditionalInfoType(LocalDate esd, LocalDate eed) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
 		if (eed != null) {
-			ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+			ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		}
 		return ait;
 	}
 
-	protected AdditionalInfoType makeAdditionalInfoType(String type, DateTime esd, DateTime eed, BigDecimal amt) {
+	protected AdditionalInfoType makeAdditionalInfoType(String type, LocalDate esd, LocalDate eed, BigDecimal amt) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
 		if (eed != null) {
-			ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+			ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		}
 		if (type.equals(APTC)) {
 			ait.setAPTCAmount(amt); 
@@ -220,12 +225,12 @@ public abstract class BaseMapperTest extends TestCase {
 		return ait;
 	}
 
-	protected AdditionalInfoType makeAdditionalInfoType(String type, DateTime esd, DateTime eed, String txt) {
+	protected AdditionalInfoType makeAdditionalInfoType(String type, LocalDate esd, LocalDate eed, String txt) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
 		if (eed != null) {
-			ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+			ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		}
 		if (type.equals(RA)) {
 			ait.setRatingArea(txt); 
@@ -233,30 +238,30 @@ public abstract class BaseMapperTest extends TestCase {
 		return ait;
 	}
 
-	protected PolicyPremiumPO makePolicyPremiumPO(DateTime esd, DateTime eed, BigDecimal aptc, BigDecimal tira, BigDecimal tpa) {
+	protected PolicyPremiumPO makePolicyPremiumPO(LocalDate esd, LocalDate eed, BigDecimal aptc, BigDecimal tira, BigDecimal tpa) {
 
 		return makePolicyPremiumPO(esd, eed, aptc, tira, tpa, null, null, null, null, null, null, null);
 	}
 
-	protected PolicyPremiumPO makePolicyPremiumPO(DateTime esd, DateTime eed, BigDecimal aptc, BigDecimal tira, BigDecimal tpa,
+	protected PolicyPremiumPO makePolicyPremiumPO(LocalDate esd, LocalDate eed, BigDecimal aptc, BigDecimal tira, BigDecimal tpa,
 			BigDecimal csr) {
 
 		return makePolicyPremiumPO(esd, eed, aptc, tira, tpa, csr, null, null, null, null, null, null);
 	}
 
-	protected PolicyPremiumPO makePolicyPremiumPO(DateTime esd, DateTime eed, BigDecimal aptc, BigDecimal tira, BigDecimal tpa,
+	protected PolicyPremiumPO makePolicyPremiumPO(LocalDate esd, LocalDate eed, BigDecimal aptc, BigDecimal tira, BigDecimal tpa,
 			BigDecimal csr, BigDecimal opa1, BigDecimal opa2) {
 
 		return makePolicyPremiumPO(esd, eed, aptc, tira, tpa, csr, null, null, null, null, null, null);
 	}
 
-	protected PolicyPremiumPO makePolicyPremiumPO(DateTime esd, DateTime eed, BigDecimal aptc, BigDecimal tira, BigDecimal tpa, 
+	protected PolicyPremiumPO makePolicyPremiumPO(LocalDate esd, LocalDate eed, BigDecimal aptc, BigDecimal tira, BigDecimal tpa, 
 			BigDecimal csr, BigDecimal opa1, BigDecimal opa2, BigDecimal pa2, BigDecimal pa3, BigDecimal tera, String ra) {
 
 		PolicyPremiumPO po = new PolicyPremiumPO();
-		po.setEffectiveStartDate(new DateTime(esd));
+		po.setEffectiveStartDate(esd);
 		if (eed != null) {
-			po.setEffectiveEndDate(new DateTime(eed));
+			po.setEffectiveEndDate(eed);
 		}
 		//Key Financial elements
 		po.setAptcAmount(aptc);
@@ -269,7 +274,7 @@ public abstract class BaseMapperTest extends TestCase {
 	}
 
 
-	protected void assertPolicyPremiumPO(int i, String aitType, DateTime expectedESD, DateTime expectedEED, BigDecimal expectedAmt, PolicyPremiumPO actualPO) {
+	protected void assertPolicyPremiumPO(int i, String aitType, LocalDate expectedESD, LocalDate expectedEED, BigDecimal expectedAmt, PolicyPremiumPO actualPO) {
 
 		String msg = "EPS PolicyPremium Record " + i + ": " + aitType + " - ";
 		assertEquals(msg + "EffectiveStartDate (ESD)", expectedESD, actualPO.getEffectiveStartDate());
@@ -300,7 +305,7 @@ public abstract class BaseMapperTest extends TestCase {
 		} 
 	}
 
-	protected void assertPolicyPremiumPO(int i, String aitType, DateTime expectedESD, DateTime expectedEED, String expectedTxt, PolicyPremiumPO actualPO) {
+	protected void assertPolicyPremiumPO(int i, String aitType, LocalDate expectedESD, LocalDate expectedEED, String expectedTxt, PolicyPremiumPO actualPO) {
 
 		String msg = "EPS PolicyPremium Record " + i + ": " + aitType + " - ";
 		assertEquals(msg + "EffectiveStartDate (ESD)", expectedESD, actualPO.getEffectiveStartDate());

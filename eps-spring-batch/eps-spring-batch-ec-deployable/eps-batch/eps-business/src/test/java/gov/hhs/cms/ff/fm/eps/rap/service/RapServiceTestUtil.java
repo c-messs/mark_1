@@ -4,15 +4,21 @@
 package gov.hhs.cms.ff.fm.eps.rap.service;
 
 import static gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants.HIGH_DATE;
+
+import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
+import gov.hhs.cms.ff.fm.eps.ep.enums.ProrationType;
 import gov.hhs.cms.ff.fm.eps.rap.domain.IssuerUserFeeRate;
 import gov.hhs.cms.ff.fm.eps.rap.domain.PolicyPremium;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDataDTO;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDetailDTO;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyPaymentTransDTO;
+import gov.hhs.cms.ff.fm.eps.rap.util.RapProcessingHelper;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.joda.time.DateTime;
 
@@ -37,6 +43,7 @@ public class RapServiceTestUtil {
 			policyDataDTO.setPolicyEndDate(new DateTime(HIGH_DATE));
 		}
 		policyDataDTO.setMaintenanceStartDateTime(new DateTime(policyVersionDate));
+		policyDataDTO.setIssuerStartDate(new DateTime("2015-01-01"));
 
 		return policyDataDTO;
 	}
@@ -54,6 +61,7 @@ public class RapServiceTestUtil {
 			policyDataDTO.setPolicyEndDate(new DateTime(policyEndDt));
 		}
 		policyDataDTO.setMaintenanceStartDateTime(new DateTime(policyVersionDate));
+		policyDataDTO.setIssuerStartDate(policyDataDTO.getPolicyStartDate().withDayOfYear(1));
 
 		return policyDataDTO;
 	}
@@ -145,6 +153,80 @@ public class RapServiceTestUtil {
 
 		return policyDetailDTO;
 	}
+	
+	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroEnrollmentMultiplePremiumsForMonth() {
+
+		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
+		List<PolicyPremium> premiums = new ArrayList<PolicyPremium>();
+		premiums.add(createMockPolicyPremium(1, "2015-01-01", "2015-01-15", new BigDecimal(50), new BigDecimal(25), new BigDecimal(100)));
+		premiums.add(createMockPolicyPremium(1, "2015-01-16", null, new BigDecimal(75), new BigDecimal(50), new BigDecimal(150)));
+		policyDetailDTO.setPolicyPremiums(premiums);
+
+		return policyDetailDTO;
+	}
+	
+	public static PolicyDetailDTO createProratedMockPolicyPaymentDataForRetroEnrollment() {
+
+		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
+		List<PolicyPremium> premiums = new ArrayList<PolicyPremium>();
+		
+		PolicyPremium premium = createMockPolicyPremium(1, "2015-01-15", null, new BigDecimal(50), new BigDecimal(25), new BigDecimal(100));
+		premium.setProratedAptcAmount(new BigDecimal("25.00"));
+		premium.setProratedCsrAmount(new BigDecimal("12.50"));
+		premium.setProratedPremiumAmount(new BigDecimal("50.00"));
+		premiums.add(premium);
+		
+		
+		policyDetailDTO.setPolicyPremiums(premiums);
+
+		return policyDetailDTO;
+	}
+	
+	public static PolicyDetailDTO createProratedMockPolicyPaymentDataForRetroEnrollmentMultiplePremiumsForMonth() {
+
+		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
+		List<PolicyPremium> premiums = new ArrayList<PolicyPremium>();
+		
+		PolicyPremium premium = createMockPolicyPremium(1, "2015-01-01", "2015-01-15", new BigDecimal(50), new BigDecimal(25), new BigDecimal(100));
+		premium.setProratedAptcAmount(new BigDecimal("25.00"));
+		premium.setProratedCsrAmount(new BigDecimal("12.50"));
+		premium.setProratedPremiumAmount(new BigDecimal("50.00"));
+		premiums.add(premium);
+		
+		PolicyPremium premium2 = createMockPolicyPremium(1, "2015-01-16", null, new BigDecimal(75), new BigDecimal(50), new BigDecimal(150));
+		premium2.setProratedAptcAmount(new BigDecimal("37.50"));
+		premium2.setProratedCsrAmount(new BigDecimal("25.00"));
+		premium2.setProratedPremiumAmount(new BigDecimal("75.00"));
+		premiums.add(premium2);
+		
+		
+		policyDetailDTO.setPolicyPremiums(premiums);
+
+		return policyDetailDTO;
+	}
+	
+	public static PolicyDetailDTO createProratedMockPolicyPaymentDataForRetroEnrollmentMultiplePremiumsForMonth(String proratingProgramType) {
+
+		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
+		List<PolicyPremium> premiums = new ArrayList<PolicyPremium>();
+		
+		PolicyPremium premium = createMockPolicyPremium(1, "2015-01-01", "2015-01-15", new BigDecimal(50), new BigDecimal(25), new BigDecimal(100));
+		if(proratingProgramType.equalsIgnoreCase("APTC")) premium.setProratedAptcAmount(new BigDecimal("25.00"));
+		if(proratingProgramType.equalsIgnoreCase("CSR")) premium.setProratedCsrAmount(new BigDecimal("12.50"));
+		premium.setProratedPremiumAmount(new BigDecimal("50.00"));
+		premiums.add(premium);
+		
+		PolicyPremium premium2 = createMockPolicyPremium(1, "2015-01-16", null, new BigDecimal(75), new BigDecimal(50), new BigDecimal(150));
+		if(proratingProgramType.equalsIgnoreCase("APTC")) premium2.setProratedAptcAmount(new BigDecimal("37.50"));
+		if(proratingProgramType.equalsIgnoreCase("CSR")) premium2.setProratedCsrAmount(new BigDecimal("25.00"));
+		premium2.setProratedPremiumAmount(new BigDecimal("75.00"));
+		premiums.add(premium2);
+		
+		
+		policyDetailDTO.setPolicyPremiums(premiums);
+
+		return policyDetailDTO;
+	}
 
 	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroEnrollment_Zero_Amounts() {
 
@@ -186,7 +268,7 @@ public class RapServiceTestUtil {
 		return policyDetailDTO;
 	}
 
-	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroChange() {
+	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroChange(boolean isFfm) {
 
 		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
 		List<PolicyPremium> premiums = new ArrayList<PolicyPremium>();
@@ -199,11 +281,11 @@ public class RapServiceTestUtil {
 		List<PolicyPaymentTransDTO> payments = new ArrayList<PolicyPaymentTransDTO>();
 		payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), "APPV"));
 		payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), "APPV"));
-		payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), "APPV"));
+		if (isFfm) payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), "APPV"));
 
 		payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), "APPV"));
 		payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), "APPV"));
-		payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), "APPV"));
+		if (isFfm) payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), "APPV"));
 
 		policyDetailDTO.setPolicyPayments(payments);
 
@@ -285,7 +367,7 @@ public class RapServiceTestUtil {
 		return policyDetailDTO;
 	}
 	
-	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroChange_Zero_Amounts() {
+	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroChange_Zero_Amounts(boolean isFfm) {
 
 		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
 		List<PolicyPremium> premiums = new ArrayList<PolicyPremium>();
@@ -297,18 +379,18 @@ public class RapServiceTestUtil {
 		List<PolicyPaymentTransDTO> payments = new ArrayList<PolicyPaymentTransDTO>();
 		payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), "APPV"));
 		payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), "APPV"));
-		payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), "APPV"));
+		if(isFfm) payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), "APPV"));
 
 		payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), "APPV"));
 		payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), "APPV"));
-		payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), "APPV"));
+		if(isFfm) payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), "APPV"));
 
 		policyDetailDTO.setPolicyPayments(payments);
 
 		return policyDetailDTO;
 	}
 
-	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroChange_Null_Amounts() {
+	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroChange_Null_Amounts(boolean isFfm) {
 
 		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
 		List<PolicyPremium> premiums = new ArrayList<PolicyPremium>();
@@ -320,18 +402,18 @@ public class RapServiceTestUtil {
 		List<PolicyPaymentTransDTO> payments = new ArrayList<PolicyPaymentTransDTO>();
 		payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), "APPV"));
 		payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), "APPV"));
-		payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), "APPV"));
+		if(isFfm) payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), "APPV"));
 
 		payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), "APPV"));
 		payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), "APPV"));
-		payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), "APPV"));
+		if(isFfm) payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), "APPV"));
 
 		policyDetailDTO.setPolicyPayments(payments);
 
 		return policyDetailDTO;
 	}
 
-	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroMidMonthChange() {
+	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroMidMonthChange(boolean isFfm) {
 
 		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
 		List<PolicyPremium> premiums = new ArrayList<PolicyPremium>();
@@ -343,18 +425,51 @@ public class RapServiceTestUtil {
 		List<PolicyPaymentTransDTO> payments = new ArrayList<PolicyPaymentTransDTO>();
 		payments.add(createMockPolicyPayment(1L, 1L, "301", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), "APPV"));
 		payments.add(createMockPolicyPayment(2L, 1L, "301", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), "APPV"));
-		payments.add(createMockPolicyPayment(3L, 1L, "301", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), "APPV"));
+		if(isFfm) payments.add(createMockPolicyPayment(3L, 1L, "301", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), "APPV"));
 
 		payments.add(createMockPolicyPayment(4L, 1L, "301", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), "APPV"));
 		payments.add(createMockPolicyPayment(5L, 1L, "301", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), "APPV"));
-		payments.add(createMockPolicyPayment(6L, 1L, "301", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), "APPV"));
+		if(isFfm) payments.add(createMockPolicyPayment(6L, 1L, "301", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), "APPV"));
 
 		policyDetailDTO.setPolicyPayments(payments);
 
 		return policyDetailDTO;
 	}
+	
+	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroMidMonthChangeSbmProrated() {
 
-	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroTerm(String paymentStatusCd) {
+		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
+		List<PolicyPremium> premiums = new ArrayList<PolicyPremium>();
+		
+		PolicyPremium premium = createMockPolicyPremium(2, "2015-01-01", "2015-01-15", new BigDecimal(50), new BigDecimal(25), new BigDecimal(100));
+		premium.setProratedAptcAmount(new BigDecimal("24.19"));
+		premium.setProratedCsrAmount(new BigDecimal("12.10"));
+		premium.setProratedPremiumAmount(new BigDecimal("50.00"));
+		premiums.add(premium);
+		
+		PolicyPremium premium1 = createMockPolicyPremium(1, "2015-01-16", "2015-01-31", new BigDecimal(100), new BigDecimal(50), new BigDecimal(100));
+		premium1.setProratedAptcAmount(new BigDecimal("51.61"));
+		premium1.setProratedCsrAmount(new BigDecimal("25.81"));
+		premium1.setProratedPremiumAmount(new BigDecimal("50.00"));
+		premiums.add(premium1);
+		
+		premiums.add(createMockPolicyPremium(2, "2015-02-01", null, new BigDecimal(100), new BigDecimal(50), new BigDecimal(100)));
+
+		policyDetailDTO.setPolicyPremiums(premiums);
+
+		List<PolicyPaymentTransDTO> payments = new ArrayList<PolicyPaymentTransDTO>();
+		payments.add(createMockPolicyPayment(1L, 1L, "301", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), "APPV"));
+		payments.add(createMockPolicyPayment(2L, 1L, "301", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), "APPV"));
+
+		payments.add(createMockPolicyPayment(4L, 1L, "301", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), "APPV"));
+		payments.add(createMockPolicyPayment(5L, 1L, "301", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), "APPV"));
+
+		policyDetailDTO.setPolicyPayments(payments);
+
+		return policyDetailDTO;
+	}
+	
+	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroTerm(String paymentStatusCd, boolean isFfm) {
 
 		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
 		//Premiums
@@ -366,25 +481,46 @@ public class RapServiceTestUtil {
 
 		//Payments
 		List<PolicyPaymentTransDTO> payments = new ArrayList<PolicyPaymentTransDTO>();
-		payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), paymentStatusCd));
-		payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), paymentStatusCd));
-		payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), paymentStatusCd));
-
-		payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), paymentStatusCd));
-		payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), paymentStatusCd));
-		payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), paymentStatusCd));
-
-		payments.add(createMockPolicyPayment(7L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(-50), paymentStatusCd));
-		payments.get(6).setParentPolicyPaymentTransId(4L);
-		payments.add(createMockPolicyPayment(8L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(80), paymentStatusCd));
-		payments.add(createMockPolicyPayment(9L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(-25), paymentStatusCd));
-		payments.get(8).setParentPolicyPaymentTransId(5L);
-		payments.add(createMockPolicyPayment(10L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(50), paymentStatusCd));
-
-		payments.add(createMockPolicyPayment(11L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), paymentStatusCd));
-		payments.add(createMockPolicyPayment(12L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), paymentStatusCd));
-		payments.add(createMockPolicyPayment(13L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), paymentStatusCd));
-
+		
+		if(isFfm) {
+			payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), paymentStatusCd));
+			payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), paymentStatusCd));
+			payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(7L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(-50), paymentStatusCd));
+			payments.get(6).setParentPolicyPaymentTransId(4L);
+			payments.add(createMockPolicyPayment(8L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(9L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(-25), paymentStatusCd));
+			payments.get(8).setParentPolicyPaymentTransId(5L);
+			payments.add(createMockPolicyPayment(10L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(50), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(11L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(12L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(13L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), paymentStatusCd));
+			
+		} else {
+			payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(7L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(-50), paymentStatusCd));
+			payments.get(4).setParentPolicyPaymentTransId(4L);
+			payments.add(createMockPolicyPayment(8L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(9L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(-25), paymentStatusCd));
+			payments.get(6).setParentPolicyPaymentTransId(5L);
+			payments.add(createMockPolicyPayment(10L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(50), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(11L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(12L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(13L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), paymentStatusCd));
+			
+		}
 		policyDetailDTO.setPolicyPayments(payments);
 
 		return policyDetailDTO;
@@ -450,7 +586,7 @@ public class RapServiceTestUtil {
 		return policyDetailDTO;
 	}
 
-	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroCancel(String paymentStatusCd) {
+	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroCancel(String paymentStatusCd, boolean isFfm) {
 
 		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
 		//Premiums
@@ -464,7 +600,7 @@ public class RapServiceTestUtil {
 		List<PolicyPaymentTransDTO> payments = new ArrayList<PolicyPaymentTransDTO>();
 		payments.add(createMockPolicyPayment(1L, 1L, "201", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), paymentStatusCd));
 		payments.add(createMockPolicyPayment(2L, 1L, "201", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), paymentStatusCd));
-		payments.add(createMockPolicyPayment(3L, 1L, "201", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), paymentStatusCd));
+		if(isFfm) payments.add(createMockPolicyPayment(3L, 1L, "201", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), paymentStatusCd));
 
 		policyDetailDTO.setPolicyPayments(payments);
 
@@ -492,7 +628,7 @@ public class RapServiceTestUtil {
 		return policyDetailDTO;
 	}
 
-	public static PolicyDetailDTO createMockPolicyPaymentDataForPolicyStartDateChange() {
+	public static PolicyDetailDTO createMockPolicyPaymentDataForPolicyStartDateChange(boolean isFfm) {
 
 		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
 		//Premiums
@@ -506,30 +642,30 @@ public class RapServiceTestUtil {
 		List<PolicyPaymentTransDTO> payments = new ArrayList<PolicyPaymentTransDTO>();
 		payments.add(createMockPolicyPayment(1L, 1L, "201", "R", "2015-06-01", "2015-06-01", "2015-06-30", "APTC", new BigDecimal(88.61), "APPV"));
 		payments.add(createMockPolicyPayment(2L, 1L, "201", "R", "2015-06-01", "2015-06-01", "2015-06-30", "CSR", new BigDecimal(41.58), "APPV"));
-		payments.add(createMockPolicyPayment(3L, 1L, "201", "R", "2015-06-01", "2015-06-01", "2015-06-30", "UF", new BigDecimal(189.01), "APPV"));
+		if(isFfm) payments.add(createMockPolicyPayment(3L, 1L, "201", "R", "2015-06-01", "2015-06-01", "2015-06-30", "UF", new BigDecimal(189.01), "APPV"));
 
 		payments.add(createMockPolicyPayment(4L, 1L, "201", "R", "2015-07-01", "2015-07-01", "2015-07-31", "APTC", new BigDecimal(88.61), "APPV"));
 		payments.add(createMockPolicyPayment(5L, 1L, "201", "R", "2015-07-01", "2015-07-01", "2015-07-31", "CSR", new BigDecimal(41.58), "APPV"));
-		payments.add(createMockPolicyPayment(6L, 1L, "201", "R", "2015-07-01", "2015-07-01", "2015-07-31", "UF", new BigDecimal(189.01), "APPV"));
+		if(isFfm) payments.add(createMockPolicyPayment(6L, 1L, "201", "R", "2015-07-01", "2015-07-01", "2015-07-31", "UF", new BigDecimal(189.01), "APPV"));
 
 		payments.add(createMockPolicyPayment(7L, 1L, "201", "R", "2015-08-01", "2015-08-01", "2015-08-31", "APTC", new BigDecimal(88.61), "APPV"));
 		payments.add(createMockPolicyPayment(8L, 1L, "201", "R", "2015-08-01", "2015-08-01", "2015-08-31", "CSR", new BigDecimal(41.58), "APPV"));
-		payments.add(createMockPolicyPayment(9L, 1L, "201", "R", "2015-08-01", "2015-08-01", "2015-08-31", "UF", new BigDecimal(189.01), "APPV"));
+		if(isFfm) payments.add(createMockPolicyPayment(9L, 1L, "201", "R", "2015-08-01", "2015-08-01", "2015-08-31", "UF", new BigDecimal(189.01), "APPV"));
 
 		payments.add(createMockPolicyPayment(10L, 1L, "201", "R", "2015-09-01", "2015-09-01", "2015-09-30", "APTC", new BigDecimal(88.61), "APPV"));
 		payments.add(createMockPolicyPayment(11L, 1L, "201", "R", "2015-09-01", "2015-09-01", "2015-09-30", "CSR", new BigDecimal(41.58), "APPV"));
-		payments.add(createMockPolicyPayment(12L, 1L, "201", "R", "2015-09-01", "2015-09-01", "2015-09-30", "UF", new BigDecimal(189.01), "APPV"));
+		if(isFfm) payments.add(createMockPolicyPayment(12L, 1L, "201", "R", "2015-09-01", "2015-09-01", "2015-09-30", "UF", new BigDecimal(189.01), "APPV"));
 
 		payments.add(createMockPolicyPayment(13L, 1L, "201", "R", "2015-10-01", "2015-10-01", "2015-10-31", "APTC", new BigDecimal(88.61), "APPV"));
 		payments.add(createMockPolicyPayment(14L, 1L, "201", "R", "2015-10-01", "2015-10-01", "2015-10-31", "CSR", new BigDecimal(41.58), "APPV"));
-		payments.add(createMockPolicyPayment(15L, 1L, "201", "R", "2015-10-01", "2015-10-01", "2015-10-31", "UF", new BigDecimal(189.01), "APPV"));
+		if(isFfm) payments.add(createMockPolicyPayment(15L, 1L, "201", "R", "2015-10-01", "2015-10-01", "2015-10-31", "UF", new BigDecimal(189.01), "APPV"));
 
 		policyDetailDTO.setPolicyPayments(payments);
 
 		return policyDetailDTO;
 	}
 
-	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroChangePastPeriod(String paymentStatusCd) {
+	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroChangePastPeriod(String paymentStatusCd, boolean isFfm) {
 
 		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
 		//Premiums
@@ -541,46 +677,77 @@ public class RapServiceTestUtil {
 
 		//Payments
 		List<PolicyPaymentTransDTO> payments = new ArrayList<PolicyPaymentTransDTO>();
-		payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), paymentStatusCd));
-		payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), paymentStatusCd));
-		payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), paymentStatusCd));
-
-		payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), paymentStatusCd));
-		payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), paymentStatusCd));
-		payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), paymentStatusCd));
-
-		payments.add(createMockPolicyPayment(7L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(-50), paymentStatusCd));
-		payments.get(6).setParentPolicyPaymentTransId(4L);
-		payments.add(createMockPolicyPayment(8L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(80), paymentStatusCd));
-		payments.add(createMockPolicyPayment(9L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(-25), paymentStatusCd));
-		payments.get(8).setParentPolicyPaymentTransId(5L);
-		payments.add(createMockPolicyPayment(10L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(50), paymentStatusCd));
-
-		payments.add(createMockPolicyPayment(11L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), paymentStatusCd));
-		payments.add(createMockPolicyPayment(12L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), paymentStatusCd));
-		payments.add(createMockPolicyPayment(13L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), paymentStatusCd));
-
-		payments.add(createMockPolicyPayment(14L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(-80), paymentStatusCd));
-		payments.get(13).setParentPolicyPaymentTransId(11L);
-		payments.add(createMockPolicyPayment(15L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(-50), paymentStatusCd));
-		payments.get(14).setParentPolicyPaymentTransId(12L);
-		payments.add(createMockPolicyPayment(16L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(-100), paymentStatusCd));
-		payments.get(15).setParentPolicyPaymentTransId(13L);
-
-		payments.add(createMockPolicyPayment(17L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), paymentStatusCd));
-		payments.add(createMockPolicyPayment(18L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), paymentStatusCd));
-		payments.add(createMockPolicyPayment(19L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), paymentStatusCd));
-
-		payments.add(createMockPolicyPayment(20L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "APTC", new BigDecimal(80), paymentStatusCd));
-		payments.add(createMockPolicyPayment(20L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "CSR", new BigDecimal(50), paymentStatusCd));
-		payments.add(createMockPolicyPayment(21L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "UF", new BigDecimal(100), paymentStatusCd));
-
+		
+		if(isFfm) {
+			payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), paymentStatusCd));
+			payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), paymentStatusCd));
+			payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(7L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(-50), paymentStatusCd));
+			payments.get(6).setParentPolicyPaymentTransId(4L);
+			payments.add(createMockPolicyPayment(8L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(9L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(-25), paymentStatusCd));
+			payments.get(8).setParentPolicyPaymentTransId(5L);
+			payments.add(createMockPolicyPayment(10L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(50), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(11L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(12L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(13L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(14L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(-80), paymentStatusCd));
+			payments.get(13).setParentPolicyPaymentTransId(11L);
+			payments.add(createMockPolicyPayment(15L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(-50), paymentStatusCd));
+			payments.get(14).setParentPolicyPaymentTransId(12L);
+			payments.add(createMockPolicyPayment(16L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(-100), paymentStatusCd));
+			payments.get(15).setParentPolicyPaymentTransId(13L);
+	
+			payments.add(createMockPolicyPayment(17L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(18L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(19L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(20L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(20L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "CSR", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(21L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "UF", new BigDecimal(100), paymentStatusCd));
+		
+		} else {
+			payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(7L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(-50), paymentStatusCd));
+			payments.get(4).setParentPolicyPaymentTransId(4L);
+			payments.add(createMockPolicyPayment(8L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(9L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(-25), paymentStatusCd));
+			payments.get(6).setParentPolicyPaymentTransId(5L);
+			payments.add(createMockPolicyPayment(10L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(50), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(11L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(12L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(14L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(-80), paymentStatusCd));
+			payments.get(10).setParentPolicyPaymentTransId(11L);
+			payments.add(createMockPolicyPayment(15L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(-50), paymentStatusCd));
+			payments.get(11).setParentPolicyPaymentTransId(12L);
+	
+			payments.add(createMockPolicyPayment(17L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(18L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(20L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(20L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "CSR", new BigDecimal(50), paymentStatusCd));
+		}
+		
 		policyDetailDTO.setPolicyPayments(payments);
 
 		return policyDetailDTO;
 	}
 
-	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroReinstatement(String paymentStatusCd) {
+	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroReinstatement(String paymentStatusCd, boolean isFfm) {
 
 		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
 		//Premiums
@@ -592,38 +759,63 @@ public class RapServiceTestUtil {
 
 		//Payments
 		List<PolicyPaymentTransDTO> payments = new ArrayList<PolicyPaymentTransDTO>();
-		payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), paymentStatusCd));
-		payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), paymentStatusCd));
-		payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), paymentStatusCd));
-
-		payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), paymentStatusCd));
-		payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), paymentStatusCd));
-		payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), paymentStatusCd));
-
-		payments.add(createMockPolicyPayment(7L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(-50), paymentStatusCd));
-		payments.get(6).setParentPolicyPaymentTransId(4L);
-		payments.add(createMockPolicyPayment(8L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(80), paymentStatusCd));
-		payments.add(createMockPolicyPayment(9L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(-25), paymentStatusCd));
-		payments.get(8).setParentPolicyPaymentTransId(5L);
-		payments.add(createMockPolicyPayment(10L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(50), paymentStatusCd));
-
-		payments.add(createMockPolicyPayment(11L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), paymentStatusCd));
-		payments.add(createMockPolicyPayment(12L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), paymentStatusCd));
-		payments.add(createMockPolicyPayment(13L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), paymentStatusCd));
-
-		payments.add(createMockPolicyPayment(14L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(-80), paymentStatusCd));
-		payments.get(13).setParentPolicyPaymentTransId(11L);
-		payments.add(createMockPolicyPayment(15L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(-50), paymentStatusCd));
-		payments.get(14).setParentPolicyPaymentTransId(12L);
-		payments.add(createMockPolicyPayment(16L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(-100), paymentStatusCd));
-		payments.get(15).setParentPolicyPaymentTransId(13L);
-
+		
+		if(isFfm) {
+			payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), paymentStatusCd));
+			payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), paymentStatusCd));
+			payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(7L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(-50), paymentStatusCd));
+			payments.get(6).setParentPolicyPaymentTransId(4L);
+			payments.add(createMockPolicyPayment(8L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(9L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(-25), paymentStatusCd));
+			payments.get(8).setParentPolicyPaymentTransId(5L);
+			payments.add(createMockPolicyPayment(10L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(50), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(11L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(12L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(13L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(14L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(-80), paymentStatusCd));
+			payments.get(13).setParentPolicyPaymentTransId(11L);
+			payments.add(createMockPolicyPayment(15L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(-50), paymentStatusCd));
+			payments.get(14).setParentPolicyPaymentTransId(12L);
+			payments.add(createMockPolicyPayment(16L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(-100), paymentStatusCd));
+			payments.get(15).setParentPolicyPaymentTransId(13L);
+		
+		} else {
+			payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), paymentStatusCd));
+			payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(7L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(-50), paymentStatusCd));
+			payments.get(4).setParentPolicyPaymentTransId(4L);
+			payments.add(createMockPolicyPayment(8L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(9L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(-25), paymentStatusCd));
+			payments.get(6).setParentPolicyPaymentTransId(5L);
+			payments.add(createMockPolicyPayment(10L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(50), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(11L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), paymentStatusCd));
+			payments.add(createMockPolicyPayment(12L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), paymentStatusCd));
+	
+			payments.add(createMockPolicyPayment(14L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(-80), paymentStatusCd));
+			payments.get(10).setParentPolicyPaymentTransId(11L);
+			payments.add(createMockPolicyPayment(15L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(-50), paymentStatusCd));
+			payments.get(11).setParentPolicyPaymentTransId(12L);
+		}
+		
 		policyDetailDTO.setPolicyPayments(payments);
 
 		return policyDetailDTO;
 	}
 
-	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroChangeMultiple() {
+	public static PolicyDetailDTO createMockPolicyPaymentDataForRetroChangeMultiple(boolean isFfm) {
 
 		PolicyDetailDTO policyDetailDTO = new PolicyDetailDTO();
 		//Premiums
@@ -636,47 +828,86 @@ public class RapServiceTestUtil {
 
 		//Payments
 		List<PolicyPaymentTransDTO> payments = new ArrayList<PolicyPaymentTransDTO>();
-		payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), "APPV"));
-		payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), "APPV"));
-		payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), "APPV"));
+		
+		if(isFfm) {
+			payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), "APPV"));
+			payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), "APPV"));
+			payments.add(createMockPolicyPayment(3L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "UF", new BigDecimal(100), "APPV"));
+	
+			payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), "APPV"));
+			payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), "APPV"));
+			payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), "APPV"));
+	
+			payments.add(createMockPolicyPayment(7L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(-50), "APPV"));
+			payments.get(6).setParentPolicyPaymentTransId(4L);
+			payments.add(createMockPolicyPayment(8L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(80), "APPV"));
+			payments.add(createMockPolicyPayment(9L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(-25), "APPV"));
+			payments.get(8).setParentPolicyPaymentTransId(5L);
+			payments.add(createMockPolicyPayment(10L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(50), "APPV"));
+	
+			payments.add(createMockPolicyPayment(11L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), "APPV"));
+			payments.add(createMockPolicyPayment(12L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), "APPV"));
+			payments.add(createMockPolicyPayment(13L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), "APPV"));
+	
+			payments.add(createMockPolicyPayment(14L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(-80), "APPV"));
+			payments.get(13).setParentPolicyPaymentTransId(11L);
+			payments.add(createMockPolicyPayment(15L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(-50), "APPV"));
+			payments.get(14).setParentPolicyPaymentTransId(12L);
+			payments.add(createMockPolicyPayment(16L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(-100), "APPV"));
+			payments.get(15).setParentPolicyPaymentTransId(13L);
+	
+			payments.add(createMockPolicyPayment(17L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), "PCYC"));
+			payments.add(createMockPolicyPayment(18L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), "PCYC"));
+			payments.add(createMockPolicyPayment(19L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), "PCYC"));
+	
+			payments.add(createMockPolicyPayment(20L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "APTC", new BigDecimal(80), "PCYC"));
+			payments.add(createMockPolicyPayment(21L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "CSR", new BigDecimal(50), "PCYC"));
+			payments.add(createMockPolicyPayment(22L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "UF", new BigDecimal(100), "PCYC"));
+	
+			payments.add(createMockPolicyPayment(23L, 5L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(-50), "PCYC"));
+			payments.get(22).setParentPolicyPaymentTransId(1L);
+			payments.add(createMockPolicyPayment(24L, 5L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(70), "PCYC"));
+			payments.add(createMockPolicyPayment(25L, 5L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(-25), "PCYC"));
+			payments.get(24).setParentPolicyPaymentTransId(2L);
+			payments.add(createMockPolicyPayment(26L, 5L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(35), "PCYC"));
 
-		payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), "APPV"));
-		payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), "APPV"));
-		payments.add(createMockPolicyPayment(6L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "UF", new BigDecimal(100), "APPV"));
+		} else {
+			payments.add(createMockPolicyPayment(1L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(50), "APPV"));
+			payments.add(createMockPolicyPayment(2L, 1L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(25), "APPV"));
+	
+			payments.add(createMockPolicyPayment(4L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(50), "APPV"));
+			payments.add(createMockPolicyPayment(5L, 1L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(25), "APPV"));
+	
+			payments.add(createMockPolicyPayment(7L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(-50), "APPV"));
+			payments.get(4).setParentPolicyPaymentTransId(4L);
+			payments.add(createMockPolicyPayment(8L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(80), "APPV"));
+			payments.add(createMockPolicyPayment(9L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(-25), "APPV"));
+			payments.get(6).setParentPolicyPaymentTransId(5L);
+			payments.add(createMockPolicyPayment(10L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(50), "APPV"));
+	
+			payments.add(createMockPolicyPayment(11L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), "APPV"));
+			payments.add(createMockPolicyPayment(12L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), "APPV"));
+	
+			payments.add(createMockPolicyPayment(14L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(-80), "APPV"));
+			payments.get(10).setParentPolicyPaymentTransId(11L);
+			payments.add(createMockPolicyPayment(15L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(-50), "APPV"));
+			payments.get(11).setParentPolicyPaymentTransId(12L);
+	
+			payments.add(createMockPolicyPayment(17L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), "PCYC"));
+			payments.add(createMockPolicyPayment(18L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), "PCYC"));
+	
+			payments.add(createMockPolicyPayment(20L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "APTC", new BigDecimal(80), "PCYC"));
+			payments.add(createMockPolicyPayment(21L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "CSR", new BigDecimal(50), "PCYC"));
+	
+			payments.add(createMockPolicyPayment(23L, 5L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(-50), "PCYC"));
+			payments.get(16).setParentPolicyPaymentTransId(1L);
+			payments.add(createMockPolicyPayment(24L, 5L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(70), "PCYC"));
+			payments.add(createMockPolicyPayment(25L, 5L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(-25), "PCYC"));
+			payments.get(18).setParentPolicyPaymentTransId(2L);
+			payments.add(createMockPolicyPayment(26L, 5L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(35), "PCYC"));
 
-		payments.add(createMockPolicyPayment(7L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(-50), "APPV"));
-		payments.get(6).setParentPolicyPaymentTransId(4L);
-		payments.add(createMockPolicyPayment(8L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "APTC", new BigDecimal(80), "APPV"));
-		payments.add(createMockPolicyPayment(9L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(-25), "APPV"));
-		payments.get(8).setParentPolicyPaymentTransId(5L);
-		payments.add(createMockPolicyPayment(10L, 2L, "101", "R", "2015-02-01", "2015-02-01", "2015-02-28", "CSR", new BigDecimal(50), "APPV"));
-
-		payments.add(createMockPolicyPayment(11L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), "APPV"));
-		payments.add(createMockPolicyPayment(12L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), "APPV"));
-		payments.add(createMockPolicyPayment(13L, 2L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), "APPV"));
-
-		payments.add(createMockPolicyPayment(14L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(-80), "APPV"));
-		payments.get(13).setParentPolicyPaymentTransId(11L);
-		payments.add(createMockPolicyPayment(15L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(-50), "APPV"));
-		payments.get(14).setParentPolicyPaymentTransId(12L);
-		payments.add(createMockPolicyPayment(16L, 3L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(-100), "APPV"));
-		payments.get(15).setParentPolicyPaymentTransId(13L);
-
-		payments.add(createMockPolicyPayment(17L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "APTC", new BigDecimal(80), "PCYC"));
-		payments.add(createMockPolicyPayment(18L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "CSR", new BigDecimal(50), "PCYC"));
-		payments.add(createMockPolicyPayment(19L, 4L, "101", "R", "2015-03-01", "2015-03-01", "2015-03-31", "UF", new BigDecimal(100), "PCYC"));
-
-		payments.add(createMockPolicyPayment(20L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "APTC", new BigDecimal(80), "PCYC"));
-		payments.add(createMockPolicyPayment(21L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "CSR", new BigDecimal(50), "PCYC"));
-		payments.add(createMockPolicyPayment(22L, 4L, "101", "R", "2015-04-01", "2015-04-01", "2015-04-30", "UF", new BigDecimal(100), "PCYC"));
-
-		payments.add(createMockPolicyPayment(23L, 5L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(-50), "PCYC"));
-		payments.get(22).setParentPolicyPaymentTransId(1L);
-		payments.add(createMockPolicyPayment(24L, 5L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "APTC", new BigDecimal(70), "PCYC"));
-		payments.add(createMockPolicyPayment(25L, 5L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(-25), "PCYC"));
-		payments.get(24).setParentPolicyPaymentTransId(2L);
-		payments.add(createMockPolicyPayment(26L, 5L, "101", "R", "2015-01-01", "2015-01-01", "2015-01-31", "CSR", new BigDecimal(35), "PCYC"));
-
+		}
+		
 		policyDetailDTO.setPolicyPayments(payments);
 
 		return policyDetailDTO;
@@ -1658,4 +1889,26 @@ public class RapServiceTestUtil {
 		list.add(createIssuerUserFeeRate("NY", "2", 11, false));		
 		return list;
 	}
+	
+	public static Map<String, StateProrationConfiguration> getStateConfigMap(String stateCd, int marketYear,
+			ProrationType prorationType) {
+		
+		StateProrationConfiguration stConfig = new StateProrationConfiguration();
+		stConfig.setStateCd(stateCd);
+		stConfig.setMarketYear(marketYear);
+		stConfig.setProrationTypeCd(prorationType.getValue());
+		
+		Map<String, StateProrationConfiguration> stateCdMap = new HashMap<>();
+		stateCdMap.put(stConfig.getStateCd(), stConfig);
+		
+		return stateCdMap;
+	}
+	
+	public static void loadStateConfigMap(String stateCd, int marketYear, ProrationType prorationTyp) {
+		
+		Map<String, StateProrationConfiguration> stateCdMap = RapServiceTestUtil.getStateConfigMap(stateCd, marketYear, prorationTyp);
+	
+		RapProcessingHelper.getStateProrationConfigMap().put(marketYear, stateCdMap);
+	}
+
 }

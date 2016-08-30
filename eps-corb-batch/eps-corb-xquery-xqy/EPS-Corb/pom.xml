@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 		<groupId>gov.hhs.cms.ffe.fm.corb-batch</groupId>
-		<version>25.0.0-SNAPSHOT</version>		
+		<version>26.0.0-SNAPSHOT</version>		
 	    <artifactId>eps-corb-xquery</artifactId>
 	    <name>eps-corb-xquery</name>
 	    <packaging>pom</packaging>
@@ -79,8 +79,8 @@
 	</build>
 
 	<scm>
- 		<connection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-corb-batch/eps-corb-xquery-xqy/EPS-Corb</connection>
- 		<developerConnection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-corb-batch/eps-corb-xquery-xqy/EPS-Corb</developerConnection>
- 		<url>https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-corb-batch/eps-corb-xquery-xqy/EPS-Corb</url>
+ 		<connection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-corb-batch/eps-corb-xquery-xqy/EPS-Corb</connection>
+ 		<developerConnection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-corb-batch/eps-corb-xquery-xqy/EPS-Corb</developerConnection>
+ 		<url>https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-corb-batch/eps-corb-xquery-xqy/EPS-Corb</url>
  	</scm>
 </project>

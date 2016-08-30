@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepContribution;
@@ -88,7 +89,9 @@ public class FileMoveTasklet implements Tasklet {
                     return pathname.isFile();
                 }
             });
-            Collections.addAll(files, dirFiles);
+        	if(ArrayUtils.isNotEmpty(dirFiles)) {
+        		Collections.addAll(files, dirFiles);
+        	}
         } else {
             throw new EnvironmentException("EPROD-01 Service Access Failure, unexpected file type: sourceDirectory=" + sourceDirectory);
         }

@@ -9,8 +9,8 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageDirectionType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageType;
 import gov.hhs.cms.ff.fm.eps.ep.po.BatchTransMsgPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.ErrorWarningLogPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,8 +63,8 @@ public class DaoTest extends TestCase {
 		ErrorWarningLogPO logPO = new ErrorWarningLogPO();
 		logPO.setTransMsgID(transMsgId);
 		logPO.setBizAppAckErrorCd("E001");
-		logPO.setCreateDateTime(EpsDateUtils.getCurrentDateTime());
-		logPO.setLastModifiedDateTime(EpsDateUtils.getCurrentDateTime());
+		logPO.setCreateDateTime(LocalDate.now());
+		logPO.setLastModifiedDateTime(LocalDate.now());
 		logPO.setCreateBy("DaoTest");
 		logPO.setLastModifiedBy("DaoTest");
 		logPoList.add(logPO);

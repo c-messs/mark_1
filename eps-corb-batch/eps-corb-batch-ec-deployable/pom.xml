@@ -3,7 +3,7 @@
 	
 	<groupId>gov.hhs.cms.ffe.fm.corb-batch</groupId>
 	<artifactId>eps-corb-batch-ec-deployable</artifactId>
-    <version>25.0.0-SNAPSHOT</version>		
+    <version>26.0.0-SNAPSHOT</version>		
 	<packaging>pom</packaging>
 
         <distributionManagement>
@@ -63,8 +63,8 @@
       </modules>
 
 	<scm>
- 		<connection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-corb-batch/eps-corb-batch-ec-deployable</connection>
- 		<developerConnection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-corb-batch/eps-corb-batch-ec-deployable</developerConnection>
- 		<url>https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_25.0/eps-corb-batch/eps-corb-batch-ec-deployable</url>
+ 		<connection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-corb-batch/eps-corb-batch-ec-deployable</connection>
+ 		<developerConnection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-corb-batch/eps-corb-batch-ec-deployable</developerConnection>
+ 		<url>https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-corb-batch/eps-corb-batch-ec-deployable</url>
  	</scm>
 </project>

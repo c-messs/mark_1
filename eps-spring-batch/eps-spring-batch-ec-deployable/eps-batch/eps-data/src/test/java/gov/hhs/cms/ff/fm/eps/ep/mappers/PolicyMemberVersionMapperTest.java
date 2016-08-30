@@ -9,9 +9,10 @@ import gov.cms.dsh.bem.MemberRelatedInfoType;
 import gov.cms.dsh.bem.MemberType;
 import gov.hhs.cms.ff.fm.eps.ep.data.util.TestDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberVersionPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
-import org.joda.time.DateTime;
+import java.time.LocalDate;
+
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -43,9 +44,9 @@ public class PolicyMemberVersionMapperTest extends BaseMapperTest {
 		assertNotNull("PolicyMemberVersionPO", po);
 		
 		assertEquals("PolicyMemberEligStartDate", expectedMember.getMemberRelatedDates().getEligibilityBeginDate(),
-				EpsDateUtils.getXMLGregorianCalendar(po.getPolicyMemberEligStartDate()));
+				DateTimeUtil.getXMLGregorianCalendar(po.getPolicyMemberEligStartDate()));
 		assertEquals("PolicyMemberEligEndDate",expectedMember.getMemberRelatedDates().getEligibilityEndDate(),
-				EpsDateUtils.getXMLGregorianCalendar(po.getPolicyMemberEligEndDate()));	
+				DateTimeUtil.getXMLGregorianCalendar(po.getPolicyMemberEligEndDate()));	
 		assertEquals("subscriberInd",expectedMember.getMemberInformation().getSubscriberIndicator().value(),
 				po.getSubscriberInd());
 		assertEquals("issuerAssignedMemberID",expectedMember.getMemberAdditionalIdentifier().getIssuerAssignedMemberID(),
@@ -54,7 +55,7 @@ public class PolicyMemberVersionMapperTest extends BaseMapperTest {
 				po.getExchangeMemberID());
 		// Set in FFMMemberDAO from policy.
 		assertNull("maintenanceStartDateTime", po.getMaintenanceStartDateTime());
-		assertEquals("maintenanceEndDateTime",EpsDateUtils.HIGHDATE, po.getMaintenanceEndDateTime());
+		assertEquals("maintenanceEndDateTime",DateTimeUtil.HIGHDATE, po.getMaintenanceEndDateTime());
 		assertEquals("policyMemberLastNm",expectedMember.getMemberNameInformation().getMemberName().getLastName(),
 				po.getPolicyMemberLastNm());
 		assertEquals("policyMemberFirstNm",expectedMember.getMemberNameInformation().getMemberName().getFirstName(),
@@ -69,7 +70,7 @@ public class PolicyMemberVersionMapperTest extends BaseMapperTest {
 				po.getPolicyMemberSSN());
 		//ExchangePolicyId and SubscriberStateCd mapping is done in FFMDataService
 		assertEquals("policyMemberBirthDate", expectedMember.getMemberNameInformation().getMemberDemographics().getBirthDate(),
-				EpsDateUtils.getXMLGregorianCalendar(po.getPolicyMemberBirthDate()));
+				DateTimeUtil.getXMLGregorianCalendar(po.getPolicyMemberBirthDate()));
 		assertEquals("x12GenderTypeCd",expectedMember.getMemberNameInformation().getMemberDemographics().getGenderCode(),
 				GenderCodeSimpleType.valueOf(po.getX12GenderTypeCd()));
 
@@ -218,12 +219,12 @@ public class PolicyMemberVersionMapperTest extends BaseMapperTest {
 	@Test
 	public void test_MapMemberNameInformation_nonSubscriber() {
 		
-		DateTime expectedBD = APR_1;
+		LocalDate expectedBD = APR_1;
 		GenderCodeSimpleType expectedGender = GenderCodeSimpleType.F;
 		MemberType expectedMember = new MemberType();
 		expectedMember.setMemberNameInformation(new MemberNameInfoType());
 		expectedMember.getMemberNameInformation().setMemberDemographics(new MemberDemographicsType());
-		expectedMember.getMemberNameInformation().getMemberDemographics().setBirthDate(EpsDateUtils.getXMLGregorianCalendar(expectedBD));
+		expectedMember.getMemberNameInformation().getMemberDemographics().setBirthDate(DateTimeUtil.getXMLGregorianCalendar(expectedBD));
 		expectedMember.getMemberNameInformation().getMemberDemographics().setGenderCode(GenderCodeSimpleType.F);
 		PolicyMemberVersionPO po = new PolicyMemberVersionPO();
 		ReflectionTestUtils.invokeMethod(mapper, "mapMemberNameInformationType", new Object[] {expectedMember, po});

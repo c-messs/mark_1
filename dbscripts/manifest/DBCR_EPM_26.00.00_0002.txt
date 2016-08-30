@@ -1,0 +1,24 @@
+﻿#
+# Sample manifest file to bundle DB scripts for a release build
+# 
+# App: EPM (EPM26)
+# Release: 26.00.00
+# Environment: (NONE)
+# Script revision: 1.01.15
+# Sequence Number: 0001 (might increment if have to re-submit)
+
+# List of files to include. Use "/" unix slash in paths.
+EPM_26.0.0/epm_1.01.31_ddl_patch.sql
+EPM_26.0.0/epm_SBMErrorWarningType_002_dat.sql
+EPM_26.0.0/epm_SbmFileStatusType_002_dat.sql
+EPM_26.0.0/epm_SBMResponsePhaseType_001_dat.sql
+EPM_26.0.0/epm_SBMTransMsgProcStatusType_002_dat.sql
+EPM_26.0.0/epm_X12LanguageQualifierType_001_dat.sql
+EPM_26.0.0/eps_x12LanguageType_001_dat.sql
+EPM_26.0.0/ecm_DispatchRoutingMap_018_dat.sql
+EPM_26.0.0/ecm_PhysicalDocumentFileType_007_dat.sql
+EPM_26.0.0/ecm_PhysicalDocumentFileType_008_dat.sql
+EPM_26.0.0/build0001_selectappgrants.sql
+EPM_26.0.0/build0003_appgrants.sql
+EPM_26.0.0/build0003_synonyms.sql
+EPM_26.0.0/DBCR_EPM_EPM26_0002.docx
