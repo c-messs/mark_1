@@ -1,5 +1,5 @@
 #!/bin/bash
 echo "Reformatting all poms"
-find -iname "pom.xml" -print -exec ./.xmlrewrite.rb '{}' \;
+find -iname "pom.xml" -exec ./.xmlrewrite.rb '{}' \;
 
 
