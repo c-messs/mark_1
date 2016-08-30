@@ -13,7 +13,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.util.Calendar;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.joda.time.DateTime;
 
@@ -101,7 +102,7 @@ public class TestErlBerFileGenerator1 extends AbstractTestFileGenerator implemen
 		MemberType member = null;
 		String fileNmPrefix;
 		String fileNm = "";
-		DateTime currentTimestamp = null;
+		LocalDateTime currentTimestamp = null;
 		String text = "";
 
 		Long berId = null;
@@ -154,7 +155,7 @@ public class TestErlBerFileGenerator1 extends AbstractTestFileGenerator implemen
 				bemId = Long.valueOf("100000000");
 				state = states[i % states.length];
 				groupSenderId = hiosId + state + "0" + hiosId.substring(0, 4) + "01";
-				currentTimestamp = new DateTime();
+				currentTimestamp = LocalDateTime.now();
 				// sleep so CurrentTimestamp is different is different between file sets.
 				try {
 					Thread.sleep(SLEEP_INTERVAL);
@@ -162,15 +163,15 @@ public class TestErlBerFileGenerator1 extends AbstractTestFileGenerator implemen
 					System.out.println("EX: " + ex.getMessage());
 				}
 				ber = new BenefitEnrollmentRequest();
-				ber.setFileInformation(makeFileInformationType(berId, exchngType, groupSenderId));
+				ber.setFileInformation(makeFileInformationType(berId, exchngType, groupSenderId, currentTimestamp));
 
-				Calendar cal = Calendar.getInstance();
-				fileNm = fileNmPrefix + sdf.format(cal.getTime()) + ".T";
+				fileNm = fileNmPrefix + LocalDateTime.now().format(DTF_FILE) + ".T";
+
 
 				File file = new File(TEST_PATH_INPUT_DIR + manifestNums[m] + "/" + fileNm);
 
-				DateTime psd = new DateTime(YEAR, 1, (i + 1), 0, 0);
-				DateTime ped = new DateTime(YEAR, 6, (i + 1), 0, 0);
+				LocalDate psd = LocalDate.of(YEAR, 1, (i + 1));
+				LocalDate ped = LocalDate.of(YEAR, 6, (i + 1));
 
 				for(int j = 0; j < BEM_LEN; ++j) {
 
@@ -233,9 +234,9 @@ public class TestErlBerFileGenerator1 extends AbstractTestFileGenerator implemen
 						}
 
 						ber = new BenefitEnrollmentRequest();
-						ber.setFileInformation(makeFileInformationType(berId, exchngType, groupSenderId));
+						ber.setFileInformation(makeFileInformationType(berId, exchngType, groupSenderId, currentTimestamp));
 
-						fileNm = fileNmPrefix + sdf.format(cal.getTime()) + ".T";
+						fileNm = fileNmPrefix + LocalDateTime.now().format(DTF_FILE) + ".T";
 
 						file = new File(TEST_PATH_INPUT_DIR  + manifestNums[m] + "/" +  fileNm);
 

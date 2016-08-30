@@ -23,9 +23,11 @@ import gov.cms.dsh.bem.TransactionInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentMaintenanceDTO;
 import gov.hhs.cms.ff.fm.eps.ep.enums.ExchangeType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
@@ -38,9 +40,15 @@ import org.joda.time.DateTime;
 public class EPSValidationTestUtil {
 	
 
-	public static final DateTime DATETIME = new DateTime();
+	protected static final LocalDate DATE = LocalDate.now();
+	protected static final LocalDateTime DATETIME = LocalDateTime.now();
+	protected static final int YEAR = DATE.getYear();
+	
 	
 	public static final DateTime csrEffStart = new DateTime(DATETIME.getYear(), 2, 28, 0, 0);
+	
+	protected static final LocalDate JAN_1 = LocalDate.of(YEAR, 1, 1);
+	protected static final LocalDate FEB_1 = LocalDate.of(YEAR, 2, 1);
 
 	/*
 	 * Util to create BEM for INITIAL transaction 
@@ -49,7 +57,7 @@ public class EPSValidationTestUtil {
 		BenefitEnrollmentMaintenanceDTO bemDTO = new BenefitEnrollmentMaintenanceDTO();
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		
-		bem.setPolicyInfo(makePolicyInfoType("MGPI", DATETIME, null, PolicyStatus.INITIAL_1, "ExchangePolicyId"));
+		bem.setPolicyInfo(makePolicyInfoType("MGPI", DATE, null, PolicyStatus.INITIAL_1, "ExchangePolicyId"));
 		bemDTO.setBemXml("<BenefitEnrollmentMaintenance>BEMXml</BenefitEnrollmentMaintenance>");
 
 		FileInformationType fileInformation = new FileInformationType();
@@ -77,7 +85,7 @@ public class EPSValidationTestUtil {
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		
 		//Set PolicyInfo
-		bem.setPolicyInfo(makePolicyInfoType("MGPI", DATETIME, DATETIME, PolicyStatus.EFFECTUATED_2, "EXCHANGEPOLICYID"));
+		bem.setPolicyInfo(makePolicyInfoType("MGPI", DATE, DATE, PolicyStatus.EFFECTUATED_2, "EXCHANGEPOLICYID"));
 		
 		// Add subscriber member
 		MemberType member = new MemberType();
@@ -221,10 +229,8 @@ public class EPSValidationTestUtil {
 
 		MemberRelatedDatesType memRelDatesType = new MemberRelatedDatesType();
 		
-		memRelDatesType.setEligibilityBeginDate(
-				EpsDateUtils.getXMLGregorianCalendar(new DateTime(2015, 01, 01, 00, 00, 01)));
-		memRelDatesType.setEligibilityEndDate(
-				EpsDateUtils.getXMLGregorianCalendar(new DateTime(2015, 02, 01, 00, 00, 01)));
+		memRelDatesType.setEligibilityBeginDate(DateTimeUtil.getXMLGregorianCalendar(JAN_1));
+		memRelDatesType.setEligibilityEndDate(DateTimeUtil.getXMLGregorianCalendar(FEB_1));
 		return memRelDatesType;
 
 	}
@@ -233,8 +239,7 @@ public class EPSValidationTestUtil {
 
 		MemberRelatedDatesType memRelDatesType = new MemberRelatedDatesType();
 		
-		memRelDatesType.setEligibilityBeginDate(
-				EpsDateUtils.getXMLGregorianCalendar(date));
+		memRelDatesType.setEligibilityBeginDate(DateTimeUtil.getXMLGregorianCalendar(date));
 		
 		return memRelDatesType;
 
@@ -262,23 +267,23 @@ public class EPSValidationTestUtil {
 		return healthCovInfoType;
 	}
 	
-	public static PolicyInfoType makePolicyInfoType(String mgpi, DateTime psd, DateTime ped, PolicyStatus policyStatus, String gpn) {
+	public static PolicyInfoType makePolicyInfoType(String mgpi, LocalDate psd, LocalDate ped, PolicyStatus policyStatus, String gpn) {
 
 		PolicyInfoType policyInfo = new PolicyInfoType();
 		policyInfo.setMarketplaceGroupPolicyIdentifier(mgpi);
-		policyInfo.setPolicyStartDate(EpsDateUtils.getXMLGregorianCalendar(psd));
-		policyInfo.setPolicyEndDate(EpsDateUtils.getXMLGregorianCalendar(ped));
+		policyInfo.setPolicyStartDate(DateTimeUtil.getXMLGregorianCalendar(psd));
+		policyInfo.setPolicyEndDate(DateTimeUtil.getXMLGregorianCalendar(ped));
 		policyInfo.setPolicyStatus(policyStatus.getValue());
 		policyInfo.setGroupPolicyNumber(gpn);
 		return policyInfo;
 	}
 
-	public static AdditionalInfoType makeAdditionalInfoType(DateTime esd, DateTime eed, BigDecimal tpa) {
+	public static AdditionalInfoType makeAdditionalInfoType(LocalDate esd, LocalDate eed, BigDecimal tpa) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		ait.setAPTCAmount(new BigDecimal("11.11"));
 		ait.setCSRAmount(new BigDecimal("22.22"));
 		ait.setTotalIndividualResponsibilityAmount(new BigDecimal("33.33"));

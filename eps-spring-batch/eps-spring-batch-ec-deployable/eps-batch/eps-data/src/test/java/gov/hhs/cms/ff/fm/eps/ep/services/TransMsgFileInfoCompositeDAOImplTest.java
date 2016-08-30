@@ -6,16 +6,15 @@ import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentRequestDTO;
 import gov.hhs.cms.ff.fm.eps.ep.data.util.TestDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.enums.ExchangeType;
 import gov.hhs.cms.ff.fm.eps.ep.services.impl.TransMsgFileInfoCompositeDAOImpl;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
-import java.util.Date;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
-import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,8 +85,8 @@ public class TransMsgFileInfoCompositeDAOImplTest extends BaseServicesTest {
         assertEquals("FileInfoXml", TestDataUtil.prettyFormat(berDTO.getFileInfoXml()),  TestDataUtil.prettyFormat((String) row.get("poXML")));
      
 		// Create and Modified stuff created in mappers.
-		assertNotNull("CreateDateTime", (Date) row.get("createDateTime"));
-		assertNotNull("LastModifiedDateTime", (Date) row.get("lastModifiedDateTime"));		
+		assertNotNull("CreateDateTime", row.get("createDateTime"));
+		assertNotNull("LastModifiedDateTime", row.get("lastModifiedDateTime"));		
 	}
 
 
@@ -141,16 +140,16 @@ public class TransMsgFileInfoCompositeDAOImplTest extends BaseServicesTest {
 		assertEquals("GroupSenderID", berDTO.getFileInformation().getGroupSenderID(), (String) row.get("GroupSenderId"));
 		assertEquals("GroupReceiverID", berDTO.getFileInformation().getGroupReceiverID(), (String) row.get("GroupReceiverId"));
 		assertEquals("FileName", berDTO.getFileNm(), (String) row.get("fileNm"));
-		Date gtsDt = (Date) row.get("groupTimestampDateTime");
-		assertEquals("GroupTimestampDateTime", EpsDateUtils.getDateTimeFromXmlGC(berDTO.getFileInformation().getGroupTimeStamp()),
-				new DateTime(gtsDt.getTime()));
+		Timestamp gtsDt = (Timestamp) row.get("groupTimestampDateTime");
+		assertEquals("GroupTimestampDateTime", DateTimeUtil.getLocalDateTimeFromXmlGC(berDTO.getFileInformation().getGroupTimeStamp()),
+				DateTimeUtil.getLocalDateTimeFromSqlTimestamp(gtsDt));
 		assertEquals("GroupControlNum", berDTO.getFileInformation().getGroupControlNumber(), (String) row.get("groupControlNum"));
 		assertEquals("VersionNumber", berDTO.getFileInformation().getVersionNumber(), (String) row.get("VersionNum"));
 		assertEquals("transMsgOriginTypeCd", berDTO.getExchangeTypeCd(), (String) row.get("transMsgOriginTypeCd"));
 
 		// Create and Modified stuff created in mappers.
-		assertNotNull("CreateDateTime", (Date) row.get("createDateTime"));
-		assertNotNull("LastModifiedDateTime", (Date) row.get("lastModifiedDateTime"));
+		assertNotNull("CreateDateTime", row.get("createDateTime"));
+		assertNotNull("LastModifiedDateTime", row.get("lastModifiedDateTime"));
 		assertEquals("CreateBy (batchId)", id.toString(), (String) row.get("CreateBy"));
 		assertEquals("LastModifiedBy (batchId)", id.toString(), (String) row.get("LastModifiedBy"));
 	}

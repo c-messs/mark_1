@@ -7,12 +7,12 @@ import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberDatePO;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyVersionPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
-import java.util.Locale;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
-import org.joda.time.DateTime;
-import org.springframework.format.datetime.DateFormatter;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -27,21 +27,22 @@ public class TestEPSPre25Data {
 
 	private JdbcTemplate jdbc;
 
-	private final DateTime DATETIME = new DateTime();
-	private final int YEAR = DATETIME.getYear();
+	protected static final LocalDate DATE = LocalDate.now();
+	protected static final LocalDateTime DATETIME = LocalDateTime.now();
+	protected static final int YEAR = DATE.getYear();
+
 
 	public final int SLEEP_INTERVAL = 1050;
-
-	public final DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
-	public final DateTime FEB_1 = new DateTime(YEAR, 2, 1, 0, 0);
-	public final DateTime MAR_1 = new DateTime(YEAR, 3, 1, 0, 0);
-	public final DateTime APR_1 = new DateTime(YEAR, 4, 1, 0, 0);
-	public final DateTime MAY_1 = new DateTime(YEAR, 5, 1, 0, 0);
-
+	
+	protected final LocalDate JAN_1 = LocalDate.of(YEAR, 1, 1);
+	protected final LocalDate FEB_1 = LocalDate.of(YEAR, 2, 1);
+	protected final LocalDate MAR_1 = LocalDate.of(YEAR, 3, 1);
+	protected final LocalDate APR_1 = LocalDate.of(YEAR, 4, 1);
+	protected final LocalDate MAY_1 = LocalDate.of(YEAR, 5, 1);
 	/*
 	 * Make a minimal PolicyVersion
 	 */
-	public PolicyVersionPO makePolicyVersion(Long bemId, String stateCd, String exchangePolicyId, DateTime msd) {
+	public PolicyVersionPO makePolicyVersion(Long bemId, String stateCd, String exchangePolicyId, LocalDateTime msd) {
 
 		String strBemId = bemId.toString();
 		Long transMsgId = insertTransMsg();
@@ -49,8 +50,8 @@ public class TestEPSPre25Data {
 
 		po.setSubscriberStateCd(stateCd);
 		po.setExchangePolicyId(exchangePolicyId);
-		po.setMaintenanceStartDateTime(msd.minusMillis(1));
-		po.setMaintenanceEndDateTime(EpsDateUtils.HIGHDATE);
+		po.setMaintenanceStartDateTime(msd.minusNanos(1000));
+		po.setMaintenanceEndDateTime(DateTimeUtil.HIGHDATE);
 		po.setIssuerPolicyId(strBemId.substring(0, 8));
 		po.setIssuerHiosId(strBemId.substring(0, 5));	
 		po.setIssuerTaxPayerId("ISSTAXID-" + strBemId);
@@ -62,8 +63,8 @@ public class TestEPSPre25Data {
 		po.setX12InsrncLineTypeCd(InsuranceLineCodeSimpleType.HLT.value());
 		po.setTransMsgID(transMsgId);
 		po.setPolicyStartDate(APR_1);		
-		po.setCreateDateTime(EpsDateUtils.getCurrentDateTime());
-		po.setLastModifiedDateTime(EpsDateUtils.getCurrentDateTime());
+		po.setCreateDateTime(LocalDate.now());
+		po.setLastModifiedDateTime(LocalDate.now());
 		po.setCreateBy("TestEPSPre25");
 		po.setLastModifiedBy("TestEPSPre25");
 
@@ -84,7 +85,7 @@ public class TestEPSPre25Data {
 		return po;	
 	}
 
-	public PolicyMemberVersionPO makePolicyMemberVersion(String exchangeMemId, DateTime maintStart, String exchangePolicyId, String subscriberStateCd) {
+	public PolicyMemberVersionPO makePolicyMemberVersion(String exchangeMemId, LocalDateTime maintStart, String exchangePolicyId, String subscriberStateCd) {
 
 		PolicyMemberVersionPO po = new PolicyMemberVersionPO();
 		po.setExchangePolicyId(exchangePolicyId);
@@ -92,8 +93,8 @@ public class TestEPSPre25Data {
 		po.setMaintenanceStartDateTime(maintStart);
 		po.setSubscriberStateCd(subscriberStateCd);
 		po.setX12GenderTypeCd(GenderCodeSimpleType.M.value());
-		po.setCreateDateTime(EpsDateUtils.getCurrentDateTime());
-		po.setLastModifiedDateTime(EpsDateUtils.getCurrentDateTime());
+		po.setCreateDateTime(LocalDate.now());
+		po.setLastModifiedDateTime(LocalDate.now());
 		po.setCreateBy("TestEPSPre25");
 		po.setLastModifiedBy("TestEPSPre25");
 
@@ -132,14 +133,14 @@ public class TestEPSPre25Data {
 				+ toTimestampValue(po.getMaintenanceStartDateTime()) + ", " + toTimestampValue(po.getMaintenanceEndDateTime())
 				+ ", '" + po.getIssuerPolicyId() + "', '"+ po.getIssuerHiosId() + "', '" + po.getIssuerTaxPayerId() + "', '"
 				+ po.getIssuerNm() + "', '" + po.getIssuerSubscriberID() + "', '" + po.getExchangeAssignedSubscriberID() + "', " 
-				+ toDateValue(po.getTransDateTime()) + ", '" + po.getTransControlNum() + "', "	+ toDateValue(po.getEligibilityStartDate())	+ ", "
+				+ toTimestampValue(po.getTransDateTime()) + ", '" + po.getTransControlNum() + "', "	+ toDateValue(po.getEligibilityStartDate())	+ ", "
 				+ toDateValue(po.getEligibilityEndDate()) + ", 'SEPR', 'SRCEXID', " + toDateValue(po.getPremiumPaidToEndDate()) + ", "
 				+ toDateValue(po.getLastPremiumPaidDate()) + ", null, " + toDateValue(APR_1) + ", '" + po.getPlanID() + "', '" 
 				+ "EMPGRPNUM', '" + po.getX12InsrncLineTypeCd() + "', '1', 'EMPIDNUM', 'SPONSORNM', 'SPONSRSSN', 'SPONSOROTHID', " 
 				+ po.getTransMsgID() + ", '1', 'AGTAXID', 'AGNM', 'AGNPN', 'AGACCTNUM', 'BRKNM', 'BRKNPN', 'BRKTAXID', 'BRKACCTNUM', 'AC', " 
 				+ toDateValue(FEB_1) + ", 'FAM', 'EnrollmentMaintenance', "  + toDateValue(po.getCreateDateTime()) + ", "		
 				+ toDateValue(po.getLastModifiedDateTime()) + ", 'Pre25Data', 'Pre25Data', " + toDateValue(po.getPolicyStartDate()) + ", "
-				+ toDateValue(po.getPolicyEndDate()) + ", 1, " + toDateValue(po.getSourceVersionDateTime()) + ", " + toDateValue(MAR_1) + ", null)";
+				+ toDateValue(po.getPolicyEndDate()) + ", 1, " + toTimestampValue(po.getSourceVersionDateTime()) + ", " + toDateValue(MAR_1) + ", null)";
 
 		jdbc.execute(sql);
 		return policyVersionId;
@@ -164,8 +165,8 @@ public class TestEPSPre25Data {
 				+ "CREATEDATETIME, LASTMODIFIEDDATETIME, CREATEBY, LASTMODIFIEDBY, INCORRECTLASTNM, "
 				+ "INCORRECTBIRTHDATE, INCORRECTGENDERTYPECD, INCORRECTMARITALSTATUSTYPECD) "
 				+ " VALUES (" + pmvId + ", '"+ po.getExchangePolicyId() + "', '" + po.getSubscriberStateCd() + "', '" 
-				+ po.getExchangeMemberID() + "', " + toDateValue(po.getMaintenanceStartDateTime()) + ", " 
-				+ toTimestampValue(EpsDateUtils.HIGHDATE) + ",'" + po.getIssuerAssignedMemberID() + "', " + toDateValue(po.getPolicyMemberEligStartDate()) 
+				+ po.getExchangeMemberID() + "', " + toTimestampValue(po.getMaintenanceStartDateTime()) + ", " 
+				+ toTimestampValue(DateTimeUtil.HIGHDATE) + ",'" + po.getIssuerAssignedMemberID() + "', " + toDateValue(po.getPolicyMemberEligStartDate()) 
 				+ ", " + toDateValue(po.getPolicyMemberEligEndDate()) + ", 'Y', " + toDateValue(po.getPolicyMemberBirthDate())
 				+ ", '" + po.getPolicyMemberLastNm() + "', '" + po.getPolicyMemberFirstNm() + "', '" + po.getPolicyMemberMiddleNm()
 				+ "', '" + po.getPolicyMemberSalutationNm() + "', '" + po.getPolicyMemberSuffixNm() + "', '" + po.getPolicyMemberSSN()
@@ -209,24 +210,16 @@ public class TestEPSPre25Data {
 		jdbc.execute(sql);
 	}
 
-	private String toDateValue(DateTime dt) {
-		return " TO_DATE('" + getSqlDate(dt) + "', 'YYYY-MM-DD HH24:MI:SS')";
+	private String toDateValue(LocalDate dt) {
+		return " TO_DATE('" + dt.toString() + "', 'YYYY-MM-DD')";
 	}
+	
+	private String toTimestampValue(LocalDateTime ts) {
 
-	private String toTimestampValue(DateTime ts) {
+		DateTimeFormatter sqlDf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS"); 
 
-		DateFormatter sqlDf = new DateFormatter("yyyy-MM-dd HH:mm:ss.SSS");
-
-		return "TO_TIMESTAMP('" + sqlDf.print(ts.toDate(), Locale.US) + "', 'YYYY-MM-DD HH24:MI:SS.FF3')";
+		return "TO_TIMESTAMP('" + ts.format(sqlDf) + "', 'YYYY-MM-DD HH24:MI:SS.FF')";
 	}
-
-	private java.sql.Date getSqlDate(DateTime dateTime) {
-		if(dateTime != null) {
-			return new java.sql.Date(dateTime.getMillis());
-		}
-		return null;
-	}
-
 	
 	public void setJdbc(JdbcTemplate jdbc) {
 		this.jdbc = jdbc;

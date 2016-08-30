@@ -1,6 +1,17 @@
 package gov.hhs.cms.ff.fm.eps.ep.jobs;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.comparator.LastModifiedFileComparator;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
+
+import com.accenture.foundation.common.exception.EnvironmentException;
 
 /**
  * @author eps
@@ -36,6 +47,60 @@ public class CommonUtil {
 			}
 		}
 		return listAsString;
+	}
+	
+	/**
+	 * This method creates a list of files in the source directory.
+	 *
+	 * @param dir the dir
+	 * @return List<File> - sorted by last modified date
+	 */
+	public static List<File> getFilesFromDir(File dir) {
+		List<File> files = new ArrayList<File>();
+
+
+		if (dir.isDirectory()) {
+			//Create a Filename filter to identify filter files
+			File[] dirFiles = dir.listFiles(new FileFilter() {
+				@Override
+				public boolean accept(File pathname) {
+					return pathname.isFile();
+				}
+			});
+			if(ArrayUtils.isNotEmpty(dirFiles)) {
+				Collections.addAll(files, dirFiles);
+			}
+		} else {
+			throw new EnvironmentException("E9004: Service Access Failure, unexpected file type: Directory=" + dir);
+		}
+		
+		//sort by last modified date
+		if(CollectionUtils.isNotEmpty(files)) {
+			files.sort(LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
+		}
+		
+		return files;
+	}
+	
+	/**
+	 * Checks if originalStr is found in list of values (Note: Not case
+	 * sensitive).
+	 *
+	 * @param originalStr String
+	 * @param values String
+	 * @return boolean
+	 */	
+	public static boolean isStringMatched(String originalStr, String... values) {
+
+		if (StringUtils.isNotBlank(originalStr) && values != null) {
+			for (String str : values) {
+				if (originalStr.equalsIgnoreCase(str)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 }

@@ -13,9 +13,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
-
-import org.joda.time.DateTime;
 
 public class ErlTestFileGenerator extends AbstractTestFileGenerator {
 
@@ -131,8 +131,8 @@ public class ErlTestFileGenerator extends AbstractTestFileGenerator {
 		String fileNmINI = "";
 		String fileNmPrefEFF = exchngType.getValue() + "EFF." + FUNC + ".";
 		String fileNmEFF = "";
-		DateTime currentTimestampINI = null;
-		DateTime currentTimestampEFF = null;
+		LocalDateTime currentTimestampINI = null;
+		LocalDateTime currentTimestampEFF = null;
 		String textINI = null;
 		String textEFF = null;
 
@@ -163,7 +163,7 @@ public class ErlTestFileGenerator extends AbstractTestFileGenerator {
 			bemLen = Long.valueOf(bemCount);
 			hiosId = String.format("%05d", berInt);
 			groupSenderId = hiosId + state + "0" + hiosId.substring(0, 4) + "01";
-			currentTimestampINI = new DateTime();
+			currentTimestampINI = LocalDateTime.now();
 			if (isEFF) {
 				// sleep so CurrentTimestamp is different.
 				try {
@@ -171,7 +171,7 @@ public class ErlTestFileGenerator extends AbstractTestFileGenerator {
 				} catch (Exception ex) {
 					System.out.println("EX: " + ex.getMessage());
 				}
-				currentTimestampEFF = new DateTime();
+				currentTimestampEFF = LocalDateTime.now();
 			}
 
 			berINI = new BenefitEnrollmentRequest();
@@ -311,12 +311,16 @@ public class ErlTestFileGenerator extends AbstractTestFileGenerator {
 		if (!manifestFile.exists()) {
 			manifestFile.createNewFile();
 		}
+		Long microSec =  getRandom3DigitNumber();
+		ZonedDateTime zdt = ZonedDateTime.now();
+		Long micros = (microSec * 1000);
+		zdt = zdt.plusNanos(micros);
 		PrintWriter writer = new PrintWriter(manifestFile);
 		writer.println("jobid=" + manifestNum);
-		writer.println("BeginHighWaterMark=" + DateTime.now() );
-		writer.println("JobStartTime=" + DateTime.now().minusYears(2));
-		writer.println("JobEndTime=" + DateTime.now().minusYears(2).plusHours(1));
-		writer.println("EndHighWaterMark=" + DateTime.now().plusHours(1));
+		writer.println("BeginHighWaterMark=" + zdt.format(DTF_MANIFEST_MICRO_SEC) );
+		writer.println("JobStartTime=" + zdt.minusYears(2).format(DTF_MANIFEST_MICRO_SEC));
+		writer.println("JobEndTime=" + zdt.minusYears(2).plusHours(1).format(DTF_MANIFEST_MICRO_SEC));
+		writer.println("EndHighWaterMark=" + zdt.plusHours(1).format(DTF_MANIFEST_MICRO_SEC));
 		writer.println("RecordCount=" + recordCount);
 		writer.println(EPSConstants.PAETCOMPLETION + "=" + paet);
 		writer.write("JobStatus=SUCCESS");

@@ -11,14 +11,14 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageType;
 import gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.data.util.TestDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.po.BatchTransMsgPO;
 import gov.hhs.cms.ff.fm.eps.ep.services.TransMsgCompositeDAO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLSyntaxErrorException;
+import java.time.LocalDateTime;
 
 import org.apache.commons.io.FileUtils;
-import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -105,7 +105,7 @@ public class SkipBemListenerTest extends BaseBatchTest {
 		Throwable appEx = new ApplicationException(expectedT, expectedCode.getCode());
 
 		String expectedFileNm = "SBMEOC.IC834.D140531.T145543452.T";
-		DateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
+		LocalDateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
 		String expectedExchangeTypeCd = "SBM_EO";
 		String expectedFileInfoXML = "<TEST>Unit test file info xml</TEST>";
 
@@ -146,7 +146,7 @@ public class SkipBemListenerTest extends BaseBatchTest {
 		Throwable t = new ApplicationException(expectedErrMsg);
 
 		String expectedFileNm = "SBMEOC.IC834.D140531.T145543452.T";
-		DateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
+		LocalDateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
 		String expectedExchangeTypeCd = "SBM_EO";
 		String expectedFileInfoXML = "<TEST>Unit test file info xml</TEST>";
 
@@ -187,7 +187,7 @@ public class SkipBemListenerTest extends BaseBatchTest {
 		Throwable t = new ApplicationException(expectedErrMsg);
 
 		String expectedFileNm = "SBMEOC.IC834.D140531.T145543452.T";
-		DateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
+		LocalDateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
 		String expectedExchangeTypeCd = "SBM_EO";
 		String expectedFileInfoXML = "<TEST>Unit test file info xml</TEST>";
 
@@ -228,7 +228,7 @@ public class SkipBemListenerTest extends BaseBatchTest {
 		Throwable t = new ApplicationException(expectedErrMsg);
 
 		String expectedFileNm = "SBMEOC.IC834.D140531.T145543452.T";
-		DateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
+		LocalDateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
 		String expectedExchangeTypeCd = "SBM_EO";
 		String expectedFileInfoXML = "<TEST>Unit test file info xml</TEST>";
 
@@ -266,7 +266,7 @@ public class SkipBemListenerTest extends BaseBatchTest {
 		String expectedErrMsg = null;
 
 		String expectedFileNm = "SBMEOC.IC834.D140531.T145543452.T";
-		DateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
+		LocalDateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
 		String expectedExchangeTypeCd = "SBM_EO";
 		String expectedFileInfoXML = "<TEST>Unit test file info xml</TEST>";
 
@@ -323,7 +323,7 @@ public class SkipBemListenerTest extends BaseBatchTest {
 		Throwable t = new ApplicationException(expectedCodeLogMsg, expectedCode.getCode());
 		String expectedFileNm = "FFM.IS834.D140531.T145543452.T";
 
-		DateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
+		LocalDateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
 		String expectedExchangeTypeCd = "FFM";
 		String expectedFileInfoXML = "<TEST>Unit test file info xml</TEST>";
 
@@ -332,7 +332,7 @@ public class SkipBemListenerTest extends BaseBatchTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = TestDataUtil.getRandomNumber(7).intValue();
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = MAR_1;
+		LocalDateTime versionDt = MAR_1_3am;
 
 		// Insert a "previously skipped Version" of this transaction from a previous batch into transMsg 
 		// and BatchTransMsg so this test can update it from SkipBemListener to 'D'.
@@ -364,8 +364,8 @@ public class SkipBemListenerTest extends BaseBatchTest {
 		bem.getPolicyInfo().setGroupPolicyNumber(exchangePolicyId);
 		bem.setTransactionInformation(new TransactionInformationType());
 		bem.getTransactionInformation().setPolicySnapshotVersionNumber(versionNumStr);
-		bem.getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(versionDt));
-		bem.getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId, versionDt));
+		bem.getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(versionDt));
+		bem.getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId));
 
 		bemDTO.setTransMsgId(transMsgId);
 		bemDTO.setBem(bem);
@@ -391,7 +391,7 @@ public class SkipBemListenerTest extends BaseBatchTest {
 		Throwable t = new ApplicationException(expectedErrMsg);
 
 		String expectedFileNm = "SBMEOC.IC834.D140531.T145543452.T";
-		DateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
+		LocalDateTime expectedFileDateTime = getFileNameDateTime(expectedFileNm);
 		String expectedExchangeTypeCd = "SBM_EO";
 		String expectedFileInfoXML = "<TEST>Unit test file info xml</TEST>";
 

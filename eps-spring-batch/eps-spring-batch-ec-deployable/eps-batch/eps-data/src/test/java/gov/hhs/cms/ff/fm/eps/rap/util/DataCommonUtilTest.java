@@ -67,13 +67,6 @@ public class DataCommonUtilTest extends TestCase {
 		assertEquals("SQL Date", expectedDateTime.getMonthOfYear() , cal.get(Calendar.MONTH)+1);
 		assertEquals("SQL Date", expectedDateTime.getDayOfMonth(), cal.get(Calendar.DAY_OF_MONTH));
 	}
-	
-	
-	@Test
-	public void testConvertToDate_Null () {
-		
-		Date actualDate = DataCommonUtil.convertToDate(null);
-		assertNull("SQL Date", actualDate);
-	}
+
 
 }

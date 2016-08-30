@@ -7,6 +7,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.accenture.foundation.common.exception.ApplicationException;
 
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmMetalLevelType;
+
 public class EnumsTest extends TestCase{
 
 
@@ -151,5 +153,66 @@ public class EnumsTest extends TestCase{
 			assertNotNull(actualValue + ": " + actualDesc, actualEnum);
 		}
 	}
+	
+	
+	
+	@Test
+	public void testSBMErrorWarningCode() {
+
+		SBMErrorWarningCode[] epsEnumArray = SBMErrorWarningCode.values();
+		String code;
+		for (Enum<?> epsEnum : epsEnumArray) {
+			code = (String) ReflectionTestUtils.invokeMethod(epsEnum, "getCode", new Object[] {} );
+			assertNotNull(epsEnum.getClass().getName() + " code", code);
+		}
+	}
+	
+	@Test
+	public void testSBMFileStatus() {
+
+		SBMFileStatus[] epsEnumArray = SBMFileStatus.values();
+		String value;
+		String name;
+		Enum<?> actualEnum;
+		for (Enum<?> epsEnum : epsEnumArray) {
+			value = (String) ReflectionTestUtils.invokeMethod(epsEnum, "getValue", new Object[] {} );
+			assertNotNull(epsEnum.getClass().getName() + " value", value);
+			name = (String) ReflectionTestUtils.invokeMethod(epsEnum, "getName", new Object[] {} );
+			assertNotNull(epsEnum.getClass().getName() + " name", name);
+			actualEnum = (Enum<?>) ReflectionTestUtils.invokeMethod(epsEnum, "getEnum", new Object[] {value} );
+			assertNotNull(value + ": " + name, actualEnum);
+		}
+		try {
+			SBMFileStatus.getEnum("XXX");
+		} catch (ApplicationException appEx) {
+			assertTrue("ApplicationException thrown for invalid value", true);
+		}
+	}
+	
+	
+	
+	@Test
+	public void testSBMPolicyEnum() {
+
+		SBMPolicyEnum[] epsEnumArray = SBMPolicyEnum.values();
+		String elementNm;
+		for (Enum<?> epsEnum : epsEnumArray) {
+			elementNm = (String) ReflectionTestUtils.invokeMethod(epsEnum, "getElementNm", new Object[] {} );
+			assertNotNull(epsEnum.getClass().getName() + " elementNm", elementNm);
+		}
+	}
+	
+	@Test
+	public void testSbmMetalLevelType() {
+
+		SbmMetalLevelType[] epsEnum = SbmMetalLevelType.values();
+		assertEnumValsAndDesc(epsEnum);
+		try {
+			SbmMetalLevelType.getEnum("XXX");
+		} catch (ApplicationException appEx) {
+			assertTrue("ApplicationException thrown for invalid value", true);
+		}
+	}
+	
 
 }

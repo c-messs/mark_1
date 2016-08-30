@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch"
+       xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util" xmlns:oxm="http://www.springframework.org/schema/oxm"
+       xmlns:aop="http://www.springframework.org/schema/aop" 
+       xsi:schemaLocation="
+             http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+             http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+             http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+             http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+             http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-1.5.xsd
+             http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+           	 
+       ">
+
+		<context:property-placeholder location="classpath:eps.properties" ignore-unresolvable="true"/>
+		<context:property-placeholder location="classpath*:sbmi-sql.properties" ignore-unresolvable="true" />
+		
+        <job id="sbmIngestionBatchJob" xmlns="http://www.springframework.org/schema/batch"
+             job-repository="jobRepository">
+           
+             <decision id="stepDecider" decider="sbmiProcessTypeFlowExecutionDecider">
+		         <next on="SBMI" to="sbmiFileIngestion" />
+		         <next on="XPR" to="xprProcessing" />
+		         <!-- <next on="SBMR" to="sbmrGeneration" /> -->
+		     </decision>
+			
+             <step id="sbmiFileIngestion" next="xprExtraction">
+	             <tasklet ref="sbmiFileIngestionTasklet">                    
+	             </tasklet>
+             </step>
+
+			<step id="xprExtraction" next="xprProcessing">
+				<tasklet transaction-manager="transactionManager" ref="xprExtractionTasklet">
+				</tasklet>
+			</step>
+             
+            <step id="xprProcessing" next="sbmrGeneration"> 
+                <tasklet>
+					<chunk reader="xprProcessingReader" processor="xprProcessor" writer="xprProcessingWriter" 
+						commit-interval="1" retry-limit="${retry.limit}"
+						skip-limit="${skip.limit}">
+	             		<retryable-exception-classes>
+            				<include class="com.accenture.foundation.common.exception.EnvironmentException"/>
+         			 	</retryable-exception-classes>
+	                    <skippable-exception-classes>
+            				<include class="com.accenture.foundation.common.exception.ApplicationException"/>
+         				</skippable-exception-classes>         			 		
+         			 	<listeners>
+         			 	  <listener ref="xprProcessingStepExecutionLister" />
+         			 	  <listener ref="xprProcessingSkipListener" />
+		    			</listeners>					
+					</chunk>
+				</tasklet>
+			</step>
+			         			
+			<step id="sbmrGeneration" next="processFlowDecision">
+	             <tasklet ref="sbmrGenerationTasklet">                    
+	             </tasklet>
+             </step>
+			
+			<decision id="processFlowDecision" decider="sbmiProcessFlowDecider">
+			 	<next on="XPR" to="xprProcessing" />
+			 	<next on="EXTRACT" to="xprExtraction" />
+			 	<next on="FILE" to="sbmiFileIngestion" />
+			 	<end  on="COMPLETE" />
+			</decision> 
+			
+			 <listeners>
+				<listener ref="sbmiJobExecListener" />
+			</listeners>
+			
+		</job>   
+		
+		<bean id="sbmiProcessTypeFlowExecutionDecider" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmiProcessTypeFlowExecutionDecider"/>
+	
+		<bean id="sbmiFileIngestionTasklet" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmiFileIngestionTasklet">
+			<property name="fileIngestionReader" ref="sbmiFileIngestionReader" />
+			<property name="fileIngestionWriter" ref="sbmiFileIngestionWriter" />
+			<property name="sbmEvaluatePendingFiles" ref="sbmEvaluatePendingFiles" />
+		</bean>
+ 		<bean id="sbmiFileIngestionReader" 
+ 			class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmiFileIngestionReader" >
+			<property name="eftFolder" value="${eps.inputfolder.sbm}" />
+			<property name="privateFolder" value="${eps.privatefolder.sbm}" />
+			<property name="processedFolder" value="${eps.processedfolder.sbm}" />
+			<property name="zipFilesFolder" value="${eps.zipfolder.sbm}" />
+			<property name="xmlValidator" ref="sbmXMLValidator" />
+			<property name="fileValidator" ref="sbmFileValidator" />
+			<property name="fileCompositeDao" ref="sbmFileCompositeDao" />
+			<property name="fileSatusHandler" ref="sbmFileStatusHandler" />
+		</bean>
+
+		<bean id="sbmiFileIngestionWriter" 	
+			class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmiFileIngestionWriter" >
+			<property name="processedFolder" value="${eps.processedfolder.sbm}" />
+			<property name="invalidFolder" value="${eps.invalidfolder.sbm}" />
+			<property name="fileCompositeDao" ref="sbmFileCompositeDao" />
+			<property name="responseGenerator" ref="sbmResponseGenerator" />
+		</bean> 
+		
+		<bean id="sbmXMLValidator" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmXMLValidator">
+			<property name="xsdFilePath" value="/xsd/SBMPolicy.xsd" />
+		</bean>
+		
+		<bean id="sbmFileValidator" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmFileValidator">
+			<property name="coverageYear" value="${eps.sbm.coverageYear}" />
+			<property name="fileCompositeDao" ref="sbmFileCompositeDao" />
+		</bean>
+		
+		<bean id="sbmFileStatusHandler" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SBMFileStatusHandler">
+			<property name="freezePeriodStartDay" value="${eps.sbm.freezePeriodStartDay}" />
+			<property name="freezePeriodEndDay" value="${eps.sbm.freezePeriodEndDay}" />
+			<property name="fileCompositeDao" ref="sbmFileCompositeDao" />
+		</bean>
+	
+		<bean id="xprExtractionTasklet" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.XprExtractionTasklet"
+			scope="step">
+			<property name="xprProcessingGroupSize" value="${eps.sbm.extractXPR.processingGroupSize}" />
+			<property name="jobExecution" value="#{stepExecution.jobExecution}" />
+			<property name="sbmFileCompositeDAO" ref="sbmFileCompositeDao" />
+			<property name="stagingSbmGroupLockDao" ref="stagingSbmGroupLockDao" />
+			<property name="jobId" value="#{stepExecution.jobExecution.jobId}"/>
+		</bean>
+			
+		<bean id="xprProcessingStepExecutionLister"
+			class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.XprProcessingStepExecutionListener">
+			<property name="jdbcTemplate" ref="jdbcTemplate" />
+			<property name="stageDataSqls">
+			  <list>
+			  	<value>${LOCK_STAGING_XPR_GROUP}</value>
+			  </list>
+			</property>	
+			<property name="postCleanUpSqls">
+			  <list>
+			  	<value>${DELETE_STAGING_XPR_GROUP}</value>
+			  	<value>${DELETE_STAGING_XPR_GROUP_LOCK}</value>
+			  </list>
+			</property>
+			<property name="stagingSbmFileDao" ref="stagingSbmFileDao"/>	
+		</bean>
+		
+       <bean id="xprProcessingSkipListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmXprSkipListener" scope="step">
+       		<property name="sbmXprService" ref="sbmXprService"/>
+       </bean>		
+      
+        <bean id="xprProcessingReader" class="org.springframework.batch.item.database.JdbcCursorItemReader" scope="step">
+            <property name="dataSource" ref="dataSource" />
+            <property name="sql" value="${SELECT_XPRS_FROM_STAGING_SBM_POLICY}" />
+            
+            <property name="preparedStatementSetter">
+			<bean class="org.springframework.batch.core.resource.ListPreparedStatementSetter">
+				<property name="parameters">
+					<list>
+						<value>#{stepExecution.jobExecution.jobId}</value>
+					</list>
+				</property>
+			</bean>
+		    </property>
+			<property name="rowMapper">
+				<bean class="gov.hhs.cms.ff.fm.eps.ep.dao.mappers.SbmPolicyDTORowMapper" />
+			</property>
+      </bean>
+       	
+	  <bean id="xprProcessor"
+			class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.XprProcessor" scope="step">
+			<property name="sbmXMLValidator" ref="sbmXMLValidator" />
+			<property name="sbmValidationService" ref="sbmValidationService" />
+			<property name="sbmFileCompositeDao" ref="sbmFileCompositeDao" />
+			<property name="jobId" value="#{stepExecution.jobExecution.jobId}"/>
+	  </bean>       	
+	  	
+	  <bean id="xprProcessingWriter" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.XprProcessingWriter" scope="step">
+			<property name="sbmXprService" ref="sbmXprService" />
+			<property name="jobExecutionContext" value="#{stepExecution.jobExecution}"/>
+	  </bean>
+
+      <bean id="paramsProvider" class="org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider" />
+		
+	  <bean id="sbmiProcessFlowDecider" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmiProcessFlowDecider">
+	  	<property name="stagingXprCountSelect" value="${SELECT_STAGING_XPR_COUNT}"/>
+	  	<property name="pendingExtractCountSelect" value="${SELECT_PENDING_EXTRACT_COUNT}"/>
+	  	<property name="jdbcTemplate" ref="jdbcTemplate"/>
+	  </bean>
+		
+	  <bean id="sbmiJobExecListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmiJobExecutionListener" scope="job">
+			<property name="batchProcessDAO" ref="batchProcessDAO" />
+			<property name="sbmConfigDao" ref="sbmConfigDao" />
+			<property name="sbmEvaluatePendingFiles" ref="sbmEvaluatePendingFiles" />
+	   </bean>
+
+	<bean id="sbmrGenerationTasklet" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmrGenerationTasklet">
+		<property name="sbmResponseGenerator" ref="sbmResponseGenerator" />
+		<property name="sbmResponseDao" ref="sbmResponseCompositeDao" />
+	</bean>
+	
+	<bean id="sbmResponseGenerator" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SBMResponseGenerator">
+		<property name="eftDispatcher" ref="eftDispatchDriver" />
+		<property name="environmentCodeSuffix"  value="${eps.eft.filenameSuffix.environmentCode}" />
+		<property name="fileCompositeDao" ref="sbmFileCompositeDao" />
+		<property name="sbmResponseDao" ref="sbmResponseCompositeDao" />
+		<property name="updateStatusDataService" ref="sbmUpdateStatusDataService" />
+	</bean>
+
+	<bean id="eftDispatchDriver" class="gov.hhs.cms.ff.fm.eps.dispatcher.EFTDispatchDriver">
+		<property name="batchProps" value="${eps.eft.OutboundFolder}" />
+		<property name="eftDispatcherDao" ref="eftDispatcherDao" />
+	</bean>
+	
+	<bean id="sbmEvaluatePendingFiles" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SBMEvaluatePendingFiles">
+		<property name="freezePeriodStartDay" value="${eps.sbm.freezePeriodStartDay}" />
+		<property name="freezePeriodEndDay" value="${eps.sbm.freezePeriodEndDay}" />
+		<property name="fileSetDeadlineHours" value="${eps.sbm.issuerFileSetDeadlineInHours}" />
+		<property name="fileCompositeDao" ref="sbmFileCompositeDao" />
+		<property name="responseGenerator" ref="sbmResponseGenerator" />
+	</bean>
+	
+	<bean id="ppCommonQueryProps" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="locations" value="classpath*:data-query.properties" />
+	</bean>	
+	
+   	<bean id="batchProcessDAO" class="gov.hhs.cms.ff.fm.eps.rap.dao.BatchProcessDAO">
+		<property name="queryProps" ref="ppCommonQueryProps" />
+		<property name="jdbcTemplate" ref="jdbcTemplate"  />
+	</bean>	
+	  
+</beans>		
+		
+		    

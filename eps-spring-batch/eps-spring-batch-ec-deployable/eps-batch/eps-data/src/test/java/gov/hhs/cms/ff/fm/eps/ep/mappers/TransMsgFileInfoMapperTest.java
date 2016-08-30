@@ -5,7 +5,7 @@ import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentRequestDTO;
 import gov.hhs.cms.ff.fm.eps.ep.data.util.TestDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.enums.ExchangeType;
 import gov.hhs.cms.ff.fm.eps.ep.po.TransMsgFileInfoPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import org.junit.Test;
 
@@ -49,7 +49,7 @@ public class TransMsgFileInfoMapperTest extends BaseMapperTest {
 		assertNotNull("FileName", po.getFileNm());
 		assertEquals("FileName", expecteFileNm, po.getFileNm());
 		assertNotNull("GroupTimestampDateTime", po.getGroupTimestampDateTime());
-		assertEquals("GroupTimestampDateTime", EpsDateUtils.getDateTimeFromXmlGC(expectedFileInfoType.getGroupTimeStamp()), 
+		assertEquals("GroupTimestampDateTime", DateTimeUtil.getLocalDateTimeFromXmlGC(expectedFileInfoType.getGroupTimeStamp()), 
 				po.getGroupTimestampDateTime());
 		assertNotNull("GroupControlNum", po.getGroupControlNum());
 				assertEquals("GroupControlNum", expectedFileInfoType.getGroupControlNumber(),

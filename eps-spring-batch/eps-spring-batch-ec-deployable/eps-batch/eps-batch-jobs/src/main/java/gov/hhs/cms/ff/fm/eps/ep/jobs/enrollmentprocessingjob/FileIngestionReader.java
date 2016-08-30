@@ -23,6 +23,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ExecutionContext;
@@ -194,7 +195,9 @@ public class FileIngestionReader implements ItemReader<EPSFileIndex>, ItemStream
                         return pathname.isFile();
                     }
                 });
-                Collections.addAll(result, dirFiles);
+            	if(ArrayUtils.isNotEmpty(dirFiles)) {
+            		Collections.addAll(result, dirFiles);
+            	}
             } else {
                 throw new IllegalStateException("unexpected file type");
             }

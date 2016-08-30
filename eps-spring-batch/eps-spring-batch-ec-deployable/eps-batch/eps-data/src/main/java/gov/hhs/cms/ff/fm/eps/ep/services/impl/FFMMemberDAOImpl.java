@@ -16,12 +16,12 @@ import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberDatePO;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.services.MemberDataDAO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ public class FFMMemberDAOImpl implements MemberDataDAO {
 	private PolicyMemberDateDao policyMemberDateDao;
 
 	@Override
-	public void processMembers(Long pvId, DateTime pvMaintenanceStartDateTime, BenefitEnrollmentMaintenanceDTO bemDTO) {
+	public void processMembers(Long pvId, LocalDateTime pvMaintenanceStartDateTime, BenefitEnrollmentMaintenanceDTO bemDTO) {
 
 		List<GenericPolicyMemberPO<?>> genPOList = new ArrayList<GenericPolicyMemberPO<?>>();
 
@@ -223,8 +223,8 @@ public class FFMMemberDAOImpl implements MemberDataDAO {
 		po.setPolicyVersionId(policyVersionId);
 		po.setPolicyMemberVersionId(policyMemberVersionId);
 		po.setSubscriberStateCd(subscriberStateCd);
-		po.setCreateDateTime(EpsDateUtils.getCurrentDateTime());
-		po.setLastModifiedDateTime(EpsDateUtils.getCurrentDateTime());
+		po.setCreateDateTime(LocalDate.now());
+		po.setLastModifiedDateTime(LocalDate.now());
 
 		return po;
 	}
@@ -257,8 +257,8 @@ public class FFMMemberDAOImpl implements MemberDataDAO {
 	private void setSystemData(List<GenericPolicyMemberPO<?>> poList) {
 
 		for(GenericPolicyMemberPO<?> po : poList) {
-			po.setCreateDateTime(EpsDateUtils.getCurrentDateTime());
-			po.setLastModifiedDateTime(EpsDateUtils.getCurrentDateTime());
+			po.setCreateDateTime(LocalDate.now());
+			po.setLastModifiedDateTime(LocalDate.now());
 		}
 	}
 

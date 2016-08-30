@@ -16,6 +16,8 @@ import static gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants.STATUS_PENDING_CYCLE
 import static gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants.STATUS_REPLACED;
 import static gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants.TRANSPERIOD_RETROACTIVE;
 import static gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants.UF;
+
+import gov.hhs.cms.ff.fm.eps.ep.enums.ProrationType;
 import gov.hhs.cms.ff.fm.eps.rap.dao.RapDao;
 import gov.hhs.cms.ff.fm.eps.rap.domain.IssuerUserFeeRate;
 import gov.hhs.cms.ff.fm.eps.rap.domain.PolicyPremium;
@@ -99,11 +101,13 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 	}	
 	
 	/*
-	 * Determine whether the state is prorating for the Payment Transaction year
+	 * Determine whether the state is FFM prorating for the Payment Transaction year
 	 */
-	private boolean isStateProrating(String stateCode, int paymentTransYear) {
+	private boolean isStateFfmProrating(String stateCode, int paymentTransYear) {
 		
-		return codeDecodesHelper.isStateProrating(stateCode, paymentTransYear);
+		//return codeDecodesHelper.isStateProrating(stateCode, paymentTransYear);
+		
+		return RapProcessingHelper.getProrationType(stateCode, paymentTransYear).equals(ProrationType.FFM_PRORATING);
 	}
 
 	/*
@@ -144,14 +148,24 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 		//Evaluate Policy version through the coverage Months 
 		for(DateTime coverageDate: minMaxCoverageMonths) {
 			
+			ProrationType prorationType = RapProcessingHelper.getProrationType(
+					policyVersion.getSubscriberStateCd(), coverageDate.getYear());
+			
+			LOGGER.info("prorationType: "+ prorationType.getValue());
+			
 			List<PolicyPremium> premiumRecs = premiumsForMonths.get(coverageDate);
-			//If state is not prorating use only the earliest premium record for the month as basis for creating payments
+			
+			//If state is not prorating or is an SBM with no prorated amounts  
+			// use only the earliest premium record for the month as basis for creating payments
 			// ie, only one payment for the month based on the oldest effective premium for the month
-			if (!isStateProrating(policyVersion.getSubscriberStateCd(), coverageDate.getYear())) { 
+			if ((!prorationType.equals(ProrationType.SBM_PRORATING) && !isStateFfmProrating(policyVersion.getSubscriberStateCd(), coverageDate.getYear())) 
+					|| RapProcessingHelper.isSbmWithoutProratedAmounts(prorationType, premiumRecs)) { 
+				
 				if(CollectionUtils.isNotEmpty(premiumRecs)) {
 					premiumRecs.subList(1, premiumRecs.size()).clear();
 				}
 			}
+			
 			List<PolicyPaymentTransDTO> payments = paymentsForMonths.get(coverageDate);
 			
 			//if no payments exists for coverage date then create retros for all three programTypes
@@ -159,16 +173,24 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 				LOGGER.debug("No payments exists for coverage period - creating retros");
 				
 				if(CollectionUtils.isNotEmpty(premiumRecs) && !coverageDate.isAfter(policyVersion.getPolicyEndDate())) {
-					pmtTransList.addAll(createRetros(coverageDate, policyVersion, premiumRecs));
+					
+					if(prorationType.equals(ProrationType.SBM_PRORATING)) {
+						
+						pmtTransList.addAll(createRetrosForSbm(coverageDate, policyVersion, premiumRecs, prorationType));
+						
+					} else {
+						
+						pmtTransList.addAll(createRetros(coverageDate, policyVersion, premiumRecs, prorationType));
+					}
 				}
 			} else {
 				LOGGER.debug("Payments exist - creating reversals/adjustments");
 				
-				createAptcPayments(policyVersion, coverageDate, pmtTransList, payments, premiumRecs);
+				createAptcPayments(policyVersion, coverageDate, pmtTransList, payments, premiumRecs, prorationType);
 
-				createCsrPayments(policyVersion, coverageDate, pmtTransList, payments, premiumRecs);
+				createCsrPayments(policyVersion, coverageDate, pmtTransList, payments, premiumRecs, prorationType);
 
-				if(isUserFeeRateExists(coverageDate, policyVersion)) {
+				if(!prorationType.equals(ProrationType.SBM_PRORATING) && isUserFeeRateExists(coverageDate, policyVersion)) {
 					createUfPayments(policyVersion, coverageDate, pmtTransList, payments, premiumRecs);
 				} 
 			}
@@ -238,14 +260,21 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 	 */
 	private void createAptcPayments(
 			PolicyDataDTO policyVersion, DateTime coverageDate, 
-			List<PolicyPaymentTransDTO> pmtTransList, List<PolicyPaymentTransDTO> payments, List<PolicyPremium> premiumRecs) {
+			List<PolicyPaymentTransDTO> pmtTransList, List<PolicyPaymentTransDTO> payments, List<PolicyPremium> premiumRecs, ProrationType prorationType) {
 		LOGGER.info("Evaluating Aptc Payment Records for.." + coverageDate);
 		
 		List<PolicyPaymentTransDTO> aptcPayments = getProgramSpecificPayments(payments, APTC);
 		
 		if(premiumRecs != null) {
 			
-			for(PolicyPremium policyPremium : premiumRecs) {
+			List<PolicyPremium> premiums = new ArrayList<PolicyPremium>();
+			premiums.addAll(premiumRecs);
+			
+			if(prorationType.equals(ProrationType.SBM_PRORATING) && RapProcessingHelper.hasNoProratedAptc(premiums)) {
+				premiums.subList(1, premiums.size()).clear();
+			}
+			
+			for(PolicyPremium policyPremium : premiums) {
 				
 				BigDecimal epsAptc = policyPremium.getAptcAmount() == null ? BigDecimal.ZERO:policyPremium.getAptcAmount();
 				
@@ -267,11 +296,11 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 				if (pmt != null) {
 					
 					BigDecimal proratedAmount = getProratedAmount(epsAptc, policyPremium.getProratedAptcAmount(),
-							coverageDate, premiumStartDate, premiumEndDate, policyVersion.getSubscriberStateCd());
+							coverageDate, premiumStartDate, premiumEndDate, policyVersion.getSubscriberStateCd(), prorationType);
 					
 					if(!(pmt.getPaymentAmount().compareTo(proratedAmount) == 0)) {
 						createAdjustmentForMatchingDates(
-								pmtTransList, coverageDate, APTC, policyVersion, pmt, policyPremium, epsAptc, policyPremium.getProratedAptcAmount());
+								pmtTransList, coverageDate, APTC, policyVersion, pmt, policyPremium, epsAptc, policyPremium.getProratedAptcAmount(), prorationType);
 					} else {
 						createReversalForCancels(pmtTransList, coverageDate, APTC, policyVersion, pmt);
 					}
@@ -284,7 +313,7 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 					}
 					
 					if(!policyVersion.isPolicyCancelled() && !coverageDate.isAfter(premiumEndDate) && epsAptc.compareTo(BigDecimal.ZERO) != 0) {
-						pmtTransList.add(createPolicyPaymentTrans(coverageDate, APTC, policyVersion, policyPremium, epsAptc, policyPremium.getProratedAptcAmount()));
+						pmtTransList.add(createPolicyPaymentTrans(coverageDate, APTC, policyVersion, policyPremium, epsAptc, policyPremium.getProratedAptcAmount(), prorationType));
 					}
 				}
 			}
@@ -303,14 +332,21 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 	 * Create CSR Payment Transactions
 	 */
 	private void createCsrPayments(PolicyDataDTO policyVersion, DateTime coverageDate, 
-			List<PolicyPaymentTransDTO> pmtTransList, List<PolicyPaymentTransDTO> payments, List<PolicyPremium> premiumRecs) {
+			List<PolicyPaymentTransDTO> pmtTransList, List<PolicyPaymentTransDTO> payments, List<PolicyPremium> premiumRecs, ProrationType prorationType) {
 		LOGGER.info("Evaluating CSR Payment Records for.." + coverageDate);
 		
 		List<PolicyPaymentTransDTO> csrPayments = getProgramSpecificPayments(payments, CSR);
 		
 		if(premiumRecs != null) {
 			
-			for(PolicyPremium policyPremium : premiumRecs) {
+			List<PolicyPremium> premiums = new ArrayList<PolicyPremium>();
+			premiums.addAll(premiumRecs);
+			
+			if(prorationType.equals(ProrationType.SBM_PRORATING) && RapProcessingHelper.hasNoProratedCsr(premiums)) {
+				premiums.subList(1, premiums.size()).clear();
+			}
+			
+			for(PolicyPremium policyPremium : premiums) {
 				
 				BigDecimal epsCsr = policyPremium.getCsrAmount() == null ? BigDecimal.ZERO:policyPremium.getCsrAmount();
 				
@@ -332,12 +368,12 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 				if (pmt != null) {
 					
 					BigDecimal proratedAmount = getProratedAmount(epsCsr, policyPremium.getProratedCsrAmount(),
-							coverageDate, premiumStartDate, premiumEndDate, policyVersion.getSubscriberStateCd());
+							coverageDate, premiumStartDate, premiumEndDate, policyVersion.getSubscriberStateCd(), prorationType);
 					
 					if(!(pmt.getPaymentAmount().compareTo(proratedAmount) == 0)) {
 						
 						createAdjustmentForMatchingDates(
-								pmtTransList, coverageDate, CSR, policyVersion, pmt, policyPremium, epsCsr, policyPremium.getProratedCsrAmount());
+								pmtTransList, coverageDate, CSR, policyVersion, pmt, policyPremium, epsCsr, policyPremium.getProratedCsrAmount(), prorationType);
 					} else {
 						createReversalForCancels(pmtTransList, coverageDate, CSR, policyVersion, pmt);
 					}
@@ -350,7 +386,7 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 	
 					//Create the new Adjustment Transaction
 					if(!policyVersion.isPolicyCancelled() && !coverageDate.isAfter(premiumEndDate) && epsCsr.compareTo(BigDecimal.ZERO) != 0) {
-						pmtTransList.add(createPolicyPaymentTrans(coverageDate, CSR, policyVersion, policyPremium, epsCsr, policyPremium.getProratedCsrAmount()));
+						pmtTransList.add(createPolicyPaymentTrans(coverageDate, CSR, policyVersion, policyPremium, epsCsr, policyPremium.getProratedCsrAmount(), prorationType));
 					}
 				}
 			}
@@ -398,7 +434,8 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 				if (pmt != null) {
 					
 					BigDecimal proratedAmount = getProratedAmount(epsUf, policyPremium.getProratedPremiumAmount(),
-							coverageDate, premiumStartDate, premiumEndDate, policyVersion.getSubscriberStateCd());
+							coverageDate, premiumStartDate, premiumEndDate, policyVersion.getSubscriberStateCd(),
+							ProrationType.NON_PRORATING);
 					
 					if(!(pmt.getTotalPremiumAmount().compareTo(proratedAmount) == 0)) {
 						
@@ -415,7 +452,7 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 						if(epsUf.compareTo(BigDecimal.ZERO) !=0 && !coverageDate.isAfter(policyVersion.getPolicyEndDate())
 								&& !policyVersion.isPolicyCancelled()) {
 							
-							pmtTransList.add(createPolicyPaymentTrans(coverageDate, UF, policyVersion, policyPremium, epsUf, policyPremium.getProratedPremiumAmount()));
+							pmtTransList.add(createPolicyPaymentTrans(coverageDate, UF, policyVersion, policyPremium, epsUf, policyPremium.getProratedPremiumAmount(), ProrationType.NON_PRORATING));
 						}
 					} else {
 						createReversalForCancels(pmtTransList, coverageDate, UF, policyVersion, pmt);
@@ -429,7 +466,7 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 					}
 					//Create the new Adjustment Transaction
 					if(!policyVersion.isPolicyCancelled() && !coverageDate.isAfter(premiumEndDate) && epsUf.compareTo(BigDecimal.ZERO) != 0) {
-						pmtTransList.add(createPolicyPaymentTrans(coverageDate, UF, policyVersion, policyPremium, epsUf, policyPremium.getProratedPremiumAmount()));
+						pmtTransList.add(createPolicyPaymentTrans(coverageDate, UF, policyVersion, policyPremium, epsUf, policyPremium.getProratedPremiumAmount(), ProrationType.NON_PRORATING));
 					}
 				}
 			}
@@ -513,7 +550,7 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 	 */
 	private void createAdjustmentForMatchingDates(List<PolicyPaymentTransDTO> pmtTransList, 
 			DateTime coverageDate, String programType, PolicyDataDTO policyVersion,
-			PolicyPaymentTransDTO payment, PolicyPremium policyPremium, BigDecimal epsAmount, BigDecimal proratedAmount) {
+			PolicyPaymentTransDTO payment, PolicyPremium policyPremium, BigDecimal epsAmount, BigDecimal proratedAmount, ProrationType prorationType) {
 		LOGGER.debug(programType + " create Adjustment/Reversal For Matching Dates");
 		
 		Long reversalRefId = null;
@@ -528,7 +565,7 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 		if(epsAmount.compareTo(BigDecimal.ZERO) !=0 
 				&& !payment.getPaymentCoverageStartDate().isAfter(policyVersion.getPolicyEndDate()) 
 				&& !policyVersion.isPolicyCancelled()) {
-			pmtTransList.add(createPolicyPaymentTrans(coverageDate, programType, policyVersion, policyPremium, epsAmount, proratedAmount));
+			pmtTransList.add(createPolicyPaymentTrans(coverageDate, programType, policyVersion, policyPremium, epsAmount, proratedAmount, prorationType));
 		}
 	}
 	
@@ -536,14 +573,18 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 	 * Get Prorated Amount
 	 */
 	private BigDecimal getProratedAmount(BigDecimal paymentAmount, BigDecimal proratedPmtAmount,
-			DateTime coverageDate, DateTime effectiveStartDate, DateTime premiumEndDate, String stateCd) {
+			DateTime coverageDate, DateTime effectiveStartDate, DateTime premiumEndDate, String stateCd, ProrationType prorationType) {
 		
-		if (!isStateProrating(stateCd, coverageDate.getYear())) { 
+		if (!prorationType.equals(ProrationType.SBM_PRORATING) && !isStateFfmProrating(stateCd, coverageDate.getYear())) { 
 			return paymentAmount;
 		}
 		
 		if(proratedPmtAmount != null) {
 			return proratedPmtAmount;
+		}
+		
+		if(prorationType.equals(ProrationType.SBM_PRORATING)) {
+			return paymentAmount;
 		}
 		
 		int prorationDays = RapProcessingHelper.getProrationDaysOfCoverage(coverageDate, effectiveStartDate, premiumEndDate);
@@ -695,6 +736,15 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 		DateTime minPaymentMonth = policyVersion.getPolicyStartDate();
 		LOGGER.info("min Payment Month: "+ minPaymentMonth);
 		
+		DateTime issuerTransitionDt = policyVersion.getIssuerStartDate();
+		
+		if(minPaymentMonth.getYear() < issuerTransitionDt.getYear()) {
+			
+			minPaymentMonth = new DateTime().withYear(issuerTransitionDt.getYear()).withDayOfYear(1).withTimeAtStartOfDay();
+			
+			LOGGER.info("Policy start year less than issuer Transition year. Setting Min Covg Month to Jan of Issuer transition Year "+ minPaymentMonth);
+		}
+		
 		DateTime policyVersionDt = policyVersion.getMaintenanceStartDateTime();
 		
 		DateTime paymentMonth = currentPmtMonth.get(0);
@@ -779,7 +829,7 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 	/*
 	 * Creates retro payments for all APTC,CSR & UF
 	 */
-	private List<PolicyPaymentTransDTO> createRetros(DateTime coverageDate, PolicyDataDTO policy, List<PolicyPremium> premiumRecs) {       
+	private List<PolicyPaymentTransDTO> createRetros(DateTime coverageDate, PolicyDataDTO policy, List<PolicyPremium> premiumRecs, ProrationType prorationType) {       
 		List<PolicyPaymentTransDTO> transactionList = new ArrayList<PolicyPaymentTransDTO>();   
 
 		for (PolicyPremium premium : premiumRecs) {
@@ -791,18 +841,18 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 				
 				BigDecimal aptcAmount = premium.getAptcAmount();
 				if (aptcAmount != null && aptcAmount.compareTo(BigDecimal.ZERO) != 0) {
-					transactionList.add(createPolicyPaymentTrans(coverageDate, APTC, policy, premium, premium.getAptcAmount(), premium.getProratedAptcAmount()));
+					transactionList.add(createPolicyPaymentTrans(coverageDate, APTC, policy, premium, premium.getAptcAmount(), premium.getProratedAptcAmount(), prorationType));
 				}
 				
 				BigDecimal csrAmount = premium.getCsrAmount();
 				if (csrAmount != null && csrAmount.compareTo(BigDecimal.ZERO) != 0) {
-					transactionList.add(createPolicyPaymentTrans(coverageDate, CSR, policy, premium, premium.getCsrAmount(), premium.getProratedCsrAmount()));
+					transactionList.add(createPolicyPaymentTrans(coverageDate, CSR, policy, premium, premium.getCsrAmount(), premium.getProratedCsrAmount(), prorationType));
 				}
 				
 				BigDecimal totalPremiumAmount = premium.getTotalPremiumAmount();
 				if (totalPremiumAmount != null && totalPremiumAmount.compareTo(BigDecimal.ZERO) != 0) {
-					if(isUserFeeRateExists(coverageDate, policy)) {
-						transactionList.add(createPolicyPaymentTrans(coverageDate, UF, policy, premium, premium.getTotalPremiumAmount(), premium.getProratedPremiumAmount()));
+					if(!prorationType.equals(ProrationType.SBM_PRORATING) && isUserFeeRateExists(coverageDate, policy)) {
+						transactionList.add(createPolicyPaymentTrans(coverageDate, UF, policy, premium, premium.getTotalPremiumAmount(), premium.getProratedPremiumAmount(), ProrationType.NON_PRORATING));
 					}
 				}
 			}
@@ -811,11 +861,63 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 	}
 	
 	/*
+	 * Creates retro payments for SBM ProrationType - APTC,CSR
+	 */
+	private List<PolicyPaymentTransDTO> createRetrosForSbm(DateTime coverageDate, PolicyDataDTO policy, List<PolicyPremium> premiumRecs, ProrationType prorationType) {       
+		List<PolicyPaymentTransDTO> transactionList = new ArrayList<PolicyPaymentTransDTO>();   
+		
+		//APTC
+		List<PolicyPremium> premiumsNoProratedAptc = new ArrayList<PolicyPremium>();
+		premiumsNoProratedAptc.addAll(premiumRecs);
+		
+		if(RapProcessingHelper.hasNoProratedAptc(premiumsNoProratedAptc)) {
+			premiumsNoProratedAptc.subList(1, premiumsNoProratedAptc.size()).clear();
+		}
+		
+		for (PolicyPremium premium : premiumsNoProratedAptc) {
+			
+			DateTime premiumEndDate = premium.getEffectiveEndDate() == null ? 
+					new DateTime(HIGH_DATE) : premium.getEffectiveEndDate();
+			
+			if (!premiumEndDate.isBefore(coverageDate) && !policy.isPolicyCancelled()) {
+				BigDecimal aptcAmount = premium.getAptcAmount();
+				if (aptcAmount != null && aptcAmount.compareTo(BigDecimal.ZERO) != 0) {
+					transactionList.add(createPolicyPaymentTrans(coverageDate, APTC, policy, premium, premium.getAptcAmount(), premium.getProratedAptcAmount(), prorationType));
+				}
+			}
+		}
+		
+		
+		//CSR
+		List<PolicyPremium> premiumsNoProratedCsr = new ArrayList<PolicyPremium>();
+		premiumsNoProratedCsr.addAll(premiumRecs);
+		
+		if(RapProcessingHelper.hasNoProratedCsr(premiumsNoProratedCsr)) {
+			premiumsNoProratedCsr.subList(1, premiumsNoProratedCsr.size()).clear();
+		}
+			
+		for (PolicyPremium premium : premiumsNoProratedCsr) {
+			
+			DateTime premiumEndDate = premium.getEffectiveEndDate() == null ? 
+					new DateTime(HIGH_DATE) : premium.getEffectiveEndDate();
+			
+			if (!premiumEndDate.isBefore(coverageDate) && !policy.isPolicyCancelled()) {
+				BigDecimal csrAmount = premium.getCsrAmount();
+				if (csrAmount != null && csrAmount.compareTo(BigDecimal.ZERO) != 0) {
+					transactionList.add(createPolicyPaymentTrans(coverageDate, CSR, policy, premium, premium.getCsrAmount(), premium.getProratedCsrAmount(), prorationType));
+				}
+			}
+		}
+		
+		return transactionList;
+	}
+	
+	/*
 	 * Creates PolicyPaymentTransDTO
 	 */
 	private PolicyPaymentTransDTO createPolicyPaymentTrans(
 			DateTime coverageMonth, String financialProgramTypeCd, PolicyDataDTO policy,
-			PolicyPremium premium, BigDecimal amount, BigDecimal proratedAmount) {
+			PolicyPremium premium, BigDecimal amount, BigDecimal proratedAmount, ProrationType prorationType) {
 
 		PolicyPaymentTransDTO dto = new PolicyPaymentTransDTO();
 		dto.setPolicyPaymentTransId(rapDao.getPolicyPaymentTransNextSeq());
@@ -856,7 +958,7 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 
 		Integer prorationDays = coverageMonth.dayOfMonth().getMaximumValue();
 		
-		if(isStateProrating(policy.getSubscriberStateCd(), coverageMonth.getYear())) {
+		if(isStateFfmProrating(policy.getSubscriberStateCd(), coverageMonth.getYear())) {
 		
 			prorationDays = RapProcessingHelper.getProrationDaysOfCoverage(
 					coverageMonth, dto.getPaymentCoverageStartDate(), dto.getPaymentCoverageEndDate());
@@ -879,7 +981,17 @@ public class RapProcessingServiceImpl implements RapProcessingService {
 				prorationDays = null;
 			}
 
-		}     
+		} else if(prorationType.equals(ProrationType.SBM_PRORATING)) {
+			
+			if(proratedAmount != null) {
+				amount = proratedAmount;
+				prorationDays = null;
+				
+				if(premium.getProratedPremiumAmount() != null) {
+					totalPremiumAmount = premium.getProratedPremiumAmount();
+				}
+			}
+		}
 		
 		if(!UF.equals(financialProgramTypeCd)) {
 			dto.setPaymentAmount(amount);

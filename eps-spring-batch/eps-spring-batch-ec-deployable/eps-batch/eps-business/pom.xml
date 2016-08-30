@@ -4,7 +4,7 @@
   <parent>
     <groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
     <artifactId>eps</artifactId>
-    <version>25.0.2</version>
+    <version>26.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>eps-business</artifactId>
   <name>eps-business</name>
@@ -69,6 +69,13 @@
       <artifactId>eps-domain</artifactId>
       <scope>compile</scope>
     </dependency>
+    <!-- 	<dependency>
+			<groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
+			<artifactId>eps-domain</artifactId>
+			<version>${project.version}</version> 
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>-->
     <!-- spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>

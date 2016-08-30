@@ -4,7 +4,7 @@ import gov.cms.dsh.bem.BenefitEnrollmentMaintenanceType;
 import gov.hhs.cms.ff.fm.eps.ep.BEMDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyStatusPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +41,7 @@ public class PolicyStatusMapper {
 				PolicyStatusPO po = new PolicyStatusPO();
 
 				po.setInsuranacePolicyStatusTypeCd(inboundPolicyStatus.getValue());
-				po.setTransDateTime(EpsDateUtils.getDateTimeFromXmlGC(BEMDataUtil.getCurrentTimeStamp(bem)));
+				po.setTransDateTime(DateTimeUtil.getLocalDateTimeFromXmlGC(BEMDataUtil.getCurrentTimeStamp(bem)));
 
 				// if new inbound status is NOT the same as the latest existing EPS status, then add
 				// Since "order by TRANSDATETIME desc", grab the first one.

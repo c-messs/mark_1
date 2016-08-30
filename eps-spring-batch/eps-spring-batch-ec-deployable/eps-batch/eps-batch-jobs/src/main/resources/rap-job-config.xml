@@ -117,6 +117,7 @@
 		
 	  <bean id="rapJobExecListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.retroactivepaymentsjob.RapJobExecutionListener" scope="job">
 			<property name="batchProcessDAO" ref="batchProcessDAO" />
+			<property name="rapDao" ref="rapDao" />
 			<property name="jdbcTemplate" ref="jdbcTemplate"  />
 			<property name="updatePendingRecordSql" value="${UPDATE_REQUIRED_POLICY_STAGE_SQL}" />
 		    <property name="selectMaxPolicyMaintStartDateTime" value="${SELECT_MAX_LAST_POLICY_MAINTSTARTDATETIME}" />

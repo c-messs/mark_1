@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:oxm="http://www.springframework.org/schema/oxm"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+             http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+             http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+             http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+             http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+             http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-1.5.xsd
+             http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+           	 
+       ">
+
+	<context:property-placeholder location="classpath:eps.properties"
+		ignore-unresolvable="true" />
+	<context:property-placeholder location="classpath*:sbmi-sql.properties"
+		ignore-unresolvable="true" />
+
+	<job id="sbmUpdateStatusBatchJob" xmlns="http://www.springframework.org/schema/batch"
+		job-repository="jobRepository">
+
+		<step id="sbmUpdateStatusStep" >
+			<tasklet ref="sbmUpdateStatusTasklet">
+			</tasklet>
+		</step>
+		
+		<listeners>
+			<listener ref="sbmUpdateStatusJobListener" />
+		</listeners>		
+		
+	</job>
+	
+	<bean id="sbmUpdateStatusTasklet" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.updatestatus.SbmUpdateStatusTasklet">
+		<property name="eftFolder" value="${eps.sbm.sbmUpdateStatus.inputfolder}"></property>
+		<property name="privateFolder" value="${eps.sbm.sbmUpdateStatus.privatefolder}"></property>
+		<property name="processedFolder" value="${eps.sbm.sbmUpdateStatus.processedfolder}"></property>
+		<property name="updateStatusProcessor" ref="sbmUpdateStatusProcessor"></property>
+	</bean>
+	
+	<bean id="sbmUpdateStatusProcessor" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.updatestatus.SbmUpdateStatusProcessor">
+		<property name="fileCompositeDao" ref="sbmFileCompositeDao" />
+		<property name="responseGenerator" ref="sbmResponseGenerator" />
+		<property name="eftDispatcher" ref="eftDispatchDriver" />
+		<property name="environmentCodeSuffix"  value="${eps.eft.filenameSuffix.environmentCode}" />
+		<property name="updateStatusDataService" ref="sbmUpdateStatusDataService" />
+	</bean>
+	
+	<bean id="sbmResponseGenerator" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SBMResponseGenerator">
+		<property name="eftDispatcher" ref="eftDispatchDriver" />
+		<property name="environmentCodeSuffix" value="${eps.eft.filenameSuffix.environmentCode}" />
+		<property name="fileCompositeDao" ref="sbmFileCompositeDao" />
+		<property name="sbmResponseDao" ref="sbmResponseCompositeDao" />
+		<property name="updateStatusDataService" ref="sbmUpdateStatusDataService" />
+	</bean>
+
+	<bean id="eftDispatchDriver" class="gov.hhs.cms.ff.fm.eps.dispatcher.EFTDispatchDriver">
+		<property name="batchProps" value="${eps.eft.OutboundFolder}" />
+		<property name="eftDispatcherDao" ref="eftDispatcherDao" />
+	</bean>
+	
+	<bean id="sbmUpdateStatusJobListener" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmUpdateStatusJobListener" scope="job">
+		<property name="batchProcessDAO" ref="batchProcessDAO" />
+		<property name="sbmConfigDao" ref="sbmConfigDao" />
+	</bean>	
+	   
+	<bean id="ppCommonQueryProps" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="locations" value="classpath*:data-query.properties" />
+	</bean>	
+	
+   	<bean id="batchProcessDAO" class="gov.hhs.cms.ff.fm.eps.rap.dao.BatchProcessDAO">
+		<property name="queryProps" ref="ppCommonQueryProps" />
+		<property name="jdbcTemplate" ref="jdbcTemplate"  />
+	</bean>	   
+
+</beans>		
+		
+		    

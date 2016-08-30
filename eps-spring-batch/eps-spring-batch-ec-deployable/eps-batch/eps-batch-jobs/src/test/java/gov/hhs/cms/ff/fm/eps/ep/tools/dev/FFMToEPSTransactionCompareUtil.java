@@ -30,7 +30,7 @@ public class FFMToEPSTransactionCompareUtil {
 	 *  Upper bound date of policies not to include in comparison.
 	 *  - Include all policies LESS THAN '<' this date.
 	 */
-	protected static final DateTime UPPER_BOUND_DT = new DateTime(2016, 4, 10, 0, 0);
+	protected static final DateTime UPPER_BOUND_DT = new DateTime(2016, 7, 16, 0, 0);
 
 
 	public static void main(String[] args) {
@@ -141,19 +141,20 @@ public class FFMToEPSTransactionCompareUtil {
 								ymd = sdf.format(lastModDT.toDate());
 
 								if (ymd.equals(prvYMD)) {
+									sqlArgs += ", ";
 									if (cntThisDate % 12 == 0) {
 										sqlArgs+= "\n";
 									}
-									sqlArgs += "', '" + col[0];
+									sqlArgs += col[0];
 									cntThisDate++;
 								} else {									
 									if (!prvYMD.isEmpty()) {
 										summaryByDate += "\n\t" + prvYMD + ": " + nf.format(cntThisDate);
 									}
 									if (!sqlArgs.isEmpty()) {
-										sqlArgs += "')"; 
+										sqlArgs += ", "; 
 									}
-									sqlArgs += "\n\n-- " + ymd + " ExchangePolicyIds\n ('" + col[0];
+									sqlArgs += "\n\n-- " + ymd + "\n " + col[0];
 									prvYMD = ymd;
 									cntThisDate = 1;
 								}
@@ -177,13 +178,13 @@ public class FFMToEPSTransactionCompareUtil {
 			}
 			summaryByDate += "\n\t" + prvYMD + ": " + nf.format(cntThisDate);
 			if (!sqlArgs.isEmpty()) {
-				sqlArgs += "')";
+				sqlArgs += ")";
 			}
 			
 			writer.flush();
 		    writer.close();
 		    
-			System.out.println("\nSQL \"WHERE IN\" arguments:" + sqlArgs);
+			System.out.println("\nSQL \"WHERE IN\" arguments:\n(" + sqlArgs);
 
 			System.out.println("\n\nTotal EPS lines from file: " + nf.format((cntEPSLine)));
 			System.out.println("Total EPS lineBreaks from file: " + nf.format(cntEPSLnBrk));

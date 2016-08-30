@@ -1,9 +1,17 @@
 package gov.hhs.cms.ff.fm.eps.rap.dao.impl;
 
+import java.util.List;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
 import gov.hhs.cms.ff.fm.eps.ep.dao.GenericEpsDao;
 import gov.hhs.cms.ff.fm.eps.rap.dao.RapDao;
 import gov.hhs.cms.ff.fm.eps.rap.dao.mappers.PolicyPaymentsRowMapper;
 import gov.hhs.cms.ff.fm.eps.rap.dao.mappers.PolicyPremiumRowMapper;
+import gov.hhs.cms.ff.fm.eps.rap.dao.mappers.ProrationConfigRowMapper;
 import gov.hhs.cms.ff.fm.eps.rap.dao.mappers.UserFeeRateRowMapper;
 import gov.hhs.cms.ff.fm.eps.rap.domain.IssuerUserFeeRate;
 import gov.hhs.cms.ff.fm.eps.rap.domain.PolicyPremium;
@@ -12,12 +20,6 @@ import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDataDTO;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDetailDTO;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyPaymentTransDTO;
 import gov.hhs.cms.ff.fm.eps.rap.util.DataCommonUtil;
-
-import java.util.List;
-
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class is the DAO implementation for the Data Access methods for RAP
@@ -32,6 +34,7 @@ public class RapDaoImpl extends GenericEpsDao implements RapDao {
     private String selectPolicyPremiums;
     private String selectPolicyPmtTrans;
     private String selectIssuerRates;
+    private String selectProrationConfig;
 	
 	/**
 	 * Returns next sequence value of PolicyPaymentTransSeq
@@ -95,6 +98,7 @@ public class RapDaoImpl extends GenericEpsDao implements RapDao {
 	 * @param year
 	 * @return issuerUserFeeRates
 	 */
+	@Override
 	public List<IssuerUserFeeRate> getUserFeeRateForAllStates(DateTime asOfDate, String year) {
 		LOG.debug("Sql selectIssuerRates: "+ selectIssuerRates);
 		
@@ -102,6 +106,15 @@ public class RapDaoImpl extends GenericEpsDao implements RapDao {
 		List<IssuerUserFeeRate> issuerUserFeeRates = jdbcTemplate.query(selectIssuerRates, args, new UserFeeRateRowMapper());
 		
 		return issuerUserFeeRates;
+	}
+	
+	@Override
+	public List<StateProrationConfiguration> getProrationConfiguration() {
+
+		List<StateProrationConfiguration> prorationConfigList = 
+				(List<StateProrationConfiguration>) jdbcTemplate.query(selectProrationConfig, new ProrationConfigRowMapper());
+		return prorationConfigList;
+
 	}
 	
 	/**
@@ -123,6 +136,13 @@ public class RapDaoImpl extends GenericEpsDao implements RapDao {
 	 */
 	public void setSelectIssuerRates(String selectIssuerRates) {
 		this.selectIssuerRates = selectIssuerRates;
+	}
+
+	/**
+	 * @param selectProrationConfig the selectProrationConfig to set
+	 */
+	public void setSelectProrationConfig(String selectProrationConfig) {
+		this.selectProrationConfig = selectProrationConfig;
 	}
     
 }

@@ -7,8 +7,9 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.ProcessedToDbInd;
 import gov.hhs.cms.ff.fm.eps.ep.mappers.BatchTransMsgMapper;
 import gov.hhs.cms.ff.fm.eps.ep.po.BatchTransMsgPO;
 import gov.hhs.cms.ff.fm.eps.ep.services.TransMsgCompositeDAO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
+
+import java.time.LocalDate;
 
 import com.accenture.foundation.common.exception.ApplicationException;
 
@@ -80,8 +81,8 @@ public class TransMsgCompositeDAOImpl implements TransMsgCompositeDAO {
 		// updateBatchTransMsg will fail if BatchId is null.
 		if(!isSuccess) {
 			userVO.setUserId(batchId.toString());
-			po.setCreateDateTime(EpsDateUtils.getCurrentDateTime());
-			po.setLastModifiedDateTime(EpsDateUtils.getCurrentDateTime());
+			po.setCreateDateTime(LocalDate.now());
+			po.setLastModifiedDateTime(LocalDate.now());
 			batchTransMsgDao.insertBatchTransMsg(po);
 		}
 	}

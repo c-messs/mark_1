@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Enrollment xmlns="http://sbmi.dsh.cms.gov">
+    <FileInformation>
+        <FileId>FileId222</FileId>
+        <FileCreateDateTime>2001-12-31T12:00:00</FileCreateDateTime>
+        <TenantId>CA1</TenantId>
+        <CoverageYear>2016</CoverageYear>
+        <IssuerFileInformation>
+            <IssuerId>12345</IssuerId>
+            <IssuerFileSet>
+                <IssuerFileSetId>12345678</IssuerFileSetId>
+                <FileNumber>1</FileNumber>
+                <TotalIssuerFiles>1</TotalIssuerFiles>
+            </IssuerFileSet>
+        </IssuerFileInformation>
+    </FileInformation>
+</Enrollment>

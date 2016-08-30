@@ -5,13 +5,13 @@ import gov.cms.dsh.bem.MemberType;
 import gov.hhs.cms.ff.fm.eps.ep.BEMDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentMaintenanceDTO;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyPremiumPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.joda.time.DateTime;
 
 
 /**
@@ -33,13 +33,13 @@ public class PolicyPremiumMapper {
 
 		List<PolicyPremiumPO> poList = new ArrayList<PolicyPremiumPO>();
 		
-		Map<DateTime, AdditionalInfoType> inboundPremiums = bemDTO.getEpsPremiums();
+		Map<LocalDate, AdditionalInfoType> inboundPremiums = bemDTO.getEpsPremiums();
 		
 		MemberType subscriber = BEMDataUtil.getSubscriberMember(bemDTO.getBem());
 
-		List<DateTime> esdKeys = new ArrayList<DateTime>(inboundPremiums.keySet());
+		List<LocalDate> esdKeys = new ArrayList<LocalDate>(inboundPremiums.keySet());
 
-		for (DateTime esdKey : esdKeys) {
+		for (LocalDate esdKey : esdKeys) {
 
 			AdditionalInfoType ait = inboundPremiums.get(esdKey);
 
@@ -47,8 +47,8 @@ public class PolicyPremiumMapper {
 
 				PolicyPremiumPO po = new PolicyPremiumPO();
 
-				po.setEffectiveStartDate(EpsDateUtils.getDateTimeFromXmlGC(ait.getEffectiveStartDate()));
-				po.setEffectiveEndDate(EpsDateUtils.getDateTimeFromXmlGC(ait.getEffectiveEndDate()));
+				po.setEffectiveStartDate(DateTimeUtil.getLocalDateFromXmlGC(ait.getEffectiveStartDate()));
+				po.setEffectiveEndDate(DateTimeUtil.getLocalDateFromXmlGC(ait.getEffectiveEndDate()));
 
 				po.setAptcAmount(ait.getAPTCAmount());
 				po.setCsrAmount(ait.getCSRAmount());

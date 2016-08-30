@@ -5,7 +5,7 @@ import gov.cms.dsh.bem.PolicyInfoType;
 import gov.cms.dsh.bem.TransactionInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyStatusPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.junit.Test;
 
-public class PolicyStatusMapperTest  extends BaseMapperTest {
+public class PolicyStatusMapperTest extends BaseMapperTest {
 
 	private PolicyStatusMapper mapper = new PolicyStatusMapper();
 
@@ -23,7 +23,7 @@ public class PolicyStatusMapperTest  extends BaseMapperTest {
 	public void test_mapFFMToEPS_INITIAL() {
 
 		String expectedPolicyStatus = PolicyStatus.INITIAL_1.getValue();
-		XMLGregorianCalendar curTimeStamp = EpsDateUtils.getXMLGregorianCalendar(DATETIME);
+		XMLGregorianCalendar curTimeStamp = DateTimeUtil.getXMLGregorianCalendar(DATETIME);
 
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setTransactionInformation(new TransactionInformationType());
@@ -42,7 +42,7 @@ public class PolicyStatusMapperTest  extends BaseMapperTest {
 		PolicyStatusPO po = poList.get(0);
 
 		assertEquals("insuranacePolicyStatusTypeCd", expectedPolicyStatus, po.getInsuranacePolicyStatusTypeCd());
-		assertEquals("TransDateTime", EpsDateUtils.getDateTimeFromXmlGC(curTimeStamp), po.getTransDateTime());
+		assertEquals("TransDateTime", DateTimeUtil.getLocalDateTimeFromXmlGC(curTimeStamp), po.getTransDateTime());
 	}
 
 
@@ -50,11 +50,11 @@ public class PolicyStatusMapperTest  extends BaseMapperTest {
 	public void test_mapFFMToEPS_EFFECTUATION() {
 
 		String expectedPolicyStatus = PolicyStatus.EFFECTUATED_2.getValue();
-		XMLGregorianCalendar curTimeStamp = EpsDateUtils.getXMLGregorianCalendar(DATETIME);
+		XMLGregorianCalendar curTimeStamp = DateTimeUtil.getXMLGregorianCalendar(DATETIME);
 
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setTransactionInformation(new TransactionInformationType());
-		bem.getTransactionInformation().setCurrentTimeStamp(EpsDateUtils.getXMLGregorianCalendar(DATETIME));
+		bem.getTransactionInformation().setCurrentTimeStamp(DateTimeUtil.getXMLGregorianCalendar(DATETIME));
 		bem.setPolicyInfo(new PolicyInfoType());
 		bem.getPolicyInfo().setPolicyStatus(expectedPolicyStatus);
 
@@ -78,7 +78,7 @@ public class PolicyStatusMapperTest  extends BaseMapperTest {
 		PolicyStatusPO po2 = poList.get(1);
 
 		assertEquals("insuranacePolicyStatusTypeCd", expectedPolicyStatus, po2.getInsuranacePolicyStatusTypeCd());
-		assertEquals("TransDateTime", EpsDateUtils.getDateTimeFromXmlGC(curTimeStamp), po2.getTransDateTime());
+		assertEquals("TransDateTime", DateTimeUtil.getLocalDateTimeFromXmlGC(curTimeStamp), po2.getTransDateTime());
 	}
 
 
@@ -86,11 +86,11 @@ public class PolicyStatusMapperTest  extends BaseMapperTest {
 	public void test_mapFFMToEPS_CANCEL() {
 
 		String expectedPolicyStatus = PolicyStatus.CANCELLED_3.getValue();
-		XMLGregorianCalendar curTimeStamp = EpsDateUtils.getXMLGregorianCalendar(DATETIME);
+		XMLGregorianCalendar curTimeStamp = DateTimeUtil.getXMLGregorianCalendar(DATETIME);
 		
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setTransactionInformation(new TransactionInformationType());
-		bem.getTransactionInformation().setCurrentTimeStamp(EpsDateUtils.getXMLGregorianCalendar(DATETIME));
+		bem.getTransactionInformation().setCurrentTimeStamp(DateTimeUtil.getXMLGregorianCalendar(DATETIME));
 		bem.setPolicyInfo(new PolicyInfoType());
 		bem.getPolicyInfo().setPolicyStatus(expectedPolicyStatus);
 
@@ -125,7 +125,7 @@ public class PolicyStatusMapperTest  extends BaseMapperTest {
 		PolicyStatusPO po3 = poList.get(2);
 
 		assertEquals("CANCEL insuranacePolicyStatusTypeCd", expectedPolicyStatus, po3.getInsuranacePolicyStatusTypeCd());
-		assertEquals("CANCEL TransDateTime", EpsDateUtils.getDateTimeFromXmlGC(curTimeStamp), po3.getTransDateTime());
+		assertEquals("CANCEL TransDateTime", DateTimeUtil.getLocalDateTimeFromXmlGC(curTimeStamp), po3.getTransDateTime());
 	}
 
 	
@@ -133,11 +133,11 @@ public class PolicyStatusMapperTest  extends BaseMapperTest {
 	public void test_mapFFMToEPS_SUSPERSEDED() {
 
 		String expectedPolicyStatus = PolicyStatus.SUPERSEDED_5.getValue();
-		XMLGregorianCalendar curTimeStamp = EpsDateUtils.getXMLGregorianCalendar(DATETIME);
+		XMLGregorianCalendar curTimeStamp = DateTimeUtil.getXMLGregorianCalendar(DATETIME);
 
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setTransactionInformation(new TransactionInformationType());
-		bem.getTransactionInformation().setCurrentTimeStamp(EpsDateUtils.getXMLGregorianCalendar(DATETIME));
+		bem.getTransactionInformation().setCurrentTimeStamp(DateTimeUtil.getXMLGregorianCalendar(DATETIME));
 		bem.setPolicyInfo(new PolicyInfoType());
 		bem.getPolicyInfo().setPolicyStatus(expectedPolicyStatus);
 
@@ -183,18 +183,18 @@ public class PolicyStatusMapperTest  extends BaseMapperTest {
 		PolicyStatusPO po4 = poList.get(3);
 
 		assertEquals("SUPERSEDED insuranacePolicyStatusTypeCd", expectedPolicyStatus, po4.getInsuranacePolicyStatusTypeCd());
-		assertEquals("SUPERSEDED TransDateTime", EpsDateUtils.getDateTimeFromXmlGC(curTimeStamp), po4.getTransDateTime());
+		assertEquals("SUPERSEDED TransDateTime", DateTimeUtil.getLocalDateTimeFromXmlGC(curTimeStamp), po4.getTransDateTime());
 	}
 	
 	@Test
 	public void test_mapFFMToEPS_SUSPERSEDED_To_EFFECTUATED() {
 
 		String expectedPolicyStatus = PolicyStatus.EFFECTUATED_2.getValue();
-		XMLGregorianCalendar curTimeStamp = EpsDateUtils.getXMLGregorianCalendar(DATETIME);
+		XMLGregorianCalendar curTimeStamp = DateTimeUtil.getXMLGregorianCalendar(DATETIME);
 
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setTransactionInformation(new TransactionInformationType());
-		bem.getTransactionInformation().setCurrentTimeStamp(EpsDateUtils.getXMLGregorianCalendar(DATETIME));
+		bem.getTransactionInformation().setCurrentTimeStamp(DateTimeUtil.getXMLGregorianCalendar(DATETIME));
 		bem.setPolicyInfo(new PolicyInfoType());
 		bem.getPolicyInfo().setPolicyStatus(expectedPolicyStatus);
 
@@ -240,7 +240,7 @@ public class PolicyStatusMapperTest  extends BaseMapperTest {
 		PolicyStatusPO po4 = poList.get(3);
 
 		assertEquals("SUPERSEDED insuranacePolicyStatusTypeCd", expectedPolicyStatus, po4.getInsuranacePolicyStatusTypeCd());
-		assertEquals("SUPERSEDED TransDateTime", EpsDateUtils.getDateTimeFromXmlGC(curTimeStamp), po4.getTransDateTime());
+		assertEquals("SUPERSEDED TransDateTime", DateTimeUtil.getLocalDateTimeFromXmlGC(curTimeStamp), po4.getTransDateTime());
 	}
 	
 	
@@ -251,7 +251,7 @@ public class PolicyStatusMapperTest  extends BaseMapperTest {
 
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setTransactionInformation(new TransactionInformationType());
-		bem.getTransactionInformation().setCurrentTimeStamp(EpsDateUtils.getXMLGregorianCalendar(DATETIME));
+		bem.getTransactionInformation().setCurrentTimeStamp(DateTimeUtil.getXMLGregorianCalendar(DATETIME));
 		bem.setPolicyInfo(new PolicyInfoType());
 		bem.getPolicyInfo().setPolicyStatus(expectedPolicyStatus);
 

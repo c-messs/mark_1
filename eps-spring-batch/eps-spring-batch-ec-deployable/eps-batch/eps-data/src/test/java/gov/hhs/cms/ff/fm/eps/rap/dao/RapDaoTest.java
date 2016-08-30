@@ -3,19 +3,12 @@
  */
 package gov.hhs.cms.ff.fm.eps.rap.dao;
 
-import gov.hhs.cms.ff.fm.eps.rap.domain.IssuerUserFeeRate;
-import gov.hhs.cms.ff.fm.eps.rap.domain.PolicyPremium;
-import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDataDTO;
-import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDetailDTO;
-import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyPaymentTransDTO;
-
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -28,6 +21,14 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
+
+import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
+import gov.hhs.cms.ff.fm.eps.rap.domain.IssuerUserFeeRate;
+import gov.hhs.cms.ff.fm.eps.rap.domain.PolicyPremium;
+import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDataDTO;
+import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDetailDTO;
+import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyPaymentTransDTO;
+import junit.framework.TestCase;
 
 /**
  * @author girish.padmanabhan
@@ -123,6 +124,26 @@ public class RapDaoTest extends TestCase {
 		PolicyPremium actualPremium = actualPremiumList.get(0);
 		assertEquals("TPA", BigDecimal.valueOf(100), actualPremium.getTotalPremiumAmount());
 		
+	}
+	
+	@Test
+	public void test_getProrationConfiguration() {
+
+		assertNotNull("rapDao should not be null", rapDao);
+		
+	    List<String> expectedList = new ArrayList<String>();
+	    Collections.addAll(expectedList, "NY", "WA");
+		
+		List<StateProrationConfiguration> actualList = rapDao.getProrationConfiguration();
+		
+		assertNotNull("StateProrationConfiguration should NEVER be null.", actualList);
+		
+		for (StateProrationConfiguration state : actualList) {
+			
+			String msg  = state.getStateCd() + ": ";
+			assertTrue(msg + " ProrationTypeCd=" + state.getProrationTypeCd() + ", should be (0, 1, 2)", 
+					state.getProrationTypeCd().equals("0") || state.getProrationTypeCd().equals("1") || state.getProrationTypeCd().equals("2"));
+		}
 	}
 	
 	/**

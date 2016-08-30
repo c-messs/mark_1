@@ -3,9 +3,8 @@ package gov.hhs.cms.ff.fm.eps.ep.dao;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.vo.PolicyVersionSearchCriteriaVO;
 
+import java.time.LocalDateTime;
 import java.util.List;
-
-import org.joda.time.DateTime;
 
 
 /**
@@ -19,7 +18,7 @@ public interface PolicyVersionDao {
 	 * @param subscriberStateCd
 	 * @return
 	 */
-	public PolicyVersionPO getPolicyVersionById(Long PolicyVersionId, String subscriberStateCd);
+	public PolicyVersionPO getPolicyVersionById(Long policyVersionId, String subscriberStateCd);
 	
 	/**
 	 * Updates the previous PolicyVersion MAINTENANCEENDDATETIME from HIGHDATE to 1 millisecond less
@@ -36,13 +35,13 @@ public interface PolicyVersionDao {
 	 * @param criteria
 	 * @return
 	 */
-	public List<PolicyVersionPO> matchPolicyVersionByPolicyIdAndStateCd(PolicyVersionSearchCriteriaVO criteria);
+	public List<PolicyVersionPO> findLatestPolicyVersion(PolicyVersionSearchCriteriaVO criteria);
 	
 	
 	/**
 	 * 
 	 * @return
 	 */
-	public DateTime getLatestPolicyMaintenanceStartDateTime();
+	public LocalDateTime getLatestPolicyMaintenanceStartDateTime();
 	
 }

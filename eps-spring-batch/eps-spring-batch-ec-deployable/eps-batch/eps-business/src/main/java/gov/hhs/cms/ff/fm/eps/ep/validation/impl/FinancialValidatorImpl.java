@@ -3,15 +3,14 @@ package gov.hhs.cms.ff.fm.eps.ep.validation.impl;
 import gov.cms.dsh.bem.AdditionalInfoType;
 import gov.cms.dsh.bem.MemberType;
 import gov.hhs.cms.ff.fm.eps.ep.BEMDataUtil;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 import gov.hhs.cms.ff.fm.eps.ep.validation.FinancialValidator;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.datatype.XMLGregorianCalendar;
-
-import org.joda.time.DateTime;
 
 /**
  * @author j.radziewski
@@ -21,11 +20,11 @@ import org.joda.time.DateTime;
 public class FinancialValidatorImpl implements FinancialValidator {
 
 	@Override
-	public Map<DateTime, AdditionalInfoType> processInboundPremiums(MemberType inboundSubscriber) {
+	public Map<LocalDate, AdditionalInfoType> processInboundPremiums(MemberType inboundSubscriber) {
 
-		Map<DateTime, AdditionalInfoType> inboundPremiums = new HashMap<DateTime, AdditionalInfoType>();
+		Map<LocalDate, AdditionalInfoType> inboundPremiums = new HashMap<LocalDate, AdditionalInfoType>();
 		// Determine the system selected effective start date for this subscriber loop.
-		DateTime sysSelESD = determineSystemSelectedEffectiveStartDate(inboundSubscriber);
+		LocalDate sysSelESD = determineSystemSelectedEffectiveStartDate(inboundSubscriber);
 
 		if (sysSelESD != null) {
 			AdditionalInfoType epsPremiumNew = createEpsPremium(sysSelESD, inboundSubscriber);
@@ -43,15 +42,14 @@ public class FinancialValidatorImpl implements FinancialValidator {
 	 * @return sysSelESD
 	 */
 	@Override
-	public DateTime determineSystemSelectedEffectiveStartDate(MemberType subscriber) {
+	public LocalDate determineSystemSelectedEffectiveStartDate(MemberType subscriber) {
 
-		DateTime sysSelESD = null;
+		LocalDate sysSelESD = null;
 		
 		AdditionalInfoType inboundKeyFinancialAmount = BEMDataUtil.getFinancialElements(subscriber.getAdditionalInfo());
 
 		if (inboundKeyFinancialAmount != null) {
-			sysSelESD = EpsDateUtils.getDateTimeFromXmlGC(
-					inboundKeyFinancialAmount.getEffectiveStartDate());
+			sysSelESD = DateTimeUtil.getLocalDateFromXmlGC(inboundKeyFinancialAmount.getEffectiveStartDate());
 		}
 		return sysSelESD;
 	}
@@ -62,7 +60,7 @@ public class FinancialValidatorImpl implements FinancialValidator {
 	 * @param inboundSubscriber
 	 * @return premium
 	 */
-	private AdditionalInfoType createEpsPremium(DateTime sysSelESD, MemberType inboundSubscriber) {
+	private AdditionalInfoType createEpsPremium(LocalDate sysSelESD, MemberType inboundSubscriber) {
 
 		AdditionalInfoType epsPremium = new AdditionalInfoType();
 
@@ -77,9 +75,9 @@ public class FinancialValidatorImpl implements FinancialValidator {
 	 * @param inboundSubscriber
 	 * @param premium
 	 */
-	private void updateEpsPremium(DateTime sysSelESD, MemberType inboundSubscriber, AdditionalInfoType epsPremium) {
+	private void updateEpsPremium(LocalDate sysSelESD, MemberType inboundSubscriber, AdditionalInfoType epsPremium) {
 
-		epsPremium.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(sysSelESD));
+		epsPremium.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(sysSelESD));
 
 		if (isEffectiveEndDatePresent(inboundSubscriber))  {
 

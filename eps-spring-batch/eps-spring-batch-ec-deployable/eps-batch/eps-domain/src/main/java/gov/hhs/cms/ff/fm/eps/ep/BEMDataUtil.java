@@ -13,6 +13,7 @@ import gov.cms.dsh.bem.MemberType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,7 +23,6 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.joda.time.DateTime;
 
 /**
  * This is a utility class to extract various specific information types
@@ -42,8 +42,8 @@ public class BEMDataUtil {
 	 * @param member
 	 * @return
 	 */
-	public static DateTime getBenefitBeginDate(MemberType member) {
-		DateTime benefitBeginDate = null;
+	public static LocalDate getBenefitBeginDate(MemberType member) {
+		LocalDate benefitBeginDate = null;
 
 		if (member != null) {
 			for (HealthCoverageType healthCoverage : member.getHealthCoverage()) {
@@ -51,7 +51,7 @@ public class BEMDataUtil {
 				if (healthCoverageDates != null) {
 					XMLGregorianCalendar hcBBD = healthCoverageDates.getBenefitBeginDate();
 					if (hcBBD != null) {
-						benefitBeginDate = new DateTime(hcBBD.toGregorianCalendar().getTime());
+						benefitBeginDate = hcBBD.toGregorianCalendar().toZonedDateTime().toLocalDate();
 						break;
 					}
 				}
@@ -66,8 +66,8 @@ public class BEMDataUtil {
 	 * @param member
 	 * @return
 	 */
-	public static DateTime getBenefitEndDate(MemberType member) {
-		DateTime benefitEndDate = null;
+	public static LocalDate getBenefitEndDate(MemberType member) {
+		LocalDate benefitEndDate = null;
 
 		if (member != null) {
 			for (HealthCoverageType healthCoverage : member.getHealthCoverage()) {
@@ -75,7 +75,7 @@ public class BEMDataUtil {
 				if (healthCoverageDates != null) {
 					XMLGregorianCalendar hcBED = healthCoverageDates.getBenefitEndDate();
 					if (hcBED != null) {
-						benefitEndDate = new DateTime(hcBED.toGregorianCalendar().getTime());
+						benefitEndDate = hcBED.toGregorianCalendar().toZonedDateTime().toLocalDate();
 						break;
 					}
 				}
@@ -107,14 +107,14 @@ public class BEMDataUtil {
 	 * @param bem
 	 * @return policyStart
 	 */
-	public static DateTime getPolicyStartDate(BenefitEnrollmentMaintenanceType bem) {
+	public static LocalDate getPolicyStartDate(BenefitEnrollmentMaintenanceType bem) {
 
-		DateTime policyStart = null;
+		LocalDate policyStart = null;
 		if (bem != null) {
 			if (bem.getPolicyInfo() != null) {
 				XMLGregorianCalendar xmlPSD = bem.getPolicyInfo().getPolicyStartDate();
 				if (xmlPSD != null) {
-					policyStart = new DateTime(xmlPSD.toGregorianCalendar().getTime());
+					policyStart = xmlPSD.toGregorianCalendar().toZonedDateTime().toLocalDate();
 				}
 			}
 		}
@@ -127,14 +127,14 @@ public class BEMDataUtil {
 	 * @param bem
 	 * @return policyEnd
 	 */
-	public static DateTime getPolicyEndDate(BenefitEnrollmentMaintenanceType bem) {
+	public static LocalDate getPolicyEndDate(BenefitEnrollmentMaintenanceType bem) {
 
-		DateTime policyEnd = null;
+		LocalDate policyEnd = null;
 		if (bem != null) {
 			if (bem.getPolicyInfo() != null) {
 				XMLGregorianCalendar xmlPED = bem.getPolicyInfo().getPolicyEndDate();
 				if (xmlPED != null) {
-					policyEnd = new DateTime(xmlPED.toGregorianCalendar().getTime());
+					policyEnd = xmlPED.toGregorianCalendar().toZonedDateTime().toLocalDate();
 				}
 			}
 		}
@@ -146,15 +146,15 @@ public class BEMDataUtil {
 	 * @param member
 	 * @return eligibilityBeginDate
 	 */
-	public static DateTime getEligibilityBeginDate(MemberType member) {
-		DateTime eligibilityBegin = null;
+	public static LocalDate getEligibilityBeginDate(MemberType member) {
+		LocalDate eligibilityBegin = null;
 
 		if (member != null) {
 			if(member.getMemberRelatedDates() != null) {
 				XMLGregorianCalendar eligibilityBeginXml = member.getMemberRelatedDates().getEligibilityBeginDate();
 
 				if (eligibilityBeginXml != null)  {
-					eligibilityBegin = new DateTime(eligibilityBeginXml.toGregorianCalendar().getTime());
+					eligibilityBegin = eligibilityBeginXml.toGregorianCalendar().toZonedDateTime().toLocalDate();
 				}
 			}
 		}
@@ -166,16 +166,16 @@ public class BEMDataUtil {
 	 * @param member
 	 * @return eligibilityEnd
 	 */
-	public static DateTime getEligibilityEndDate(MemberType member) {
+	public static LocalDate getEligibilityEndDate(MemberType member) {
 
-		DateTime eligibilityEnd = null;
+		LocalDate eligibilityEnd = null;
 
 		if (member != null) {
 			if(member.getMemberRelatedDates() != null) {
 				XMLGregorianCalendar eligibilityEndXml = member.getMemberRelatedDates().getEligibilityEndDate();
 
 				if (eligibilityEndXml != null)  {
-					eligibilityEnd = new DateTime(eligibilityEndXml.toGregorianCalendar().getTime());
+					eligibilityEnd = eligibilityEndXml.toGregorianCalendar().toZonedDateTime().toLocalDate();
 				}
 			}
 		}

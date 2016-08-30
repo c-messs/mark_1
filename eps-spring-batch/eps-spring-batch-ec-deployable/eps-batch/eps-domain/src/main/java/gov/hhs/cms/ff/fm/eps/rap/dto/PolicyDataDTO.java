@@ -21,6 +21,7 @@ public class PolicyDataDTO {
 	private DateTime policyStartDate;
 	private DateTime policyEndDate;
 	private DateTime maintenanceStartDateTime;
+	private DateTime issuerStartDate;
 	private boolean policyCancelled;
 
 	/**
@@ -178,6 +179,20 @@ public class PolicyDataDTO {
 		this.maintenanceStartDateTime = maintenanceStartDateTime;
 	}
 	
+	/**
+	 * @return the issuerStartDate
+	 */
+	public DateTime getIssuerStartDate() {
+		return issuerStartDate;
+	}
+
+	/**
+	 * @param issuerStartDate the issuerStartDate to set
+	 */
+	public void setIssuerStartDate(DateTime issuerStartDate) {
+		this.issuerStartDate = issuerStartDate;
+	}
+
 	/**
 	 * @return the policyCancelled
 	 */

@@ -2,13 +2,13 @@ package gov.hhs.cms.ff.fm.eps.ep.validation;
 
 import gov.cms.dsh.bem.AdditionalInfoType;
 import gov.cms.dsh.bem.MemberType;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 import gov.hhs.cms.ff.fm.eps.ep.validation.impl.FinancialValidatorImpl;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Map;
 
-import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,10 +34,10 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 	@Test
 	public void test_createEpsPremium() {
 
-		DateTime sysSelESD = MAR_15;
+		LocalDate sysSelESD = MAR_15;
 
-		DateTime esd = JAN_1;
-		DateTime eed = null;
+		LocalDate esd = JAN_1;
+		LocalDate eed = null;
 		BigDecimal aptc = new BigDecimal("11.11");
 		BigDecimal csr = new BigDecimal("22.22");
 		BigDecimal tpa = new BigDecimal("33.33");
@@ -45,8 +45,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		String ra = "RA-NEW";
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD = sysSelESD;
-		DateTime expectedEED = null;
+		LocalDate expectedESD = sysSelESD;
+		LocalDate expectedEED = null;
 		BigDecimal expectedAPTC = aptc;
 		BigDecimal expectedCSR = csr;
 		BigDecimal expectedTPA = tpa;
@@ -57,8 +57,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		ait.setTotalPremiumAmount(tpa);
 		ait.setTotalIndividualResponsibilityAmount(tira);
@@ -70,8 +70,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		
 		AdditionalInfoType epsPremium = (AdditionalInfoType) ReflectionTestUtils.invokeMethod(financialValidator, "createEpsPremium", sysSelESD, inboundSubscriber);
 
-		assertEquals("ESD", expectedESD, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC, epsPremium.getAPTCAmount());
 		assertEquals("CSR", expectedCSR, epsPremium.getCSRAmount());
 		assertEquals("TPA", expectedTPA, epsPremium.getTotalPremiumAmount());
@@ -82,8 +82,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 	@Test
 	public void test_processInboundPremiums_singleSubscriber() {
 
-		DateTime esd = JAN_1;
-		DateTime eed = null;
+		LocalDate esd = JAN_1;
+		LocalDate eed = null;
 		BigDecimal aptc = new BigDecimal("11.11");
 		BigDecimal csr = new BigDecimal("22.22");
 		BigDecimal tpa = new BigDecimal("33.33");
@@ -91,8 +91,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		String ra = "RA-NEW";
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD = esd;
-		DateTime expectedEED = null;
+		LocalDate expectedESD = esd;
+		LocalDate expectedEED = null;
 		BigDecimal expectedAPTC = aptc;
 		BigDecimal expectedCSR = csr;
 		BigDecimal expectedTPA = tpa;
@@ -103,8 +103,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		ait.setTotalPremiumAmount(tpa);
 		ait.setTotalIndividualResponsibilityAmount(tira);
@@ -114,12 +114,12 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		
 		inboundSubscriber.getAdditionalInfo().add(ait);
 		
-		Map<DateTime, AdditionalInfoType> epsPremiums = financialValidator.processInboundPremiums(inboundSubscriber);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = financialValidator.processInboundPremiums(inboundSubscriber);
 		
 		AdditionalInfoType epsPremium = (AdditionalInfoType)epsPremiums.get(esd);
 
-		assertEquals("ESD", expectedESD, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC, epsPremium.getAPTCAmount());
 		assertEquals("CSR", expectedCSR, epsPremium.getCSRAmount());
 		assertEquals("TPA", expectedTPA, epsPremium.getTotalPremiumAmount());
@@ -130,8 +130,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 	@Test
 	public void test_processInboundPremiums_singleSubscriber_No_Premiums() {
 
-		DateTime esd = null;
-		DateTime eed = null;
+		LocalDate esd = null;
+		LocalDate eed = null;
 		BigDecimal aptc = new BigDecimal("11.11");
 		BigDecimal csr = new BigDecimal("22.22");
 		BigDecimal tpa = new BigDecimal("33.33");
@@ -142,8 +142,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		ait.setTotalPremiumAmount(tpa);
 		ait.setTotalIndividualResponsibilityAmount(tira);
@@ -153,7 +153,7 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		
 		inboundSubscriber.getAdditionalInfo().add(ait);
 		
-		Map<DateTime, AdditionalInfoType> epsPremiums = financialValidator.processInboundPremiums(inboundSubscriber);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = financialValidator.processInboundPremiums(inboundSubscriber);
 		
 		assertTrue("No Premium Records", epsPremiums.isEmpty());
 		
@@ -165,10 +165,10 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 	@Test
 	public void test_updateEpsPremium() {
 
-		DateTime sysSelESD = MAR_15;
+		LocalDate sysSelESD = MAR_15;
 
-		DateTime esd = JAN_1;
-		DateTime eed = DEC_31;
+		LocalDate esd = JAN_1;
+		LocalDate eed = DEC_31;
 		BigDecimal aptc = new BigDecimal("11.11");
 		BigDecimal csr = new BigDecimal("22.22");
 		BigDecimal tpa = new BigDecimal("33.33");
@@ -176,8 +176,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		String ra = "RA-NEW";
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD = sysSelESD;
-		DateTime expectedEED = DEC_31;
+		LocalDate expectedESD = sysSelESD;
+		LocalDate expectedEED = DEC_31;
 		BigDecimal expectedAPTC = aptc;
 		BigDecimal expectedCSR = csr;
 		BigDecimal expectedTPA = tpa;
@@ -188,8 +188,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		ait.setTotalPremiumAmount(tpa);
 		ait.setTotalIndividualResponsibilityAmount(tira);
@@ -208,8 +208,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 
 		ReflectionTestUtils.invokeMethod(financialValidator, "updateEpsPremium", sysSelESD, inboundSubscriber, epsPremium);
 
-		assertEquals("ESD", expectedESD, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC, epsPremium.getAPTCAmount());
 		assertEquals("CSR", expectedCSR, epsPremium.getCSRAmount());
 		assertEquals("TPA", expectedTPA, epsPremium.getTotalPremiumAmount());
@@ -220,10 +220,10 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 	@Test
 	public void test_updateEpsPremium_EED_null() {
 
-		DateTime sysSelESD = MAR_15;
+		LocalDate sysSelESD = MAR_15;
 
-		DateTime esd = JAN_1;
-		DateTime eed = null;
+		LocalDate esd = JAN_1;
+		LocalDate eed = null;
 		BigDecimal aptc = new BigDecimal("11.11");
 		BigDecimal csr = new BigDecimal("22.22");
 		BigDecimal tpa = new BigDecimal("33.33");
@@ -231,8 +231,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		String ra = "RA-NEW";
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD = sysSelESD;
-		DateTime expectedEED = null;
+		LocalDate expectedESD = sysSelESD;
+		LocalDate expectedEED = null;
 		BigDecimal expectedAPTC = aptc;
 		BigDecimal expectedCSR = csr;
 		BigDecimal expectedTPA = tpa;
@@ -243,8 +243,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		ait.setTotalPremiumAmount(tpa);
 		ait.setTotalIndividualResponsibilityAmount(tira);
@@ -263,8 +263,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 
 		ReflectionTestUtils.invokeMethod(financialValidator, "updateEpsPremium", sysSelESD, inboundSubscriber, epsPremium);
 
-		assertEquals("ESD", expectedESD, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC, epsPremium.getAPTCAmount());
 		assertEquals("CSR", expectedCSR, epsPremium.getCSRAmount());
 		assertEquals("TPA", expectedTPA, epsPremium.getTotalPremiumAmount());
@@ -275,10 +275,10 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 	@Test
 	public void test_updateEpsPremium_NonKFE_CarryOver() {
 
-		DateTime sysSelESD = MAR_15;
+		LocalDate sysSelESD = MAR_15;
 
-		DateTime esd = JAN_1;
-		DateTime eed = null;
+		LocalDate esd = JAN_1;
+		LocalDate eed = null;
 		BigDecimal aptc = new BigDecimal("11.11");
 		BigDecimal csr = new BigDecimal("22.22");
 		BigDecimal tpa = new BigDecimal("33.33");
@@ -286,8 +286,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		String ra = "RA-NEW";
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD = sysSelESD;
-		DateTime expectedEED = null;
+		LocalDate expectedESD = sysSelESD;
+		LocalDate expectedEED = null;
 		BigDecimal expectedAPTC = aptc;
 		BigDecimal expectedCSR = csr;
 		BigDecimal expectedTPA = tpa;
@@ -298,8 +298,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		ait.setTotalPremiumAmount(tpa);
 		ait.setTotalIndividualResponsibilityAmount(tira);
@@ -318,8 +318,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 
 		ReflectionTestUtils.invokeMethod(financialValidator, "updateEpsPremium", sysSelESD, inboundSubscriber, epsPremium);
 
-		assertEquals("ESD", expectedESD, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC, epsPremium.getAPTCAmount());
 		assertEquals("CSR", expectedCSR, epsPremium.getCSRAmount());
 		assertEquals("TPA", expectedTPA, epsPremium.getTotalPremiumAmount());
@@ -330,18 +330,18 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 	@Test
 	public void test_updateEpsPremium_KFE_Null_Replace() {
 
-		DateTime sysSelESD = MAR_15;
+		LocalDate sysSelESD = MAR_15;
 
-		DateTime esd = JAN_1;
-		DateTime eed = null;
+		LocalDate esd = JAN_1;
+		LocalDate eed = null;
 		BigDecimal aptc = new BigDecimal("11.11");
 		BigDecimal csr = new BigDecimal("22.22");
 		BigDecimal tpa = new BigDecimal("33.33");
 		String ra = "RA-NEW";
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD = sysSelESD;
-		DateTime expectedEED = null;
+		LocalDate expectedESD = sysSelESD;
+		LocalDate expectedEED = null;
 		BigDecimal expectedAPTC = aptc;
 		BigDecimal expectedCSR = csr;
 		BigDecimal expectedTPA = tpa;
@@ -352,8 +352,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		ait.setAPTCAmount(aptc); 
 		ait.setTotalPremiumAmount(tpa);
@@ -371,8 +371,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 
 		ReflectionTestUtils.invokeMethod(financialValidator, "updateEpsPremium", sysSelESD, inboundSubscriber, epsPremium);
 
-		assertEquals("ESD", expectedESD, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC, epsPremium.getAPTCAmount());
 		assertEquals("CSR", expectedCSR, epsPremium.getCSRAmount());
 		assertEquals("TPA", expectedTPA, epsPremium.getTotalPremiumAmount());
@@ -383,18 +383,18 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 	@Test
 	public void test_updateEpsPremium_Null_Amounts() {
 
-		DateTime sysSelESD = MAR_15;
+		LocalDate sysSelESD = MAR_15;
 
-		DateTime esd = JAN_1;
-		DateTime eed = null;
+		LocalDate esd = JAN_1;
+		LocalDate eed = null;
 		BigDecimal aptc = null;
 		BigDecimal csr = null;
 		BigDecimal tpa = null;
 		String ra = null;
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD = sysSelESD;
-		DateTime expectedEED = null;
+		LocalDate expectedESD = sysSelESD;
+		LocalDate expectedEED = null;
 		BigDecimal expectedAPTC = aptc;
 		BigDecimal expectedCSR = csr;
 		BigDecimal expectedTPA = tpa;
@@ -405,8 +405,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		ait.setAPTCAmount(aptc); 
 		ait.setTotalPremiumAmount(tpa);
@@ -424,8 +424,8 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 
 		ReflectionTestUtils.invokeMethod(financialValidator, "updateEpsPremium", sysSelESD, inboundSubscriber, epsPremium);
 
-		assertEquals("ESD", expectedESD, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED, EpsDateUtils.getDateTimeFromXmlGC(epsPremium.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED, DateTimeUtil.getLocalDateFromXmlGC(epsPremium.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC, epsPremium.getAPTCAmount());
 		assertEquals("CSR", expectedCSR, epsPremium.getCSRAmount());
 		assertEquals("TPA", expectedTPA, epsPremium.getTotalPremiumAmount());
@@ -473,16 +473,16 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 
 		boolean expected = true;
 
-		DateTime esd = JAN_1;
-		DateTime eed = DEC_31;
+		LocalDate esd = JAN_1;
+		LocalDate eed = DEC_31;
 		BigDecimal anyAmt = new BigDecimal("9.99");
 
 		MemberType inboundSubscriber = makeMemberType("3333");
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		ait.setTotalPremiumAmount(anyAmt);
 		
 		inboundSubscriber.getAdditionalInfo().add(ait);
@@ -496,16 +496,16 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 
 		boolean expected = false;
 
-		DateTime esd = MAR_15;
-		DateTime eed = null;
+		LocalDate esd = MAR_15;
+		LocalDate eed = null;
 		BigDecimal anyAmt = new BigDecimal("9.99");
 
 		MemberType inboundSubscriber = makeMemberType("3333");
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		ait.setTotalPremiumAmount(anyAmt);
 		
 		inboundSubscriber.getAdditionalInfo().add(ait);
@@ -517,14 +517,14 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 	@Test
 	public void test_determineSystemSelectedEffectiveStartDate() {
 
-		DateTime expectedESD = JAN_1;
+		LocalDate expectedESD = JAN_1;
 		BigDecimal anyAmt1 = new BigDecimal("0.01");
 
 		MemberType member1 = makeSubscriberMaintenance("1111");
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(JAN_1));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(JAN_1));
 		ait.setEffectiveEndDate(null);
 		ait.setAPTCAmount(anyAmt1); 
 		ait.setCSRAmount(anyAmt1);
@@ -534,27 +534,27 @@ public class FinancialValidatorImplTest extends BaseValidationTest {
 		
 		member1.getAdditionalInfo().add(ait);
 		
-		DateTime actualESD = financialValidator.determineSystemSelectedEffectiveStartDate(member1);
+		LocalDate actualESD = financialValidator.determineSystemSelectedEffectiveStartDate(member1);
 		assertEquals("System Selected EffectiveStartDate", expectedESD, actualESD);
 	}
 
 	@Test
 	public void test_determineSystemSelectedEffectiveStartDate_Null() {
 
-		DateTime expectedESD = null;
+		LocalDate expectedESD = null;
 
 		MemberType member1 = makeSubscriberMaintenance("1111");
 		// Set no key financial elements.
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(MAR_15));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(MAR_15));
 		ait.setEffectiveEndDate(null);
 		
 		ait.setRatingArea("ANY TEXT");
 		
 		member1.getAdditionalInfo().add(ait);
 
-		DateTime actualESD = financialValidator.determineSystemSelectedEffectiveStartDate(member1);
+		LocalDate actualESD = financialValidator.determineSystemSelectedEffectiveStartDate(member1);
 		assertEquals("System Selected EffectiveStartDate", expectedESD, actualESD);
 	}
 

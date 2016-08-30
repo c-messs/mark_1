@@ -21,13 +21,14 @@ import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyStatusPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.services.impl.FFMDataServiceImpl;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,8 +87,8 @@ public class FFMDataServiceImplTest extends BaseServicesTest {
 		String subscriberStateCd = null;
 
 		String mgpi = bemId.toString();
-		DateTime psd = JAN_1;
-		DateTime ped = DEC_31;
+		LocalDate psd = JAN_1;
+		LocalDate ped = DEC_31;
 		PolicyStatus policyStatus = PolicyStatus.INITIAL_1;
 		String exchangePolicyId = TestDataUtil.getRandomNumber(9).toString();
 		PolicyInfoType policyInfo = TestDataUtil.makePolicyInfoType(mgpi, psd, ped, policyStatus, exchangePolicyId);
@@ -149,7 +150,7 @@ public class FFMDataServiceImplTest extends BaseServicesTest {
 		// Since NO new member version were created, PV2 will be joined to the old, or PV1 members.
 		List<PolicyVersionPO> epsList = jdbc.query(pvSQL, new PolicyVersionRowMapper(), policyVersionId_V1, bemDTOLatest.getSubscriberStateCd());
 		PolicyVersionPO epsPO_1 = epsList.get(0);
-		DateTime pv1_MSD = epsPO_1.getMaintenanceStartDateTime();
+		LocalDateTime pv1_MSD = epsPO_1.getMaintenanceStartDateTime();
 
 		List<PolicyMemberVersionPO> epsMemberList = jdbc.query(pmvSQL, new PolicyMemberVersionRowMapper(), policyVersionId_V2, subscriberStateCd);
 
@@ -221,8 +222,8 @@ public class FFMDataServiceImplTest extends BaseServicesTest {
 		String subscriberStateCd = null;
 
 		String mgpi = bemId.toString();
-		DateTime psd = JAN_1;
-		DateTime ped = DEC_31;
+		LocalDate psd = JAN_1;
+		LocalDate ped = DEC_31;
 		PolicyStatus policyStatus = PolicyStatus.INITIAL_1;
 		String exchangePolicyId = TestDataUtil.getRandomNumber(9).toString();
 		PolicyInfoType policyInfo = TestDataUtil.makePolicyInfoType(mgpi, psd, ped, policyStatus, exchangePolicyId);
@@ -303,8 +304,8 @@ public class FFMDataServiceImplTest extends BaseServicesTest {
 		String subscriberStateCd = null;
 
 		String mgpi = bemId.toString();
-		DateTime psd = JAN_1;
-		DateTime ped = DEC_31;
+		LocalDate psd = JAN_1;
+		LocalDate ped = DEC_31;
 		PolicyStatus policyStatus = PolicyStatus.INITIAL_1;
 		String exchangePolicyId = TestDataUtil.getRandomNumber(9).toString();
 		PolicyInfoType policyInfo = TestDataUtil.makePolicyInfoType(mgpi, psd, ped, policyStatus, exchangePolicyId);
@@ -352,7 +353,7 @@ public class FFMDataServiceImplTest extends BaseServicesTest {
 		// PV2 MAINTENANCEENDDATETIME.
 		List<PolicyVersionPO> epsList = jdbc.query(pvSQL, new PolicyVersionRowMapper(), policyVersionId_V2, subscriberStateCd);
 		PolicyVersionPO epsPO_2 = epsList.get(0);
-		DateTime pv2_MSD_Less1Milli = epsPO_2.getMaintenanceStartDateTime().minusMillis(1);
+		LocalDateTime pv2_MSD_Less1Milli = epsPO_2.getMaintenanceStartDateTime().minusNanos(1000000);
 
 		List<PolicyMemberVersionPO> epsMemberList = jdbc.query(pmvSQL, new PolicyMemberVersionRowMapper(), policyVersionId_V1, subscriberStateCd);
 
@@ -428,8 +429,8 @@ public class FFMDataServiceImplTest extends BaseServicesTest {
 		// make them the same. So test data matches.
 		Long bemId = Long.valueOf("888880000") + TestDataUtil.getRandomNumber(4);
 		String mgpi = bemId.toString();
-		DateTime psd = JAN_1;
-		DateTime ped = DEC_31;
+		LocalDate psd = JAN_1;
+		LocalDate ped = DEC_31;
 		PolicyStatus policyStatus = PolicyStatus.INITIAL_1;
 		String exchangePolicyId = TestDataUtil.getRandomNumber(9).toString();
 		PolicyInfoType policyInfo = TestDataUtil.makePolicyInfoType(mgpi, psd, ped, policyStatus, exchangePolicyId);
@@ -463,8 +464,8 @@ public class FFMDataServiceImplTest extends BaseServicesTest {
 		// make them the same. So test data matches.
 		Long bemId = Long.valueOf("999990000") + TestDataUtil.getRandomNumber(4);
 		String mgpi = bemId.toString();
-		DateTime psd = JAN_1;
-		DateTime ped = DEC_31;
+		LocalDate psd = JAN_1;
+		LocalDate ped = DEC_31;
 		PolicyStatus policyStatus = PolicyStatus.INITIAL_1;
 		String exchangePolicyId = TestDataUtil.getRandomNumber(9).toString();
 		PolicyInfoType policyInfo = TestDataUtil.makePolicyInfoType(mgpi, psd, ped, policyStatus, exchangePolicyId);
@@ -508,8 +509,8 @@ public class FFMDataServiceImplTest extends BaseServicesTest {
 		String subscriberStateCd = null;
 
 		String mgpi = bemId.toString();
-		DateTime psd = JAN_1;
-		DateTime ped = DEC_31;
+		LocalDate psd = JAN_1;
+		LocalDate ped = DEC_31;
 		PolicyStatus policyStatus = PolicyStatus.INITIAL_1;
 		String exchangePolicyId = TestDataUtil.getRandomNumber(9).toString();
 		PolicyInfoType policyInfo = TestDataUtil.makePolicyInfoType(mgpi, psd, ped, policyStatus, exchangePolicyId);
@@ -527,29 +528,29 @@ public class FFMDataServiceImplTest extends BaseServicesTest {
 		TestEPSPre25Data pre25Data = new TestEPSPre25Data();
 		pre25Data.setJdbc(jdbc);
 
-		PolicyVersionPO epsPV = pre25Data.makePolicyVersion(bemId, subscriberStateCd, exchangePolicyId, psd.minusMonths(1));
+		PolicyVersionPO epsPV = pre25Data.makePolicyVersion(bemId, subscriberStateCd, exchangePolicyId, JAN_1_1am.minusMonths(1));
 		epsPV.setExchangeAssignedSubscriberID(subscriberId);
 		epsPV.setPolicyStartDate(psd);
 		epsPV.setPolicyEndDate(ped);
 		epsPV.setEligibilityStartDate(BEMDataUtil.getEligibilityBeginDate(subscriber));
 		epsPV.setEligibilityEndDate(BEMDataUtil.getEligibilityEndDate(subscriber));
 		// Add data no longer used in EPM_25.0
-		epsPV.setPremiumPaidToEndDate(EpsDateUtils.getDateTimeFromXmlGC(BEMDataUtil.getHealthCoverageDatesType(subscriber).getPremiumPaidToDateEnd()));
-		epsPV.setLastPremiumPaidDate(EpsDateUtils.getDateTimeFromXmlGC(BEMDataUtil.getHealthCoverageDatesType(subscriber).getLastPremiumPaidDate()));
-		epsPV.setSourceVersionDateTime(psd.minusMonths(1));
+		epsPV.setPremiumPaidToEndDate(DateTimeUtil.getLocalDateFromXmlGC(BEMDataUtil.getHealthCoverageDatesType(subscriber).getPremiumPaidToDateEnd()));
+		epsPV.setLastPremiumPaidDate(DateTimeUtil.getLocalDateFromXmlGC(BEMDataUtil.getHealthCoverageDatesType(subscriber).getLastPremiumPaidDate()));
+		epsPV.setSourceVersionDateTime(JAN_1_1am);
 		epsPV.setX12InsrncLineTypeCd("HLT");
 		epsPV.setPlanID(BEMDataUtil.getPlanID(subscriber));
 		epsPV.setTransMsgID(transMsgId_V1);
 
 		policyVersionId_V1 = pre25Data.insertPolicyVersion(epsPV);
 
-		PolicyMemberVersionPO epsPMV = pre25Data.makePolicyMemberVersion(BEMDataUtil.getExchangeAssignedMemberId(subscriber), psd.minusMonths(1), exchangePolicyId, subscriberStateCd);
+		PolicyMemberVersionPO epsPMV = pre25Data.makePolicyMemberVersion(BEMDataUtil.getExchangeAssignedMemberId(subscriber), JAN_1_1am.minusMonths(1), exchangePolicyId, subscriberStateCd);
 		epsPMV.setTransMsgID(transMsgId_V1);
 		epsPMV.setIssuerAssignedMemberID(subscriber.getMemberAdditionalIdentifier().getIssuerAssignedMemberID());
 		epsPMV.setPolicyMemberEligStartDate(BEMDataUtil.getEligibilityBeginDate(subscriber));
 		epsPMV.setPolicyMemberEligEndDate(BEMDataUtil.getEligibilityEndDate(subscriber));
 		epsPMV.setSubscriberInd(BooleanIndicatorSimpleType.Y.value());
-		epsPMV.setPolicyMemberBirthDate(EpsDateUtils.getDateTimeFromXmlGC(subscriber.getMemberNameInformation().getMemberDemographics().getBirthDate()));
+		epsPMV.setPolicyMemberBirthDate(DateTimeUtil.getLocalDateFromXmlGC(subscriber.getMemberNameInformation().getMemberDemographics().getBirthDate()));
 		epsPMV.setPolicyMemberLastNm(subscriber.getMemberNameInformation().getMemberName().getLastName());
 		epsPMV.setPolicyMemberFirstNm(subscriber.getMemberNameInformation().getMemberName().getFirstName());
 		epsPMV.setPolicyMemberMiddleNm(subscriber.getMemberNameInformation().getMemberName().getMiddleName());
@@ -568,8 +569,8 @@ public class FFMDataServiceImplTest extends BaseServicesTest {
 		PolicyMemberDatePO epsDatePO = new PolicyMemberDatePO();
 		epsDatePO.setPolicyMemberVersionId(pmvId_V1);
 		// Add data that is moved to PolicyMemberDate table for EPM_25.0
-		DateTime hcBBD = BEMDataUtil.getBenefitBeginDate(subscriber);
-		DateTime hcBED = BEMDataUtil.getBenefitEndDate(subscriber);
+		LocalDate hcBBD = BEMDataUtil.getBenefitBeginDate(subscriber);
+		LocalDate hcBED = BEMDataUtil.getBenefitEndDate(subscriber);
 		epsDatePO.setPolicyMemberStartDate(hcBBD);
 		epsDatePO.setPolicyMemberEndDate(hcBED);
 		pre25Data.insertPolicyMemberDate(epsDatePO);
@@ -621,7 +622,7 @@ public class FFMDataServiceImplTest extends BaseServicesTest {
 		PolicyMemberVersionPO epsMember = epsMemberList.get(0);
 
 		assertEquals(epsMember.getExchangeMemberID() + " MaintenanceEndDateTime compared to PV2 MaintenanceStartDateTime",
-				EpsDateUtils.HIGHDATE, epsMember.getMaintenanceEndDateTime());
+				DateTimeUtil.HIGHDATE, epsMember.getMaintenanceEndDateTime());
 
 	}
 
@@ -649,8 +650,8 @@ public class FFMDataServiceImplTest extends BaseServicesTest {
 		Long policyVersionId_V4 = null;
 
 		String mgpi = bemId.toString();
-		DateTime psd = JAN_1;
-		DateTime ped = DEC_31;
+		LocalDate psd = JAN_1;
+		LocalDate ped = DEC_31;
 		PolicyStatus policyStatus = PolicyStatus.INITIAL_1;
 		String exchangePolicyId = TestDataUtil.getRandomNumber(9).toString();
 		PolicyInfoType policyInfo = TestDataUtil.makePolicyInfoType(mgpi, psd, ped, policyStatus, exchangePolicyId);

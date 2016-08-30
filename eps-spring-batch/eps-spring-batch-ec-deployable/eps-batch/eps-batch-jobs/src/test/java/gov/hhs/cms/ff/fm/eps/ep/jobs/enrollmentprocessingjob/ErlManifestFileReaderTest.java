@@ -9,12 +9,16 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.PolicyVersionDao;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.Arrays;
 import java.util.Comparator;
 
 import junit.framework.TestCase;
 
-import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +47,9 @@ public class ErlManifestFileReaderTest extends TestCase {
 	
 	@Autowired
 	private String erlBEMIndexCount;
+	
+	protected static final DateTimeFormatter DTF_MANIFEST_MICRO_SEC = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HH:mm:ss")
+			.appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true).appendPattern("XXX").toFormatter();
 
 	@Before
 	public void setup() {
@@ -86,7 +93,7 @@ public class ErlManifestFileReaderTest extends TestCase {
 		assertNotNull("Batch Run Control not null", batchRunControl);
 		assertEquals("Compare Batch Run Control Id", "1234", batchRunControl.getBatchRunControlId());
 		assertEquals("Compare High Watermark Start", 
-				DateTime.parse("2014-01-01T10:12:34.600105-04:00"), batchRunControl.getHighWaterMarkStartDateTime());
+				ZonedDateTime.parse("2014-01-01T10:12:34.600105-04:00").toLocalDateTime(), batchRunControl.getHighWaterMarkStartDateTime());
 		assertEquals("Compare Record count", 100, batchRunControl.getRecordCountQuantity().intValue());
 		assertEquals("Compare PAET Indicator", "Y", batchRunControl.getPreAuditExtractCompletionInd());
 		
@@ -177,7 +184,7 @@ public class ErlManifestFileReaderTest extends TestCase {
 				erlBEMIndexCount, Integer.class)).andReturn(new Integer(0));
 		replay(mockJdbcTemplate);
 		
-		expect(mockPolicyVersionDao.getLatestPolicyMaintenanceStartDateTime()).andReturn(new DateTime());
+		expect(mockPolicyVersionDao.getLatestPolicyMaintenanceStartDateTime()).andReturn(LocalDateTime.now());
 		replay(mockPolicyVersionDao);
 		
 		BatchRunControl batchRunControl = erlManifestFileReader.read();

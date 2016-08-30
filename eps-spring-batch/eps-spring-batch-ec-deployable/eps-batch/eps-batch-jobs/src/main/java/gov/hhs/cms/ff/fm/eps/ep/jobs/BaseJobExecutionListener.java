@@ -31,7 +31,7 @@ import com.accenture.foundation.common.utilities.DateTimeUtils;
  */
 public class BaseJobExecutionListener implements JobExecutionListener {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(BaseJobExecutionListener.class);
+	protected static final Logger LOGGER = LoggerFactory.getLogger(BaseJobExecutionListener.class);
 	protected static final String ERR_MSG_UPDATE_BATCH_PROCESS_LOG = "Error occured while updating BatchProcessLog record ";
 	protected static final String BATCH_BUSINESS_ID = "batchBusinessId";
 
@@ -181,8 +181,6 @@ public class BaseJobExecutionListener implements JobExecutionListener {
 	          throw new ApplicationException(ERR_MSG_UPDATE_BATCH_PROCESS_LOG, e);
 	     }
 	}
-	
-	
 	
 
 	/**

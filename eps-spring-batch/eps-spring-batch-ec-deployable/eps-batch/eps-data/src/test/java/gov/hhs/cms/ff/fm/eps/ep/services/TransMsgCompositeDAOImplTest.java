@@ -16,11 +16,11 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.ProcessedToDbInd;
 import gov.hhs.cms.ff.fm.eps.ep.po.BatchTransMsgPO;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -339,7 +339,7 @@ public class TransMsgCompositeDAOImplTest extends BaseServicesTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = TestDataUtil.getRandom3DigitNumber().intValue();
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = APR_1;
+		LocalDateTime versionDt = APR_1_4am;
 
 
 		// Insert a batchTrans's with same policy info
@@ -382,7 +382,7 @@ public class TransMsgCompositeDAOImplTest extends BaseServicesTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = TestDataUtil.getRandom3DigitNumber().intValue();
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = APR_1;
+		LocalDateTime versionDt = APR_1_4am;
 
 		// Insert a batchTrans's with same policy info
 		Long transMsgId = insertTransMsg();
@@ -429,7 +429,7 @@ public class TransMsgCompositeDAOImplTest extends BaseServicesTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = TestDataUtil.getRandom3DigitNumber().intValue();
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = APR_1;
+		LocalDateTime versionDt = APR_1_4am;
 
 		// Insert a batchTrans's with same policy info
 		Long batchId_Original = TestDataUtil.getRandomNumber(9);
@@ -495,7 +495,7 @@ public class TransMsgCompositeDAOImplTest extends BaseServicesTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = 1;
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = APR_1;
+		LocalDateTime versionDt = APR_1_4am;
 
 		// Insert a batchTrans's with same policy info
 		Long batchId_Original = TestDataUtil.getRandomNumber(9);
@@ -566,7 +566,7 @@ public class TransMsgCompositeDAOImplTest extends BaseServicesTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = TestDataUtil.getRandom3DigitNumber().intValue();
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = APR_1;
+		LocalDateTime versionDt = APR_1_4am;
 
 		// Insert a batchTrans's with same policy info
 		Long transMsgId = insertTransMsg();
@@ -609,7 +609,7 @@ public class TransMsgCompositeDAOImplTest extends BaseServicesTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = TestDataUtil.getRandom3DigitNumber().intValue();
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = APR_1;
+		LocalDateTime versionDt = APR_1_4am;
 
 		// Insert a batchTrans's with same policy info
 		Long transMsgId = insertTransMsg();

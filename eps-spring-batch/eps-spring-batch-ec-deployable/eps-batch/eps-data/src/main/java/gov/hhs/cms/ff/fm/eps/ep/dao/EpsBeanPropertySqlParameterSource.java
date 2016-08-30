@@ -2,7 +2,11 @@ package gov.hhs.cms.ff.fm.eps.ep.dao;
 
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
-import org.joda.time.DateTime;
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 
 /**
@@ -12,6 +16,7 @@ import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 public class EpsBeanPropertySqlParameterSource extends BeanPropertySqlParameterSource {
 
 	private UserVO userVO;
+	
 	/**
 	 * Constructor
 	 * @param object
@@ -20,6 +25,7 @@ public class EpsBeanPropertySqlParameterSource extends BeanPropertySqlParameterS
 		super(object);
 		this.userVO = new UserVO();
 	}
+	
 
 	/**
 	 * Constructor.
@@ -41,15 +47,16 @@ public class EpsBeanPropertySqlParameterSource extends BeanPropertySqlParameterS
 		
 		Object result = super.getValue(paramName);
 
-		if (result != null && result instanceof DateTime) {
-			return ((DateTime)result).toDate();
+		if (result != null && result instanceof LocalDate) {
+			return Date.valueOf((LocalDate) result);
+		} else if (result != null && result instanceof LocalDateTime) {
+			return Timestamp.valueOf((LocalDateTime) result);
 		} else if (paramName.equalsIgnoreCase("CREATEBY")) {
 			return userVO.getUserId();
 		} else if (paramName.equalsIgnoreCase("LASTMODIFIEDBY")) {
 			return userVO.getUserId();
-		}  else {
+		} else {
 			return result;
 		}
 	}
-
 }

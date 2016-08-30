@@ -3,17 +3,12 @@ package gov.hhs.cms.ff.fm.eps.rap.util;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
-import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
-import gov.hhs.cms.ff.fm.eps.rap.dao.RapDao;
-import gov.hhs.cms.ff.fm.eps.rap.domain.IssuerUserFeeRate;
-import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDataDTO;
-import gov.hhs.cms.ff.fm.eps.rap.service.RapServiceTestUtil;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.joda.time.DateTime;
@@ -23,6 +18,16 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
+import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
+import gov.hhs.cms.ff.fm.eps.ep.enums.ProrationType;
+import gov.hhs.cms.ff.fm.eps.rap.dao.RapDao;
+import gov.hhs.cms.ff.fm.eps.rap.domain.IssuerUserFeeRate;
+import gov.hhs.cms.ff.fm.eps.rap.domain.PolicyPremium;
+import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDataDTO;
+import gov.hhs.cms.ff.fm.eps.rap.service.RapServiceTestUtil;
+import junit.framework.TestCase;
 
 @RunWith(JUnit4.class)
 public class RapProcessingHelperTest extends TestCase {
@@ -287,7 +292,6 @@ public class RapProcessingHelperTest extends TestCase {
 		assertEquals("isPolicyCancelledOnStartDate", expected, actual.booleanValue());	
 	}
 	
-
 	@Test
 	public void test_GetStateCode() {
 
@@ -297,6 +301,180 @@ public class RapProcessingHelperTest extends TestCase {
 		String actualStateCd = RapProcessingHelper.getStateCode(planId);
 		
 		assertEquals("getStateCode", expectedStateCd, actualStateCd);	
+	}
+	
+	@Test
+	public void test_getStateProrationConfiguration() {
+		
+		StateProrationConfiguration stConfigExpected = new StateProrationConfiguration();
+		stConfigExpected.setStateCd("VA");
+		stConfigExpected.setMarketYear(new DateTime().getYear());
+		stConfigExpected.setProrationTypeCd("2");
+		
+		Map<String, StateProrationConfiguration> stateCdMap = new HashMap<>();
+		
+		stateCdMap.put(stConfigExpected.getStateCd(), stConfigExpected);
+		
+		RapProcessingHelper.getStateProrationConfigMap().put(stConfigExpected.getMarketYear(), stateCdMap);
+		
+		StateProrationConfiguration stateConfigActual = 
+				RapProcessingHelper.getStateProrationConfiguration(stConfigExpected.getMarketYear(), stConfigExpected.getStateCd());
+		
+		assertEquals("ProrationTypeCd", stConfigExpected.getProrationTypeCd(), stateConfigActual.getProrationTypeCd());	
+	}
+	
+	@Test
+	public void test_getStateProrationConfiguration_Null() {
+		
+		StateProrationConfiguration stConfigExpected = new StateProrationConfiguration();
+		stConfigExpected.setStateCd("VA");
+		stConfigExpected.setMarketYear(new DateTime().getYear());
+		stConfigExpected.setProrationTypeCd("2");
+		
+		Map<String, StateProrationConfiguration> stateCdMap = new HashMap<>();
+		
+		stateCdMap.put(stConfigExpected.getStateCd(), stConfigExpected);
+		
+		RapProcessingHelper.getStateProrationConfigMap().put(stConfigExpected.getMarketYear(), stateCdMap);
+		
+		StateProrationConfiguration stateConfigActual = 
+				RapProcessingHelper.getStateProrationConfiguration(stConfigExpected.getMarketYear()-10, "NY");
+		
+		assertNull("stateConfigActual", stateConfigActual);	
+	}
+	
+	
+	@Test
+	public void test_getProrationType() {
+		
+		String stateCd = "VA";
+		int marketYear = new DateTime().getYear();
+		ProrationType prorationExpected = ProrationType.SBM_PRORATING;
+		
+		Map<String, StateProrationConfiguration> stateCdMap = getStateConfigMap(stateCd, marketYear, prorationExpected);
+		
+		RapProcessingHelper.getStateProrationConfigMap().put(marketYear, stateCdMap);
+		
+		ProrationType proration = RapProcessingHelper.getProrationType(stateCd, marketYear);
+		
+		assertNotNull("proration", proration);	
+		
+		assertEquals("ProrationTypeCd", prorationExpected, proration);
+
+	}
+	
+	@Test
+	public void test_getProrationType_null() {
+		
+		String stateCd = "VA";
+		int marketYear = new DateTime().getYear();
+		ProrationType prorationExpected = ProrationType.SBM_PRORATING;
+		
+		Map<String, StateProrationConfiguration> stateCdMap = getStateConfigMap(stateCd, marketYear, prorationExpected);
+		
+		RapProcessingHelper.getStateProrationConfigMap().put(marketYear, stateCdMap);
+		
+		ProrationType proration = RapProcessingHelper.getProrationType("NY", marketYear-10);
+		
+		assertEquals("proration", ProrationType.NON_PRORATING, proration);	
+	}
+	
+	
+	@Test
+	public void test_isSbmWithoutProratedAmounts_true() {
+		
+		PolicyPremium premium = new PolicyPremium();
+		PolicyPremium premium2 = new PolicyPremium();
+		
+		List<PolicyPremium> premiums = Arrays.asList(premium, premium2);
+		
+		boolean result = RapProcessingHelper.isSbmWithoutProratedAmounts(ProrationType.SBM_PRORATING, premiums);
+		
+		assertTrue("result", result);	
+	}
+	
+	@Test
+	public void test_isSbmWithoutProratedAmounts_true1() {
+		
+		PolicyPremium premium = new PolicyPremium();
+		premium.setProratedAptcAmount(new BigDecimal("0.00"));
+		premium.setProratedCsrAmount(new BigDecimal("0.00"));
+		
+		PolicyPremium premium2 = new PolicyPremium();
+		premium2.setProratedAptcAmount(new BigDecimal("0.00"));
+		premium2.setProratedCsrAmount(new BigDecimal("0.00"));
+		
+		List<PolicyPremium> premiums = Arrays.asList(premium, premium2);
+		
+		boolean result = RapProcessingHelper.isSbmWithoutProratedAmounts(ProrationType.SBM_PRORATING, premiums);
+		
+		assertTrue("result", result);	
+	}
+	
+	@Test
+	public void test_isSbmWithoutProratedAmounts_false() {
+		
+		PolicyPremium premium = new PolicyPremium();
+		premium.setProratedAptcAmount(new BigDecimal("25.00"));
+		premium.setProratedCsrAmount(new BigDecimal("125.00"));
+		
+		PolicyPremium premium2 = new PolicyPremium();
+		premium2.setProratedAptcAmount(new BigDecimal("125.00"));
+		premium2.setProratedCsrAmount(new BigDecimal("25.00"));
+		
+		List<PolicyPremium> premiums = Arrays.asList(premium, premium2);
+		
+		boolean result = RapProcessingHelper.isSbmWithoutProratedAmounts(ProrationType.SBM_PRORATING, premiums);
+		
+		assertFalse("result", result);	
+	}
+	
+	@Test
+	public void test_isSbmWithoutProratedAmounts_false1() {
+		
+		PolicyPremium premium = new PolicyPremium();
+		premium.setProratedAptcAmount(new BigDecimal("25.00"));
+		
+		PolicyPremium premium2 = new PolicyPremium();
+		premium2.setProratedCsrAmount(new BigDecimal("25.00"));
+		
+		List<PolicyPremium> premiums = Arrays.asList(premium, premium2);
+		
+		boolean result = RapProcessingHelper.isSbmWithoutProratedAmounts(ProrationType.SBM_PRORATING, premiums);
+		
+		assertFalse("result", result);	
+	}
+	
+	@Test
+	public void test_isSbmWithoutProratedAmounts_false2() {
+		
+		PolicyPremium premium = new PolicyPremium();
+		
+		PolicyPremium premium2 = new PolicyPremium();
+		premium2.setProratedAptcAmount(new BigDecimal("125.00"));
+		premium2.setProratedCsrAmount(new BigDecimal("25.00"));
+		
+		List<PolicyPremium> premiums = Arrays.asList(premium, premium2);
+		
+		boolean result = RapProcessingHelper.isSbmWithoutProratedAmounts(ProrationType.SBM_PRORATING, premiums);
+		
+		assertFalse("result", result);	
+	}
+	
+	@Test
+	public void test_isSbmWithoutProratedAmounts_false3() {
+		
+		PolicyPremium premium = new PolicyPremium();
+		
+		PolicyPremium premium2 = new PolicyPremium();
+		premium2.setProratedAptcAmount(new BigDecimal("125.00"));
+		premium2.setProratedCsrAmount(new BigDecimal("25.00"));
+		
+		List<PolicyPremium> premiums = Arrays.asList(premium, premium2);
+		
+		boolean result = RapProcessingHelper.isSbmWithoutProratedAmounts(ProrationType.FFM_PRORATING, premiums);
+		
+		assertFalse("result", result);	
 	}
 	
 	@Test
@@ -317,6 +495,20 @@ public class RapProcessingHelperTest extends TestCase {
 		System.out.println("dt2: " + dt2);
 		assertEquals("DateTime2", new DateTime(2015, 2, 1, 0, 0), dt1);
 
+	}
+	
+	private Map<String, StateProrationConfiguration> getStateConfigMap(String stateCd, int marketYear,
+			ProrationType prorationType) {
+		
+		StateProrationConfiguration stConfig = new StateProrationConfiguration();
+		stConfig.setStateCd(stateCd);
+		stConfig.setMarketYear(marketYear);
+		stConfig.setProrationTypeCd(prorationType.getValue());
+		
+		Map<String, StateProrationConfiguration> stateCdMap = new HashMap<>();
+		stateCdMap.put(stConfig.getStateCd(), stConfig);
+		
+		return stateCdMap;
 	}
 	
 }

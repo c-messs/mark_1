@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd  
+       		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd     
+           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd        
+           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+
+	<context:property-placeholder location="classpath:sbmi-sql.properties"
+		ignore-unresolvable="true" />
+
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<constructor-arg ref="dataSource" />
+	</bean>
+	
+	
+	<bean id="userVO" class="gov.hhs.cms.ff.fm.eps.ep.vo.UserVO" />
+	
+	<bean id="sequenceHelper" class="gov.hhs.cms.ff.fm.eps.ep.dao.SequenceHelper">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+	</bean>
+
+	<!-- Dao Impl Beans -->
+	
+	
+	<bean id="sbmFileProcSumDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmFileProcessingSummaryDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="sequenceHelper" ref="sequenceHelper"></property>
+		<property name="matchSbmFileProcSumSql" value="${MATCH_FILE_PROC_SUM}"></property>
+		<property name="insertSbmFileProcSumSql" value="${INSERT_FILE_PROC_SUM}"></property>
+		<property name="selectSbmFileProcSumSql" value="${SELECT_FILE_PROC_SUM}"></property>
+		<property name="findSbmFileProcSumSql" value="${FIND_FILE_PROC_SUM}"></property>
+		<property name="findSbmFileProcSumFileNumSql" value="${FIND_FILE_PROC_SUM_FILENUM}"></property>
+		<property name="findSbmFileProcSumFileNameSql" value="${FIND_FILE_PROC_SUM_FILENAME}"></property>
+		<property name="findSbmFileProcSumFileStatusSql" value="${FIND_FILE_PROC_SUM_STATUS}"></property>
+		<property name="findSbmFileProcSumFileStatusStateCdSql" value="${FIND_FILE_PROC_SUM_STATUS_STATECD}"></property>		
+		<property name="updateSbmFileProcSumStatusSql" value="${UPDATE_FILE_PROC_SUM_STATUS}" />
+		<property name="selectSbmFileProcSumLatestStateCdSql" value="${SELECT_FILE_PROC_SUM_LATEST_STATECD}" />
+		<property name="selectSbmFileProcSumLatestIssuerIdSql" value="${SELECT_FILE_PROC_SUM_LATEST_ISSUERID}" />
+		<property name="verifyJobRunningSql" value="${VERIFY_JOB_RUNNING}" />
+		<property name="updateSbmFileProcSumSql" value="${UPDATE_FILE_PROC_SUM}" />
+		<property name="updateSbmFileProcSumCmsApprovedSql" value="${UPDATE_FILE_PROC_SUM_CMS_APPROVED}" />
+		<property name="verifyCmsApprovalReqSql" value="${VERIFY_CMS_APPROVAL_REQ}" />
+		<property name="userVO" ref="userVO" />
+	</bean>	
+	
+	<bean id="sbmFileInfoDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SBMFileInfoDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="sequenceHelper" ref="sequenceHelper"></property>
+		<property name="selectSbmFileInfoSql" value="${SELECT_FILE_INFO}"></property>
+		<property name="selectSBMFileInfoSqlByFileSetId" value="${SELECT_FILE_INFO_BY_FILESETID_FILENUM}"></property>
+		<property name="selectFileStatusSql" value="${SELECT_FILE_STATUS}"></property>
+		<property name="selectFileInfoXmlSql" value="${SELECT_FILE_INFO_XML}"></property>
+		<property name="insertSBMFileInfoSql" value="${INSERT_FILE_INFO}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="stagingSbmFileDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.StagingSbmFileDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"/>
+		<property name="insertStagingSql" value="${INSERT_FILE_STAGING}"/>
+		<property name="deleteStagingSql" value="${DELETE_FILE_STAGING}"/>
+		<property name="selectStagingPolicyCountSql" value="${SELECT_STAGINGFILE_POLICY_COUNT}"/>
+		<property name="selectStagingPolicies" value="${SELECT_STAGINGFILE_POLICIES}"/>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="sbmFileArchiveDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmFileArchiveDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="insertArchiveSql" value="${INSERT_FILE_ARCHIVE}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="sbmFileErrorDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmFileErrorDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="insertErrorListSql" value="${INSERT_FILE_ERROR}"></property>
+		<property name="verifyFileErrorCountSql" value="${VERIFY_FILE_ERROR}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="sbmFileErrAddlInfoDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmFileErrorAdditionalInfoDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="insertErrAddlInfoListSql" value="${INSERT_FILE_ERROR_ADDL_INFO}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="stagingSbmPolicyDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.StagingSbmPolicyDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="sequenceHelper" ref="sequenceHelper"></property>
+		<property name="extractXprtoStagingPolicySql" value="${EXTRACT_XPR}"></property>
+		<property name="verifyStagingPolicySql" value="${VERIFY_XPR}"></property>
+	</bean>
+	
+	<bean id="stagingSbmGroupLockDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.StagingSbmGroupLockDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="selectStagingPolicySummaryIdSql" value="${SELECT_STAGING_XPR_SUMMARY_IDS}"></property>
+		<property name="insertStagingGroupLockSql" value="${INSERT_STAGING_GROUP_LOCK}"></property>
+		<property name="selectStagingGroupLockZeroSql" value="${SELECT_STAGING_GROUP_LOCK_ZERO}"></property>
+		<property name="selectStagingGroupLockSbmrSql" value="${SELECT_STAGING_GROUP_LOCK_SBMR}"></property>
+		<property name="updateStagingGroupLockSql" value="${UPDATE_STAGING_GROUP_LOCK}"></property>
+		<property name="updateStagingGroupLockForExtractSql" value="${UPDATE_STAGING_GROUP_LOCK_EXTRACT}"/>
+		<property name="deleteStagingGroupLockSql" value="${DELETE_STAGING_GROUP_LOCK}"></property>
+		<property name="deleteStagingGroupLockForExtractSql" value="${DELETE_STAGING_GROUP_LOCK_EXTRACT}"/>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="sbmTransMsgDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmTransMsgDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="insertSbmTransMsgSql" value="${INSERT_SBMTRANSMSG}"></property>
+		<property name="selectSbmTransMsgSql" value="${SELECT_SBMTRANSMSG}"></property>
+		<property name="selectRejectCountSql" value="${SELECT_SBMTRANSMSG_REJECT_COUNT}"></property>
+		<property name="selectMatchCountSql" value="${SELECT_SBMTRANSMSG_MATCH_COUNT}"></property>
+		<property name="selectMatchCountCorrectedSql" value="${SELECT_SBMTRANSMSG_MATCH_COUNT_CORRECTED}"></property>
+		<property name="selectNoMatchCountSql" value="${SELECT_SBMTRANSMSG_NO_MATCH_COUNT}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="sbmTransMsgValidationDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmTransMsgValidationDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="insertErrorListSql" value="${INSERT_XPR_ERROR}"></property>
+		<property name="verifyXprErrorSql" value="${VERIFY_XPR_ERROR}"></property>
+		<property name="verifyXprWarningSql" value="${VERIFY_XPR_WARNING}"></property>
+		<property name="selectValidationSql" value="${SELECT_VALIDATION}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="sbmTransMsgAddlErrInfoDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmTransMsgAdditionalErrorInfoDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="insertErrAddlInfoListSql" value="${INSERT_XPR_ERROR_ADDL_INFO}"></property>
+		<property name="selectErrAddlInfoSql" value="${SELECT_XPR_ERROR_ADDL_INFO}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	
+	<bean id="sbmPolicyVersionDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmPolicyVersionDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="sequenceHelper" ref="sequenceHelper"></property>
+		<property name="selectPolicyMatchSql" value="${SELECT_POLICY_MATCH}"></property>
+		<property name="selectPVSql" value="${SELECT_PV}"></property>
+		<property name="insertStagingPVSql" value="${INSERT_STAGING_PV}"></property>	
+		<property name="mergePVSql" value="${MERGE_PV}"></property>
+		<property name="selectPolicyCountStateSql" value="${SELECT_POLICY_COUNT_STATE}"></property>
+		<property name="selectPolicyCountIssuerSql" value="${SELECT_POLICY_COUNT_ISSUER}"></property>
+		<property name="selectPolicyCountByStatusSql" value="${SELECT_POLICY_COUNT_BY_STATUS}"></property>
+		<property name="deleteStagingPVSql" value="${DELETE_STAGING_PV}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	
+	<bean id="sbmPolicyStatusDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmPolicyStatusDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="selectStatusListSql" value="${SELECT_PV_STATUS}"></property>
+		<property name="insertStatusListSql" value="${INSERT_STAGING_PV_STATUS}"></property>
+		<property name="mergeStatusSql" value="${MERGE_STATUS}"></property>	
+		<property name="selectStatusLatestSql" value="${SELECT_PV_LATEST}"></property>
+		<property name="deleteStagingStatusSql" value="${DELETE_STAGING_STATUS}"></property>	
+		<property name="userVO" ref="userVO" />
+	</bean>	
+	
+	
+	<bean id="sbmPolicyPremiumDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmPolicyPremiumDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="selectPremiumListSql" value="${SELECT_PREMIUM}"></property>
+		<property name="insertPremiumListSql" value="${INSERT_STAGING_PREMIUM}"></property>	
+		<property name="mergePremiumSql" value="${MERGE_PREMIUM}"></property>
+		<property name="deleteStagingPremiumSql" value="${DELETE_STAGING_PREMIUM}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	
+	<bean id="sbmPolicyMemberDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmPolicyMemberDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="insertPMListSql" value="${INSERT_PM}"></property>
+		<property name="mergePMSql" value="${MERGE_PM}"></property>
+		<property name="findPMMissingSql" value="${FIND_PM_MISSING}"></property>
+		<property name="deleteStagingPMSql" value="${DELETE_STAGING_PM}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+
+
+	<bean id="sbmPolicyMemberVersionDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmPolicyMemberVersionDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="sequenceHelper" ref="sequenceHelper"></property>
+		<property name="selectPMVListSql" value="${SELECT_PMV}"></property>
+		<property name="selectPMVListPolicyMatchSql" value="${SELECT_PMV_POLICY_MATCH}"></property>
+		<property name="insertStagingPMVListSql" value="${INSERT_PMV}"></property>	
+		<property name="mergePMVSql" value="${MERGE_PMV}"></property>
+		<property name="mergeLangSql" value="${MERGE_LANG}"></property>
+		<property name="mergeRaceSql" value="${MERGE_RACE}"></property>
+		<property name="mergeAddrSql" value="${MERGE_ADDR}"></property>
+		<property name="deleteStagingPMVSql" value="${DELETE_STAGING_PMV}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="sbmPolicyMemberDateDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmPolicyMemberDateDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="selectDateListSql" value="${SELECT_PMV_DATE}"></property>	
+		<property name="insertDateListSql" value="${INSERT_PMV_DATE}"></property>
+		<property name="mergeDateSql" value="${MERGE_DATE}"></property>	
+		<property name="deleteStagingDateSql" value="${DELETE_STAGING_DATE}"></property>			
+		<property name="userVO" ref="userVO" />
+	</bean>	
+	
+	
+	<bean id="sbmFileSumMissingPolicyDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmFileSummaryMissingPolicyDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="findInsertMissingPolicyByIssuerSql" value="${FIND_INSERT_MISSING_POLICY_BY_ISSUER}"></property>
+		<property name="findInsertMissingPolicyByStateSql" value="${FIND_INSERT_MISSING_POLICY_BY_STATE}"></property>
+		<property name="findInsertMissingMemberByIssuerSql" value="${FIND_INSERT_MISSING_MEMBER_BY_ISSUER}"></property>
+		<property name="findInsertMissingMemberByStateSql" value="${FIND_INSERT_MISSING_MEMBER_BY_STATE}"></property>
+		<property name="selectMissingPolicyDataSql" value="${SELECT_MISSING_POLICY_DATA}"></property>			
+		<property name="userVO" ref="userVO" />
+	</bean>	
+	
+	
+	<bean id="sbmResponseDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmResponseDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="insertResponseSql" value="${INSERT_RESPONSE}"></property>	
+		<property name="userVO" ref="userVO" />
+	</bean>	
+	
+		
+
+	<!-- Mapper Beans -->
+	
+    <bean id="sbmFileProcSumMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmFileProcessingSummaryMapper" />
+	<bean id="sbmFileInfoMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmFileInfoMapper" />
+	<bean id="sbmFileArchiveMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmFileArchiveMapper" />
+	<bean id="sbmFileErrorMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmFileErrorMapper" />
+	<bean id="sbmFileErrAddlInfoMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmFileErrorAdditionalInfoMapper" />
+	<bean id="sbmTransMsgValidationMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmTransMsgValidationMapper" />
+	<bean id="sbmTransMsgAddlErrInfoMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmTransMsgAdditionalErrorInfoMapper" />
+	<bean id="stagingSbmFileMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.StagingSbmFileMapper" />
+	<bean id="sbmTransMsgMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmTransMsgMapper" />
+	<bean id="sbmPolicyVersionMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmPolicyVersionMapper" />
+	<bean id="sbmPolicyPremiumMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmPolicyPremiumMapper" />
+	<bean id="sbmPolicyStatusMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmPolicyStatusMapper" />
+	<bean id="sbmPolicyMemberVersionMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmPolicyMemberVersionMapper" />
+	<bean id="sbmPolicyMemberDateMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmPolicyMemberDateMapper" />
+	<bean id="sbmFileSumMissingPolicyMapper" class="gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmFileSummaryMissingPolicyMapper" />
+	<!-- Service Beans -->
+	
+	<bean id="sbmFileCompositeDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl.SBMFileCompositeDAOImpl">
+	    <property name="sbmFileProcSumDao" ref="sbmFileProcSumDao" />
+	    <property name="sbmFileInfoDao" ref="sbmFileInfoDao" />
+		<property name="sbmFileErrorDao" ref="sbmFileErrorDao" />
+		<property name="sbmFileErrAddlInfoDao" ref="sbmFileErrAddlInfoDao" />
+		<property name="stagingSbmFileDao" ref="stagingSbmFileDao" />
+		<property name="sbmFileArchiveDao" ref="sbmFileArchiveDao" />
+		
+		<property name="stagingSbmPolicyDao" ref="stagingSbmPolicyDao" />
+		<property name="stagingSbmGroupLockDao" ref="stagingSbmGroupLockDao" />
+		
+		<property name="sbmFileProcSumMapper" ref="sbmFileProcSumMapper" />
+		<property name="sbmFileInfoMapper" ref="sbmFileInfoMapper" />
+		<property name="sbmFileArchiveMapper" ref="sbmFileArchiveMapper" />
+		<property name="sbmFileErrorMapper" ref="sbmFileErrorMapper" />
+		<property name="sbmFileErrAddlInfoMapper" ref="sbmFileErrAddlInfoMapper" />
+		<property name="stagingSbmFileMapper" ref="stagingSbmFileMapper" />
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+
+	<bean id="sbmTransMsgCompositeDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl.SbmTransMsgCompositeDaoImpl">
+		
+		<property name="sbmTransMsgMapper" ref="sbmTransMsgMapper" />
+		<property name="sbmTransMsgValidationMapper" ref="sbmTransMsgValidationMapper" />
+		<property name="sbmTransMsgAddlErrInfoMapper" ref="sbmTransMsgAddlErrInfoMapper" />
+		
+		<property name="sbmTransMsgDao" ref="sbmTransMsgDao" />
+		<property name="sbmTransMsgValidationDao" ref="sbmTransMsgValidationDao" />
+		<property name="sbmTransMsgAddlErrInfoDao" ref="sbmTransMsgAddlErrInfoDao" />
+		
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="sbmDataService" class="gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl.SBMDataServiceImpl">
+		
+		<property name="jdbcTemplate" ref="jdbcTemplate" />
+		<property name="policyMatchService" ref="sbmPolicyMatchService" />	
+		<property name="policyVersionMapper" ref="sbmPolicyVersionMapper" />
+		<property name="pmvMapper" ref="sbmPolicyMemberVersionMapper" />
+		<property name="pmvDao" ref="sbmPolicyMemberVersionDao" />
+		
+		<property name="verifyQhpIdExists" value="${VERIFY_QHPID_EXISTS_FOR_PLAN_YEAR}"></property>
+		<!-- <property name="getBusinessRules" value="${RETRIEVE_BUSINESS_RULES}"></property>-->
+		<property name="getMetalLevelByQhpid" value="${RETRIEVE_METAL_LEVEL}"></property>
+		<property name="getCsrMultiplierByVariantAndMetal" value="${RETRIEVE_CSR_MULTIPLIER_BY_VARIANTID_AND_METAL}"></property>
+		<property name="getCsrCsrMultiplierByVariant" value="${RETRIEVE_CSR_MULTIPLIER_BY_VARIANTID}"></property>
+		
+	</bean>	
+	
+	<bean id="sbmPolicyMatchService" class="gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl.SbmPolicyMatchServiceImpl">
+		<property name="sbmPolicyVersionDao" ref="sbmPolicyVersionDao" />
+	</bean>
+	
+	<bean id="sbmXprService" class="gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl.SbmXprServiceImpl">
+		
+		<property name="sbmTransMsgCompositeDao" ref="sbmTransMsgCompositeDao" />
+		
+		<property name="policyVersionMapper" ref="sbmPolicyVersionMapper" />
+		<property name="premiumMapper" ref="sbmPolicyPremiumMapper" />
+		<property name="statusMapper" ref="sbmPolicyStatusMapper" />
+		<property name="pmvMapper" ref="sbmPolicyMemberVersionMapper" />
+		<property name="dateMapper" ref="sbmPolicyMemberDateMapper" />
+		
+		<property name="sbmPolicyVersionDao" ref="sbmPolicyVersionDao" />
+		<property name="premiumDao" ref="sbmPolicyPremiumDao" />
+		<property name="statusDao" ref="sbmPolicyStatusDao" />
+		
+		<property name="joinDao" ref="sbmPolicyMemberDao" />
+		
+		<property name="pmvDao" ref="sbmPolicyMemberVersionDao" />
+		<property name="dateDao" ref="sbmPolicyMemberDateDao" />
+			
+		<property name="userVO" ref="userVO" />		
+	</bean>	
+	
+	
+	<bean id="sbmUpdateStatusDataService" class="gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl.SbmUpdateStatusDataServiceImpl">
+		<property name="policyDao" ref="sbmPolicyVersionDao" />
+		<property name="premiumDao" ref="sbmPolicyPremiumDao" />
+		<property name="statusDao" ref="sbmPolicyStatusDao" />
+		<property name="joinDao" ref="sbmPolicyMemberDao" />
+		<property name="memberDao" ref="sbmPolicyMemberVersionDao" />
+		<property name="dateDao" ref="sbmPolicyMemberDateDao" />
+		<property name="stagingSbmFileDao" ref="stagingSbmFileDao" />
+		<property name="sbmFileReversalDao" ref="sbmFileReversalDao" />
+		<property name="sbmFileProcSumDao" ref="sbmFileProcSumDao" />
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	
+	<bean id="sbmResponseCompositeDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl.SbmResponseCompositeDaoImpl">
+	
+		<property name="sbmFileProcSumDao" ref="sbmFileProcSumDao" />
+		<property name="sbmFileInfoDao" ref="sbmFileInfoDao" />
+		<property name="sbmTransMsgDao" ref="sbmTransMsgDao" />
+		<property name="sbmTransMsgValidationDao" ref="sbmTransMsgValidationDao" />
+		<property name="sbmTransMsgAddlErrInfoDao" ref="sbmTransMsgAddlErrInfoDao" />
+		<property name="sbmFileSumMissingPolicyDao" ref="sbmFileSumMissingPolicyDao" />
+		
+		<property name="stagingSbmFileDao" ref="stagingSbmFileDao" />
+		<property name="stagingSbmPolicyDao" ref="stagingSbmPolicyDao" />
+		<property name="stagingSbmGroupLockDao" ref="stagingSbmGroupLockDao" />
+		
+		<property name="policyDao" ref="sbmPolicyVersionDao" />
+		<property name="premiumDao" ref="sbmPolicyPremiumDao" />
+		<property name="statusDao" ref="sbmPolicyStatusDao" />
+		<property name="joinDao" ref="sbmPolicyMemberDao" />
+		<property name="memberDao" ref="sbmPolicyMemberVersionDao" />
+		<property name="dateDao" ref="sbmPolicyMemberDateDao" />
+		
+		<property name="sbmFileProcSumMapper" ref="sbmFileProcSumMapper" />	
+		<property name="sbmFileInfoMapper" ref="sbmFileInfoMapper" />	
+		<property name="sbmTransMsgMapper" ref="sbmTransMsgMapper" />		
+		<property name="sbmTransMsgValidationMapper" ref="sbmTransMsgValidationMapper" />
+		<property name="sbmTransMsgAddlErrInfoMapper" ref="sbmTransMsgAddlErrInfoMapper" />
+		<property name="sbmFileSumMissingPolicyMapper" ref="sbmFileSumMissingPolicyMapper" />
+		
+		<property name="sbmResponseDao" ref="sbmResponseDao" />
+	
+		<property name="userVO" ref="userVO" />	
+	</bean>
+	
+
+	<bean id="sbmFileReversalDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl.SbmFileReversalDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="voidPolicyStatusSql" value="${VOID_POLICY_STATUS}"></property>
+		<property name="copyPrecedingPolicyVersionSql" value="${COPY_PRECEDING_POLICYVERSION}"></property>
+		<property name="copyPolicyVersionSql" value="${COPY_POLICYVERSION}"></property>
+		<property name="copyPrecedingStatusSql" value="${COPY_PRECEDING_POLICYSTATUS}"/>
+		<property name="copyPolicyPremiumsSql" value="${COPY_POLICYPREMIUM}"></property>
+		<property name="copyPolicyMembersSql" value="${COPY_POLICYMEMBER}"></property>
+		<property name="updateMaintDateTimesSql" value="${UPDATE_MAINT_DATETIMES}"></property>
+		<property name="userVO" ref="userVO" />
+	</bean>
+	
+	<bean id="sbmExecutionReportDataService" class="gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl.SbmExecutionReportDataServiceImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"/>
+		<property name="selectSbmExecutionLog" value="${RETRIEVE_SBM_EXECUTION_LOG}"/>
+	</bean>	
+	
+
+	<!--  Configuration/lookup DAOs -->
+    
+    <bean id="sbmConfigDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl.SbmConfigDaoImpl">
+		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
+		<property name="selectSbmStatesSql" value="${SELECT_STATES}"></property>
+		<property name="selectSbmBusinessRules" value="${RETRIEVE_SBM_BUSINESS_RULES}"></property>
+		<property name="selectLanguageCodes" value="${RETRIEVE_LANGUAGE_CODES}"></property>
+		<property name="selectRaceEthnicityCodes" value="${RETRIEVE_RACE_ETHNICITY_CODES}"></property>
+		<property name="selectErrorWarningTypes" value="${RETRIEVE_ERROR_WARNING_TYPES}"></property>
+	</bean>
+	
+	
+
+	<!-- Logging AOP -->
+
+
+	<bean id="loggingAspect" class="gov.hhs.cms.ff.fm.eps.ep.aop.EpsDataLogger" />
+
+	<aop:config>
+		<aop:aspect ref="loggingAspect">
+			<aop:pointcut id="AllInsertLogging"
+				expression="execution(* gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SBM*.insert*(..)) " />
+			<aop:around pointcut-ref="AllInsertLogging" method="logInserts" />
+			
+			<aop:pointcut id="AllMatchLogging"
+				expression="execution(* gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SBM*.match*(..)) " />
+			<aop:around pointcut-ref="AllMatchLogging" method="logGets" />
+
+			<aop:pointcut id="AllSelectLogging"
+				expression="execution(* gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SBM*.get*(..)) " />
+			<aop:around pointcut-ref="AllSelectLogging" method="logGets" />
+		</aop:aspect>
+
+	</aop:config>
+
+	<!-- EFT Dispatcher -->
+	<bean id="eftDispatcherDao"  class="gov.hhs.cms.ff.fm.eps.dispatcher.EFTDispatcherDAOImpl">
+		<property name="dataSource" ref="dataSource" />
+		<property name="ecmQueryProps" ref="eftDispatcherQueryProps" />
+	</bean>
+	
+	<bean id="eftDispatcherQueryProps"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="locations" value="classpath*:eft-dispatcher-sql.properties" />
+	</bean>
+
+</beans>

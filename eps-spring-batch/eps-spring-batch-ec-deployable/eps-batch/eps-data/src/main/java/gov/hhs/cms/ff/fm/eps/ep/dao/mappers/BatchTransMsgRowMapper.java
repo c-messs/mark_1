@@ -1,7 +1,7 @@
 package gov.hhs.cms.ff.fm.eps.ep.dao.mappers;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.BatchTransMsgPO;
-import gov.hhs.cms.ff.fm.eps.rap.util.DataCommonUtil;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,7 +31,7 @@ public class BatchTransMsgRowMapper implements RowMapper<BatchTransMsgPO> {
 		if (rs.getLong(SOURCE_VERSION_ID) != 0) {
 			po.setSourceVersionId(rs.getLong(SOURCE_VERSION_ID));
 		}
-		po.setSourceVersionDateTime(DataCommonUtil.convertToDateTime(rs.getTimestamp("SOURCEVERSIONDATETIME")));
+			po.setSourceVersionDateTime(DateTimeUtil.getLocalDateTimeFromSqlTimestamp(rs.getTimestamp("SOURCEVERSIONDATETIME")));
 		po.setTransMsgSkipReasonTypeCd(rs.getString("TRANSMSGSKIPREASONTYPECD"));
 		po.setTransMsgSkipReasonDesc(rs.getString("TRANSMSGSKIPREASONDESC"));
 		

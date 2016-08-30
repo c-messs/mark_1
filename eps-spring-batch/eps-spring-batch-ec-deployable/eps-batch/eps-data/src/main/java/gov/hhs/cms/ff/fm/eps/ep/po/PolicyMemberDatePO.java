@@ -1,41 +1,51 @@
 package gov.hhs.cms.ff.fm.eps.ep.po;
 
-import org.joda.time.DateTime;
+import java.time.LocalDate;
+
 
 /**
- * @author eps
+ * @author j.radziewski
  *
  */
 public class PolicyMemberDatePO extends GenericPolicyMemberPO<PolicyMemberDatePO> {
 	
 	//Attributes included in Hashcode and Equals.
-	private DateTime policyMemberStartDate;
-	private DateTime policyMemberEndDate;
+	private LocalDate policyMemberStartDate;
+	private LocalDate policyMemberEndDate;
+	
 	
 	/**
 	 * @return the policyMemberStartDate
 	 */
-	public DateTime getPolicyMemberStartDate() {
+	public LocalDate getPolicyMemberStartDate() {
 		return policyMemberStartDate;
 	}
+	
+	
 	/**
 	 * @param policyMemberStartDate the policyMemberStartDate to set
 	 */
-	public void setPolicyMemberStartDate(DateTime policyMemberStartDate) {
+	public void setPolicyMemberStartDate(LocalDate policyMemberStartDate) {
 		this.policyMemberStartDate = policyMemberStartDate;
 	}
+	
+	
 	/**
 	 * @return the policyMemberEndDate
 	 */
-	public DateTime getPolicyMemberEndDate() {
+	public LocalDate getPolicyMemberEndDate() {
 		return policyMemberEndDate;
 	}
+	
+	
 	/**
 	 * @param policyMemberEndDate the policyMemberEndDate to set
 	 */
-	public void setPolicyMemberEndDate(DateTime policyMemberEndDate) {
+	public void setPolicyMemberEndDate(LocalDate policyMemberEndDate) {
 		this.policyMemberEndDate = policyMemberEndDate;
 	}
+	
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -79,6 +89,7 @@ public class PolicyMemberDatePO extends GenericPolicyMemberPO<PolicyMemberDatePO
 			return false;
 		return true;
 	}
+	
 	
 	
 

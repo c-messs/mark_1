@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +74,7 @@ public class ErlManifestFileCleanUpTasklet implements Tasklet {
 		File extractFilesPath = (File)chunkContext.getStepContext()
 				.getJobExecutionContext().get(ERL_EXTRACT_FILE_PATH);
 		try {
-			if(extractFilesPath != null && extractFilesPath.list().length == 0) {
+			if(extractFilesPath != null && ArrayUtils.isEmpty(extractFilesPath.list())) {
 				FileUtils.deleteDirectory(extractFilesPath);
 			}
 		} catch (IOException e) {

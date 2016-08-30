@@ -6,11 +6,11 @@ import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentMaintenanceDTO;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyPremiumPO;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.joda.time.DateTime;
 import org.junit.Test;
 
 public class PolicyPremiumMapperTest extends BaseMapperTest {
@@ -20,10 +20,10 @@ public class PolicyPremiumMapperTest extends BaseMapperTest {
 	@Test
 	public void test_mapFFMToEPS() {
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = new HashMap<DateTime, AdditionalInfoType>();
+		Map<LocalDate, AdditionalInfoType> epsPremiums = new HashMap<LocalDate, AdditionalInfoType>();
 
-		DateTime esd = JAN_1;
-		DateTime eed = DEC_31;
+		LocalDate esd = JAN_1;
+		LocalDate eed = DEC_31;
 		BigDecimal aptc = new BigDecimal("11.11");
 		BigDecimal csr = new BigDecimal("22.22");
 		BigDecimal tpa = new BigDecimal("33.33");
@@ -38,8 +38,8 @@ public class PolicyPremiumMapperTest extends BaseMapperTest {
 		String csrVariant = "06";
 
 		// Expected data after mapping, Record 1
-		DateTime expectedESD_EPS1 = esd;
-		DateTime expectedEED_EPS1 = eed;
+		LocalDate expectedESD_EPS1 = esd;
+		LocalDate expectedEED_EPS1 = eed;
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -95,7 +95,7 @@ public class PolicyPremiumMapperTest extends BaseMapperTest {
 
 		int expectedEPSRecords = 0;
 		BenefitEnrollmentMaintenanceDTO bemDTO = makeBemDTO();
-		Map<DateTime, AdditionalInfoType> epsPremiums = new HashMap<DateTime, AdditionalInfoType>();
+		Map<LocalDate, AdditionalInfoType> epsPremiums = new HashMap<LocalDate, AdditionalInfoType>();
 		bemDTO.setEpsPremiums(epsPremiums);
 		List<PolicyPremiumPO> actualPoList = mapper.mapFFMToEPS(bemDTO);
 		assertEquals("PolicyPremium list size", expectedEPSRecords, actualPoList.size());
@@ -106,7 +106,7 @@ public class PolicyPremiumMapperTest extends BaseMapperTest {
 
 		int expectedEPSRecords = 0;
 		BenefitEnrollmentMaintenanceDTO bemDTO = makeBemDTO();
-		Map<DateTime, AdditionalInfoType> epsPremiums = new HashMap<DateTime, AdditionalInfoType>();
+		Map<LocalDate, AdditionalInfoType> epsPremiums = new HashMap<LocalDate, AdditionalInfoType>();
 		AdditionalInfoType ait = null;
 		epsPremiums.put(MAR_1, ait);
 		bemDTO.setEpsPremiums(epsPremiums);

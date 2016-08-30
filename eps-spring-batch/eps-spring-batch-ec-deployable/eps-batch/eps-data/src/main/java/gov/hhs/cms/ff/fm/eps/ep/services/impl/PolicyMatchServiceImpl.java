@@ -43,7 +43,7 @@ public class PolicyMatchServiceImpl implements PolicyMatchService {
 
 		log.debug("Performing Policy Match for: " + logMsg);
 
-		List<PolicyVersionPO> poList = policyVersionDao.matchPolicyVersionByPolicyIdAndStateCd(criteria);
+		List<PolicyVersionPO> poList = policyVersionDao.findLatestPolicyVersion(criteria);
 
 		// can never return null.
 		if (poList.size() == 1) {

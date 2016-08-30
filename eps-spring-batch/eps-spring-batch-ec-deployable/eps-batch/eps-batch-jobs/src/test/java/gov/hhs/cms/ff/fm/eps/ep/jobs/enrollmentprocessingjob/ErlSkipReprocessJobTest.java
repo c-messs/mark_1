@@ -13,6 +13,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -73,6 +78,11 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 	private static final String TEST_PATH_PROCESSED = "./UnitTestDirs/erl/processed";
 	private static final String TEST_PATH_INVALID = "./UnitTestDirs/erl/invalid";
 	private static final String TEST_PATH_MANIFEST_ARCHIVE = "./UnitTestDirs/erl/archive";
+
+
+	// Creates a ZonedDateTime with micro seconds and a colon in the zone offset (XXX = -04:00).
+	private final DateTimeFormatter DTF_MANIFEST_MICRO_SEC = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HH:mm:ss")
+			.appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true).appendPattern("XXX").toFormatter();
 
 	@Autowired
 	private ApplicationContext context;	
@@ -230,7 +240,7 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = 1;
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = MAR_1;
+		LocalDateTime versionDt = MAR_1_3am;
 
 		try {
 			// Insert a batchTrans's with same policy as "this" one representing a previous transaction version that was processed as 'S'
@@ -263,7 +273,7 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 			String ingestStatus = getJdbc().queryForObject("SELECT INGESTCOMPLETEIND FROM BATCHRUNCONTROL WHERE BATCHRUNCONTROLID=10", String.class);
 			assertEquals("Ingest Status after Manifest is processed", "Y", ingestStatus);
 
-			
+
 			final Map<String, JobParameter> params = jobParameters.getParameters();
 			params.put("jobType", new JobParameter("processor"));
 			params.put("timestamp", new JobParameter(new DateTime().toString()));
@@ -334,7 +344,7 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = 1;
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = MAR_1;
+		LocalDateTime versionDt = MAR_1_3am;
 
 		try {
 			// Insert a batchTrans's with same policy as "this" one representing a previous transaction version that was processed as 'S'
@@ -345,8 +355,9 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 			// Insert a skipped batchTransMsg and increment versionId representing a later "skipped" transaction for this policy
 			versionNum++;
 			versionNumStr = versionNum +"";
+			versionDt = versionDt.plusSeconds(1);
 
-			String bemXlMsg2 = getBemTransMsg(stateCd, exchangePolicyId, hiosId, versionDt.plusSeconds(1), versionNumStr, PolicyStatus.EFFECTUATED_2)
+			String bemXlMsg2 = getBemTransMsg(stateCd, exchangePolicyId, hiosId, versionDt, versionNumStr, PolicyStatus.EFFECTUATED_2)
 					.replaceAll("EligibilityBeginDate>2015-", "EligibilityBeginDate>2014-");
 			String fileInfoV2 = marshallFileInfo(TestDataUtil.makeFileInformationType(mockBatchId, ExchangeType.FFM));
 			Long transMsgIdV2 = insertBemTransMsg(mockBatchId, transMsgOriginTypCd, bemXlMsg2, fileInfoV2);
@@ -355,7 +366,10 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 			// Insert a skipped batchTransMsg and increment versionId representing a later "skipped" transaction for this policy
 			versionNum++;
 			versionNumStr = versionNum +"";
-			String bemXlMsg3 = getBemTransMsg(stateCd, exchangePolicyId, hiosId, versionDt.plusSeconds(2), versionNumStr, PolicyStatus.CANCELLED_3)
+			versionDt = versionDt.plusSeconds(1);
+
+			
+			String bemXlMsg3 = getBemTransMsg(stateCd, exchangePolicyId, hiosId, versionDt, versionNumStr, PolicyStatus.CANCELLED_3)
 					.replaceAll("EligibilityBeginDate>2015-", "EligibilityBeginDate>2014-");
 			String fileInfoV3 = marshallFileInfo(TestDataUtil.makeFileInformationType(mockBatchId, ExchangeType.FFM));
 			Long transMsgIdV3 = insertBemTransMsg(mockBatchId, transMsgOriginTypCd, bemXlMsg3, fileInfoV3);
@@ -442,7 +456,7 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 		String hiosId = exchangePolicyId.substring(0, 5);
 		int versionNum = 1;
 		String versionNumStr = versionNum + "";
-		DateTime versionDt = MAR_1;
+		LocalDateTime versionDt = MAR_1_3am;
 
 		try {
 			// Insert a batchTrans's with same policy as "this" one representing a previous transaction version that was processed as 'S'
@@ -453,7 +467,7 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 			// Insert a skipped batchTransMsg and increment versionId representing a later "skipped" transaction for this policy
 			versionNum++;
 			versionNumStr = versionNum +"";
-			
+
 			String bemXlMsg2 = getBemTransMsg(stateCd, exchangePolicyId, hiosId, versionDt.plusSeconds(1), versionNumStr, PolicyStatus.EFFECTUATED_2)
 					.replaceAll("<InsuranceLineCode>HLT</InsuranceLineCode>", "<InsuranceLineCode></InsuranceLineCode>");
 			Long transMsgIdV2 = insertBemTransMsg(mockBatchId, transMsgOriginTypCd, bemXlMsg2);
@@ -526,9 +540,9 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 	}
 
 	public String getBemTransMsg(String stateCd, String exchangePolicyId,
-			String hiosId, DateTime versionDt, String versionNumStr, PolicyStatus policyStatus) throws Exception {
+			String hiosId, LocalDateTime versionDt, String versionNumStr, PolicyStatus policyStatus) throws Exception {
 		BenefitEnrollmentMaintenanceType bem = makeBem(versionNumStr, versionDt, policyStatus, exchangePolicyId);
-		bem.getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId, versionDt));
+		bem.getMember().add(TestDataUtil.makeSubscriber(stateCd, exchangePolicyId, hiosId));
 
 		String bemXml = marshallBEM(bem);
 		return bemXml;
@@ -573,12 +587,19 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 			manifestFile.createNewFile();
 		}
 
+		// Add some micros since default is 0.
+		Long microSec = TestDataUtil.getRandom3DigitNumber();
+		ZonedDateTime zdt = ZonedDateTime.now();
+		Long micros = (microSec * 1000);
+		zdt = zdt.plusNanos(micros);
+
 		PrintWriter writer = new PrintWriter(manifestFile);
 		writer.println("jobid=10");
-		writer.println("BeginHighWaterMark=" + DateTime.now() );
-		writer.println("JobStartTime=" + DateTime.now().minusYears(5));
-		writer.println("JobEndTime=" + DateTime.now().minusYears(5).plusHours(1));
-		writer.println("EndHighWaterMark=" + DateTime.now().plusHours(1));
+
+		writer.println("BeginHighWaterMark=" + zdt.format(DTF_MANIFEST_MICRO_SEC) );
+		writer.println("JobStartTime=" +zdt.minusYears(5).format(DTF_MANIFEST_MICRO_SEC));
+		writer.println("JobEndTime=" + zdt.minusYears(5).plusHours(1).format(DTF_MANIFEST_MICRO_SEC));
+		writer.println("EndHighWaterMark=" + zdt.plusHours(1).format(DTF_MANIFEST_MICRO_SEC));
 		writer.println("RecordCount=" + 1);
 		writer.println("PAETCOMPLETION=N");
 		writer.write("JobStatus=SUCCESS");
@@ -586,6 +607,7 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 		writer.flush();
 		writer.close();
 	}
+
 
 	private void writeErlExtractFile() throws IOException {
 		File inputFile = new ClassPathResource("testfiles"+File.separator+"ERLSKIP.TEST.D141218.T163855502.T.11165VA0020999").getFile();

@@ -53,13 +53,13 @@ public class PolicyMemberVersionDaoImplTest extends BaseDaoTest {
 
 		String expectedCode = EProdEnum.EPROD_10.getCode();
 		String exchangePolicyId = "444444";
-		PolicyMemberVersionPO po1 = makePolicyMemberVersion("111111", APR_1, exchangePolicyId, "NC");
+		PolicyMemberVersionPO po1 = makePolicyMemberVersion("111111", APR_1_4am, exchangePolicyId, "NC");
 		po1.setPolicyMemberFirstNm("BillyBob");
 		insertPolicyMemberVersion(po1);
 
 		// Attempt to insert with same ExchangePolicyId, SubscriberStateCd and MaintenanceStartDateTime
 		// with other attribute different
-		PolicyMemberVersionPO po2 = makePolicyMemberVersion("111111", APR_1, exchangePolicyId, "NC");
+		PolicyMemberVersionPO po2 = makePolicyMemberVersion("111111", APR_1_4am, exchangePolicyId, "NC");
 		po2.setPolicyMemberFirstNm("BobbyJoe");
 		String actualCode = null;
 		try {
@@ -82,14 +82,14 @@ public class PolicyMemberVersionDaoImplTest extends BaseDaoTest {
 	public void test_Near_Duplicate() {
 
 		String exchangePolicyId = "444444";
-		PolicyMemberVersionPO po1 = makePolicyMemberVersion("111111", APR_1, exchangePolicyId, "NC");
+		PolicyMemberVersionPO po1 = makePolicyMemberVersion("111111", APR_1_4am, exchangePolicyId, "NC");
 		po1.setPolicyMemberFirstNm("BillyBob");
 		insertPolicyMemberVersion(po1);
 
 		// Attempt to insert with same ExchangePolicyId, SubscriberStateCd
-		// but MaintenanceStartDateTime 1 millisecond greater.
+		// but MaintenanceStartDateTime 1 millisecond (1000 nanos) greater.
 		// with other attribute different
-		PolicyMemberVersionPO po2 = makePolicyMemberVersion("111111", APR_1.plusMillis(1), exchangePolicyId, "NC");
+		PolicyMemberVersionPO po2 = makePolicyMemberVersion("111111", APR_1_4am.plusNanos(1000), exchangePolicyId, "NC");
 		po2.setPolicyMemberFirstNm("BobbyJoe");
 		Long pvId2 = memberVersionDao.insertPolicyMemberVersion(po2); 
 		assertNotNull("policyMemberVersionId 2", pvId2);

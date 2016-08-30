@@ -1,18 +1,35 @@
 package gov.hhs.cms.ff.fm.eps.ep;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+
+import org.junit.Test;
+
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMExecutionReportDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileErrorAdditionalInfo;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileErrorDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProccessingSummary;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMPolicyDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMPremium;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMScemaErrorsDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMUpdateStatusDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMUpdateStatusErrorDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMUpdateStatusRecordDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmErrWarningLogDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmResponseDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmXMLSchemaError;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.XMLSchemaError;
 import gov.hhs.cms.ff.fm.eps.rap.domain.BatchProcessLog;
 import gov.hhs.cms.ff.fm.eps.rap.domain.IssuerUserFeeRate;
 import gov.hhs.cms.ff.fm.eps.rap.domain.PolicyPaymentTrans;
 import gov.hhs.cms.ff.fm.eps.rap.domain.PolicyPremium;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyPaymentTransDTO;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.math.BigDecimal;
-
 import junit.framework.TestCase;
-
-import org.junit.Test;
 
 public class DomainPOJOTest extends TestCase {
 	
@@ -73,6 +90,23 @@ public class DomainPOJOTest extends TestCase {
 		callMethods(new PolicyPremium());
 		callMethods(new ErrorWarningLogDTO());
 		callMethods(new BenefitEnrollmentRequestDTO());
+		callMethods(new SBMErrorDTO());
+		callMethods(new SbmErrWarningLogDTO());
+		callMethods(new SBMExecutionReportDTO());
+		callMethods(new SBMFileErrorDTO());
+		callMethods(new SBMFileInfo());
+		callMethods(new SBMFileProccessingSummary());
+		callMethods(new SBMFileProcessingDTO());
+		callMethods(new SbmResponseDTO());
+		callMethods(new SBMPremium());
+		callMethods(new SBMScemaErrorsDTO());
+		callMethods(new SBMSummaryAndFileInfoDTO());
+		callMethods(new SBMUpdateStatusDTO());
+		callMethods(new SBMUpdateStatusErrorDTO());
+		callMethods(new SBMUpdateStatusRecordDTO());
+		callMethods(new SBMFileErrorAdditionalInfo());
+		callMethods(new SBMPolicyDTO());
+	
 		
 		assertTrue("methods invoked successfully", true);
 	}

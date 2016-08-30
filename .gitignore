@@ -1,0 +1,4 @@
+# files to ignore with git
+
+# Co-locate with SVN directory and ignore the metadata
+.svn

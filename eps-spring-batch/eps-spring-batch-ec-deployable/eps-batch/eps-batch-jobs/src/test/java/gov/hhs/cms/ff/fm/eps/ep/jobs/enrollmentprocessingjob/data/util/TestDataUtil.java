@@ -24,12 +24,14 @@ import gov.cms.dsh.bem.ResidentialAddressType;
 import gov.cms.dsh.bem.TransactionInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.ExchangeType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -54,70 +56,71 @@ import org.joda.time.DateTime;
 
 public class TestDataUtil {
 
-    private static final DateTime DATETIME = new DateTime();
+	private static final DateTime DATETIME = new DateTime();
 	private static final int YEAR = DATETIME.getYear();
-	
+
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss");
-	
+
 	private static final int ADDL_INFO_TYPE_LEN = 16;
 
-	private static final DateTime JAN_15 = new DateTime(YEAR, 1, 15, 0, 0);
-	private static final DateTime JAN_31 = new DateTime(YEAR, 1, 31, 0, 0);
-	private static final DateTime FEB_1 = new DateTime(YEAR, 2, 1, 0, 0);
-	private static final DateTime FEB_2 = new DateTime(YEAR, 2, 2, 0, 0);
-	private static final DateTime FEB_15 = new DateTime(YEAR, 2, 15, 0, 0);
-	private static final DateTime JUN_29 = new DateTime(YEAR, 6, 29, 0, 0);
-	private static final DateTime JUN_30 = new DateTime(YEAR, 6, 30, 0, 0);
-	private static final DateTime JUL_4_1965 = new DateTime(1965, 7, 4, 0, 0);
-	
-	private static DateTime birthDate = JUL_4_1965;
-	private static DateTime eligibilityBegin = FEB_1;
-	private static DateTime eligibilityEnd = JUN_30;
-	private static DateTime effectiveStart = FEB_15;
-	private static DateTime benefitBeginDate = FEB_2;
-	private static DateTime benefitEndDate = JUN_29;
-	private static DateTime lastPremiumPaidDate  = JAN_15;
-	private static DateTime premiumPaidToDateEnd = JAN_31;
-	
-	
+	protected static final LocalDate JAN_15 = LocalDate.of(YEAR, 1, 15);
+	protected static final LocalDate JAN_31 = LocalDate.of(YEAR, 1, 31);
+	protected static final LocalDate FEB_1 = LocalDate.of(YEAR, 2, 1);
+	protected static final LocalDate FEB_2 = LocalDate.of(YEAR, 2, 2);
+	protected static final LocalDate FEB_15 = LocalDate.of(YEAR, 2, 15);
+	protected static final LocalDate JUN_29 = LocalDate.of(YEAR, 6, 29);
+	protected static final LocalDate JUN_30 = LocalDate.of(YEAR, 6, 30);
+	protected static final LocalDate JUL_4_1965 = LocalDate.of(1965, 7, 4);
+
+	private static LocalDate birthDate = JUL_4_1965;
+	private static LocalDate eligibilityBegin = FEB_1;
+	private static LocalDate eligibilityEnd = JUN_30;
+	private static LocalDate effectiveStart = FEB_15;
+	private static LocalDate benefitBeginDate = FEB_2;
+	private static LocalDate benefitEndDate = JUN_29;
+	private static LocalDate lastPremiumPaidDate  = JAN_15;
+	private static LocalDate premiumPaidToDateEnd = JAN_31;
+
+
 	private static Marshaller marshaller;
 
 
 	static {
-        try {
-        	JAXBContext jaxbContext = JAXBContext.newInstance(BenefitEnrollmentMaintenanceType.class);
+		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance(BenefitEnrollmentMaintenanceType.class);
 			marshaller = jaxbContext.createMarshaller();
-        } catch (Exception ex) {
+		} catch (Exception ex) {
 			;
-        }
-    }
-	
-	public static MemberType makeSubscriber(String stateCd, String exchangePolicyId, String hiosId, DateTime effStart) {
+		}
+	}
+
+
+	public static MemberType makeSubscriber(String stateCd, String exchangePolicyId, String hiosId) {
 
 		String contractCode = hiosId.concat(stateCd).concat(exchangePolicyId);
-		
+
 		MemberType member = new MemberType();
 		member.setMemberInformation(new MemberRelatedInfoType());
 		member.getMemberInformation().setSubscriberIndicator(BooleanIndicatorSimpleType.Y);
-		
+
 		member.setMemberAdditionalIdentifier(new MemberAdditionalIdentifierType());
 		member.getMemberAdditionalIdentifier().setExchangeAssignedMemberID(hiosId + "-MEMBER");
 
 		HealthCoverageType hcType = new HealthCoverageType();
 		hcType.setHealthCoveragePolicyNumber(new HealthCoveragePolicyNumberType());
 		hcType.getHealthCoveragePolicyNumber().setContractCode(contractCode);
-		
+
 		hcType.setHealthCoverageInformation(new HealthCoverageInfoType());
 		hcType.getHealthCoverageInformation().setInsuranceLineCode(InsuranceLineCodeSimpleType.HLT);
-		
+
 		member.getHealthCoverage().add(hcType);
 		return member;
 	}
-	
-	public static MemberType makeSubscriber(String stateCd, String exchangePolicyId, String hiosId, DateTime effStart, PolicyStatus policyStatus) {
+
+	public static MemberType makeSubscriber(String stateCd, String exchangePolicyId, String hiosId, LocalDate effStart, PolicyStatus policyStatus) {
 
 		String contractCode = hiosId.concat(stateCd).concat(exchangePolicyId);
-		
+
 		MemberType member = new MemberType();
 		member.setMemberInformation(new MemberRelatedInfoType());
 		member.getMemberInformation().setSubscriberIndicator(BooleanIndicatorSimpleType.Y);
@@ -125,9 +128,9 @@ public class TestDataUtil {
 
 		member.setMemberAdditionalIdentifier(new MemberAdditionalIdentifierType());
 		member.getMemberAdditionalIdentifier().setExchangeAssignedMemberID(hiosId + "-MEMBER");
-		
+
 		member.setMemberRelatedDates(new MemberRelatedDatesType());
-		member.getMemberRelatedDates().setEligibilityBeginDate(EpsDateUtils.getXMLGregorianCalendar(effStart));
+		member.getMemberRelatedDates().setEligibilityBeginDate(DateTimeUtil.getXMLGregorianCalendar(effStart));
 
 		HealthCoverageType hcType = new HealthCoverageType();
 		hcType.setHealthCoveragePolicyNumber(new HealthCoveragePolicyNumberType());
@@ -135,7 +138,7 @@ public class TestDataUtil {
 		hcType.setHealthCoverageInformation(new HealthCoverageInfoType());
 		hcType.getHealthCoverageInformation().setInsuranceLineCode(InsuranceLineCodeSimpleType.HLT);
 		hcType.setHealthCoverageDates(new HealthCoverageDatesType());
-		hcType.getHealthCoverageDates().setBenefitBeginDate(EpsDateUtils.getXMLGregorianCalendar(effStart));
+		hcType.getHealthCoverageDates().setBenefitBeginDate(DateTimeUtil.getXMLGregorianCalendar(effStart));
 		member.getHealthCoverage().add(hcType);
 		return member;
 	}
@@ -161,7 +164,7 @@ public class TestDataUtil {
 		transInfoType.setControlNumber(controlNum);
 		//Calendar to String to XMLGregorianCalendar for testing
 		//Real data will be String to XMLGregorianCalendar
-		transInfoType.setCurrentTimeStamp(EpsDateUtils.getXMLGregorianCalendar(sdf.format(new DateTime())));
+		transInfoType.setCurrentTimeStamp(DateTimeUtil.getXMLGregorianCalendar(sdf.format(new DateTime())));
 		transInfoType.setExchangeCode(ExchangeCodeSimpleType.INDIVIDUAL);
 
 		return transInfoType;
@@ -208,7 +211,7 @@ public class TestDataUtil {
 		memType.setMemberRelatedDates(makeMemberRelatedDatesType(isSubscriber));
 
 		memType.setMemberNameInformation(makeMemberNameInfoType(memId, name));
-		
+
 		// TODO: not passing schema validation
 		memType.getHealthCoverage().add(makeHealthCoverageType(memId));
 
@@ -247,8 +250,8 @@ public class TestDataUtil {
 
 		MemberRelatedDatesType memRelDatesType = new MemberRelatedDatesType();
 
-		memRelDatesType.setEligibilityBeginDate(EpsDateUtils.getXMLGregorianCalendar(sdf.format(eligibilityBegin)));
-		memRelDatesType.setEligibilityEndDate(EpsDateUtils.getXMLGregorianCalendar(sdf.format(eligibilityEnd)));
+		memRelDatesType.setEligibilityBeginDate(DateTimeUtil.getXMLGregorianCalendar(eligibilityBegin));
+		memRelDatesType.setEligibilityEndDate(DateTimeUtil.getXMLGregorianCalendar(eligibilityEnd));
 		return memRelDatesType;
 
 	}
@@ -319,7 +322,7 @@ public class TestDataUtil {
 		MemberDemographicsType memDemoType = new MemberDemographicsType();
 
 		memDemoType.setGenderCode(GenderCodeSimpleType.M);
-		memDemoType.setBirthDate(EpsDateUtils.getXMLGregorianCalendar(birthDate));
+		memDemoType.setBirthDate(DateTimeUtil.getXMLGregorianCalendar(birthDate));
 
 		return memDemoType;
 
@@ -382,10 +385,10 @@ public class TestDataUtil {
 		HealthCoverageDatesType healthCovDatesType = new HealthCoverageDatesType();
 
 		// Set dates to string format first as they would come in from xml.
-		healthCovDatesType.setBenefitBeginDate(EpsDateUtils.getXMLGregorianCalendar(sdf.format(benefitBeginDate)));
-		healthCovDatesType.setBenefitEndDate(EpsDateUtils.getXMLGregorianCalendar(sdf.format(benefitEndDate)));
-		healthCovDatesType.setLastPremiumPaidDate(EpsDateUtils.getXMLGregorianCalendar(sdf.format(lastPremiumPaidDate)));
-		healthCovDatesType.setPremiumPaidToDateEnd(EpsDateUtils.getXMLGregorianCalendar(sdf.format(premiumPaidToDateEnd)));
+		healthCovDatesType.setBenefitBeginDate(DateTimeUtil.getXMLGregorianCalendar(benefitBeginDate));
+		healthCovDatesType.setBenefitEndDate(DateTimeUtil.getXMLGregorianCalendar(benefitEndDate));
+		healthCovDatesType.setLastPremiumPaidDate(DateTimeUtil.getXMLGregorianCalendar(lastPremiumPaidDate));
+		healthCovDatesType.setPremiumPaidToDateEnd(DateTimeUtil.getXMLGregorianCalendar(premiumPaidToDateEnd));
 		return healthCovDatesType;
 	}
 
@@ -412,7 +415,7 @@ public class TestDataUtil {
 		fileInfoType.setGroupControlNumber(id.toString());
 		//Calendar to String to XMLGregorianCalendar for testing
 		//Real data will be String to XMLGregorianCalendar
-		fileInfoType.setGroupTimeStamp(EpsDateUtils.getXMLGregorianCalendar(new DateTime()));
+		fileInfoType.setGroupTimeStamp(DateTimeUtil.getXMLGregorianCalendar(getLocalDateTimeWithMicros()));
 		String versionNum = "23"; //See bem.xsd 
 		fileInfoType.setVersionNumber(versionNum);
 
@@ -444,17 +447,17 @@ public class TestDataUtil {
 		List<AdditionalInfoType> addInfoTypeList = new ArrayList<AdditionalInfoType>();
 
 		AdditionalInfoType addlInfoType = new AdditionalInfoType();
-		addlInfoType.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(effectiveStart));
-		
+		addlInfoType.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(effectiveStart));
+
 		for(int i = 0; i < ADDL_INFO_TYPE_LEN; ++i) {
 			// Do not make one for ApplicationIDAndOrigin, since not being mapped
 			if (i != 14) {
 				addlInfoType = setAdditionalInfoType(addlInfoType, memId, i, baseAmt + i);
 			}
 		}
-		
+
 		addInfoTypeList.add(addlInfoType);
-		
+
 		return addInfoTypeList;
 	}
 
@@ -483,6 +486,16 @@ public class TestDataUtil {
 	}
 
 
+	public static LocalDateTime getLocalDateTimeWithMicros() {
+
+		Long microSec = getRandom3DigitNumber();
+		LocalDateTime ldt = LocalDateTime.now();
+		Long micros = (microSec * 1000);
+		ldt = ldt.plusNanos(micros);
+		return ldt;
+	}
+
+
 	public static Long getRandom3DigitNumber() {
 
 		return getRandomNumber(3);
@@ -504,7 +517,7 @@ public class TestDataUtil {
 	}
 
 	public static String makeRandomAlpha(int len) {
-		
+
 		char[] CHARSET_AZ = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 		Random random = new Random();
 		char[] result = new char[len];
@@ -534,7 +547,7 @@ public class TestDataUtil {
 		}
 		return xml;
 	}
-	
+
 	/*
 	 * Multi-line indented with field names.
 	 */
@@ -558,12 +571,12 @@ public class TestDataUtil {
 
 		return ToStringBuilder.reflectionToString(obj, ToStringStyle.SIMPLE_STYLE);
 	}
-	
+
 	/**
 	 * @return
 	 */
 	public static Timestamp getCurrentSqlTimeStamp() {
-		
+
 		Timestamp time = new Timestamp(new DateTime().getMillis());
 		time.setNanos(0);
 		return time;

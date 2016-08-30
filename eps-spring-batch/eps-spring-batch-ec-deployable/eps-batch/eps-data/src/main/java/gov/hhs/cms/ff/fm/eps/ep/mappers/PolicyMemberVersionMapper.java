@@ -9,7 +9,7 @@ import gov.cms.dsh.bem.MemberRelatedInfoType;
 import gov.cms.dsh.bem.MemberType;
 import gov.hhs.cms.ff.fm.eps.ep.BEMDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberVersionPO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 /**
  * @author EPS
@@ -45,7 +45,7 @@ public class PolicyMemberVersionMapper {
 		po.setPolicyMemberEligEndDate(BEMDataUtil.getEligibilityEndDate(member));
 
 		// MaintenanceStartDateTime set in FFMMemberDAO from PolicyVersion.
-		po.setMaintenanceEndDateTime(EpsDateUtils.HIGHDATE);
+		po.setMaintenanceEndDateTime(DateTimeUtil.HIGHDATE);
 
 		if (po.equals(epsPO)) {
 			po.setPolicyMemberChanged(false);
@@ -101,7 +101,7 @@ public class PolicyMemberVersionMapper {
 					polMemVer.setX12GenderTypeCd(demoType.getGenderCode().name());
 				}
 				if (demoType.getBirthDate() != null) {
-					polMemVer.setPolicyMemberBirthDate(EpsDateUtils.getDateTimeFromXmlGC(demoType.getBirthDate()));
+					polMemVer.setPolicyMemberBirthDate(DateTimeUtil.getLocalDateFromXmlGC(demoType.getBirthDate()));
 				}
 			}
 		}

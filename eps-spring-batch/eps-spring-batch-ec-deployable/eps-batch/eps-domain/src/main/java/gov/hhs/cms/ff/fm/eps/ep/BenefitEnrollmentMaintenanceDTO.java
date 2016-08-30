@@ -6,6 +6,8 @@ import gov.cms.dsh.bem.FileInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageDirectionType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageType;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,8 +15,6 @@ import java.util.Map;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.joda.time.DateTime;
 
 /**
  * @author eps
@@ -31,7 +31,7 @@ public class BenefitEnrollmentMaintenanceDTO {
 	private String bemXml;
 	private String currentBEMXml;
 	private BenefitEnrollmentMaintenanceType bem;
-	private DateTime fileNmDateTime;
+	private LocalDateTime fileNmDateTime;
 	private Long transMsgId;
 	private Long txnMessageFileInfoId;
 	private FileInformationType fileInformation;
@@ -47,9 +47,9 @@ public class BenefitEnrollmentMaintenanceDTO {
 	private JAXBElement<?> jaxbElement;
 	private Long policyVersionId;
 	private Long sourceVersionId;
-	private DateTime sourceVersionDateTime;
+	private LocalDateTime sourceVersionDateTime;
 	private boolean versionSkippedInPast = false;
-	private Map<DateTime, AdditionalInfoType> epsPremiums;
+	private Map<LocalDate, AdditionalInfoType> epsPremiums;
 	private String subscriberStateCd;
 	private String planId;
 	private String marketplaceGroupPolicyId;
@@ -90,11 +90,11 @@ public class BenefitEnrollmentMaintenanceDTO {
 		this.bemXml = bemXml;
 	}
 
-	public DateTime getFileNmDateTime() {
+	public LocalDateTime getFileNmDateTime() {
 		return fileNmDateTime;
 	}
 
-	public void setFileNmDateTime(DateTime fileNmDateTime) {
+	public void setFileNmDateTime(LocalDateTime fileNmDateTime) {
 		this.fileNmDateTime = fileNmDateTime;
 	}
 
@@ -318,14 +318,14 @@ public class BenefitEnrollmentMaintenanceDTO {
 	/**
 	 * @return the sourceVersionDateTime
 	 */
-	public DateTime getSourceVersionDateTime() {
+	public LocalDateTime getSourceVersionDateTime() {
 		return sourceVersionDateTime;
 	}
 
 	/**
 	 * @param sourceVersionDateTime the sourceVersionDateTime to set
 	 */
-	public void setSourceVersionDateTime(DateTime sourceVersionDateTime) {
+	public void setSourceVersionDateTime(LocalDateTime sourceVersionDateTime) {
 		this.sourceVersionDateTime = sourceVersionDateTime;
 	}
 
@@ -346,9 +346,9 @@ public class BenefitEnrollmentMaintenanceDTO {
 	/**
 	 * @return the epsPremiums
 	 */
-	public Map<DateTime, AdditionalInfoType> getEpsPremiums() {
+	public Map<LocalDate, AdditionalInfoType> getEpsPremiums() {
 		if(epsPremiums == null) {
-			epsPremiums = new HashMap<DateTime, AdditionalInfoType>();
+			epsPremiums = new HashMap<LocalDate, AdditionalInfoType>();
 		}
 		return epsPremiums;
 	}
@@ -356,7 +356,7 @@ public class BenefitEnrollmentMaintenanceDTO {
 	/**
 	 * @param epsPremiums the epsPremiums to set
 	 */
-	public void setEpsPremiums(Map<DateTime, AdditionalInfoType> epsPremiums) {
+	public void setEpsPremiums(Map<LocalDate, AdditionalInfoType> epsPremiums) {
 		this.epsPremiums = epsPremiums;
 	}
 

@@ -28,12 +28,15 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
 import gov.hhs.cms.ff.fm.eps.ep.services.PolicyDataService;
 import gov.hhs.cms.ff.fm.eps.ep.services.TransMsgCompositeDAO;
 import gov.hhs.cms.ff.fm.eps.ep.services.impl.FFMDataServiceImpl;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 import gov.hhs.cms.ff.fm.eps.ep.validation.impl.FFMValidationServiceImpl;
 import gov.hhs.cms.ff.fm.eps.ep.validation.impl.FinancialValidatorImpl;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +45,6 @@ import junit.framework.TestCase;
 
 import org.apache.commons.lang.StringUtils;
 import org.easymock.EasyMock;
-import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,27 +61,27 @@ import com.accenture.foundation.common.exception.ApplicationException;
 @RunWith(JUnit4.class)
 public class FFMValidatorTest extends TestCase {
 
-	final DateTime DATETIME = new DateTime();
-	final int YEAR = DATETIME.getYear();
-	final DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
-	final DateTime JAN_15 = new DateTime(YEAR, 1, 15, 0, 0);
-	final DateTime JAN_31 = new DateTime(YEAR, 1, 31, 0, 0);
-	final DateTime FEB_1 = new DateTime(YEAR, 2, 1, 0, 0);
-	final DateTime FEB_15 = new DateTime(YEAR, 2, 15, 0, 0);
-	protected final DateTime FEB_MAX = new DateTime(YEAR, 2, FEB_1.dayOfMonth().getMaximumValue(), 0, 0);
-	final DateTime MAR_1 = new DateTime(YEAR, 3, 1, 0, 0);
-	final DateTime MAR_14 = new DateTime(YEAR, 3, 14, 0, 0);
-	final DateTime MAR_15 = new DateTime(YEAR, 3, 15, 0, 0);
-	final DateTime MAR_20 = new DateTime(YEAR, 3, 20, 0, 0);
-	final DateTime MAR_31 = new DateTime(YEAR, 3, 31, 0, 0);
-	final DateTime APR_1 = new DateTime(YEAR, 4, 1, 0, 0);
-	final DateTime APR_10 = new DateTime(YEAR, 4, 10, 0, 0);
-	final DateTime APR_15 = new DateTime(YEAR, 4, 15, 0, 0);
-	final DateTime APR_30 = new DateTime(YEAR, 4, 30, 0, 0);
-	final DateTime MAY_1 = new DateTime(YEAR, 5, 1, 0, 0);
-	final DateTime DEC_1 = new DateTime(YEAR, 12, 1, 0, 0);
-	final DateTime DEC_15 = new DateTime(YEAR, 12, 15, 0, 0);
-	final DateTime DEC_31 = new DateTime(YEAR, 12, 31, 0, 0);
+	protected static final LocalDate DATE = LocalDate.now();
+	protected static final LocalDateTime DATETIME = LocalDateTime.now();
+	protected static final int YEAR = DATE.getYear();
+		
+	protected final LocalDate JAN_1 = LocalDate.of(YEAR, 1, 1);
+	protected final LocalDate JAN_15 = LocalDate.of(YEAR, 1, 15);
+	protected final LocalDate JAN_31 = LocalDate.of(YEAR, 1, 31);
+	protected final LocalDate FEB_1 = LocalDate.of(YEAR, 2, 1);
+	protected final LocalDate FEB_15 = LocalDate.of(YEAR, 2, 15);
+	protected final LocalDate FEB_MAX = DATE.with(TemporalAdjusters.lastDayOfMonth());
+	protected final LocalDate MAR_1 = LocalDate.of(YEAR, 3, 1);
+	protected final LocalDate MAR_14 = LocalDate.of(YEAR, 3, 14);
+	protected final LocalDate MAR_15 = LocalDate.of(YEAR, 3, 15);
+	protected final LocalDate MAR_31 = LocalDate.of(YEAR, 3, 31);
+	protected final LocalDate APR_1 = LocalDate.of(YEAR, 4, 1);
+	protected final LocalDate APR_15 = LocalDate.of(YEAR, 4, 15);
+	protected final LocalDate APR_30 = LocalDate.of(YEAR, 4, 30);
+	protected final LocalDate MAY_1 = LocalDate.of(YEAR, 5, 1);
+	protected final LocalDate DEC_1 = LocalDate.of(YEAR, 12, 1);
+	protected final LocalDate DEC_15 = LocalDate.of(YEAR, 12, 15);
+	protected final LocalDate DEC_31 = LocalDate.of(YEAR, 12, 31);
 
 
 	FFMValidationServiceImpl ffmValidatorService;
@@ -131,11 +133,11 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void validateBEM_DuplicateVersionExists() throws Exception {
 
-		DateTime sourceVersionDateTime = EpsDateUtils.getDateTimeFromXmlGC(EpsDateUtils.getXMLGregorianCalendar(DateTime.now()));
+		LocalDateTime svDT = LocalDateTime.now();
 		
 		BenefitEnrollmentMaintenanceDTO dbBemDTO = EPSValidationTestUtil.createCurrentBEMForFFMValidatorTest();
 		dbBemDTO.setSourceVersionId(1L);
-		dbBemDTO.setSourceVersionDateTime(sourceVersionDateTime);
+		dbBemDTO.setSourceVersionDateTime(svDT);
 		
 		expect(mockPolicyDataService.getLatestBEMByPolicyId(EasyMock.anyObject(BenefitEnrollmentMaintenanceDTO.class)))
 		.andReturn(dbBemDTO);
@@ -150,7 +152,7 @@ public class FFMValidatorTest extends TestCase {
 
 		BenefitEnrollmentMaintenanceDTO bemh = EPSValidationTestUtil.createBEMForPolicyMatch();
 		bemh.getBem().getTransactionInformation().setPolicySnapshotVersionNumber("1");
-		bemh.getBem().getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(sourceVersionDateTime));
+		bemh.getBem().getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(svDT));
 
 		EPSValidationRequest epsValidationRequest = new EPSValidationRequest();
 		epsValidationRequest.setBenefitEnrollmentMaintenance(bemh);
@@ -165,11 +167,11 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void validateBEM_LaterVersionExists() throws Exception {
 
-		DateTime sourceVersionDateTime = EpsDateUtils.getDateTimeFromXmlGC(EpsDateUtils.getXMLGregorianCalendar(DateTime.now()));
+		LocalDateTime svDT = LocalDateTime.now();
 		
 		BenefitEnrollmentMaintenanceDTO dbBemDTO = EPSValidationTestUtil.createCurrentBEMForFFMValidatorTest();
 		dbBemDTO.setSourceVersionId(15L);
-		dbBemDTO.setSourceVersionDateTime(sourceVersionDateTime);
+		dbBemDTO.setSourceVersionDateTime(svDT);
 		
 		expect(mockPolicyDataService.getLatestBEMByPolicyId(EasyMock.anyObject(BenefitEnrollmentMaintenanceDTO.class)))
 		.andReturn(dbBemDTO);
@@ -184,7 +186,7 @@ public class FFMValidatorTest extends TestCase {
 
 		BenefitEnrollmentMaintenanceDTO bemh = EPSValidationTestUtil.createBEMForPolicyMatch();
 		bemh.getBem().getTransactionInformation().setPolicySnapshotVersionNumber("10");
-		bemh.getBem().getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(sourceVersionDateTime));
+		bemh.getBem().getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(svDT));
 
 		EPSValidationRequest epsValidationRequest = new EPSValidationRequest();
 		epsValidationRequest.setBenefitEnrollmentMaintenance(bemh);
@@ -214,7 +216,7 @@ public class FFMValidatorTest extends TestCase {
 		} catch (ApplicationException e) {
 			assertNotNull("EPSValidationResponse", e.getMessage());
 			System.out.println("e.getMessage()=" + e.getMessage());
-			assertTrue("EPROD-37", e.getInformationCode().equals(EProdEnum.EPROD_37.getCode()));
+			assertEquals("EPROD thrown", EProdEnum.EPROD_37.getCode(), e.getInformationCode());
 		}
 	}
 	
@@ -235,7 +237,7 @@ public class FFMValidatorTest extends TestCase {
 		} catch (ApplicationException e) {
 			assertNotNull("EPSValidationResponse", e.getMessage());
 			System.out.println("e.getMessage()=" + e.getMessage());
-			assertTrue("EPROD-31", e.getInformationCode().equals(EProdEnum.EPROD_31.getCode()));
+			assertEquals("EPROD thrown", EProdEnum.EPROD_31.getCode(), e.getInformationCode());
 		}
 	}
 	
@@ -295,7 +297,7 @@ public class FFMValidatorTest extends TestCase {
 		} catch (ApplicationException e) {
 			assertNotNull("EPSValidationResponse", e.getMessage());
 			System.out.println("e.getMessage()=" + e.getMessage());
-			assertTrue("EPROD-29", e.getInformationCode().equals(EProdEnum.EPROD_29.getCode()));
+			assertEquals("EPROD thrown", EProdEnum.EPROD_29.getCode(), e.getInformationCode());
 		}
 	}
 
@@ -572,7 +574,7 @@ public class FFMValidatorTest extends TestCase {
 	public void test_checkIfLaterVersionExists_true_Diff_SVDT() {
 
 		boolean expected = true;
-		DateTime sourceVersionDateTime = EpsDateUtils.getDateTimeFromXmlGC(EpsDateUtils.getXMLGregorianCalendar(DateTime.now()));
+		LocalDateTime sourceVersionDateTime = LocalDateTime.now();
 		
 		BenefitEnrollmentMaintenanceDTO dbBemDTO = EPSValidationTestUtil.createCurrentBEMForFFMValidatorTest();
 		dbBemDTO.setSourceVersionId(10L);
@@ -584,7 +586,7 @@ public class FFMValidatorTest extends TestCase {
 
 		BenefitEnrollmentMaintenanceDTO bemh = EPSValidationTestUtil.createBEMForPolicyMatch();
 		bemh.getBem().getTransactionInformation().setPolicySnapshotVersionNumber("10");
-		bemh.getBem().getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(sourceVersionDateTime));
+		bemh.getBem().getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(sourceVersionDateTime));
 
 		Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(ffmValidatorService, "checkIfLaterVersionExists", dbBemDTO, bemh);
 		assertEquals("Returned value", expected, actual.booleanValue());
@@ -616,11 +618,11 @@ public class FFMValidatorTest extends TestCase {
 	public void testCheckIfDuplicateVersionExists_true() {
 
 		boolean expected = true;
-		DateTime sourceVersionDateTime = EpsDateUtils.getDateTimeFromXmlGC(EpsDateUtils.getXMLGregorianCalendar(DateTime.now()));
+		LocalDateTime svDT = LocalDateTime.now();
 
 		BenefitEnrollmentMaintenanceDTO dbBemDTO = EPSValidationTestUtil.createCurrentBEMForFFMValidatorTest();
 		dbBemDTO.setSourceVersionId(1L);
-		dbBemDTO.setSourceVersionDateTime(sourceVersionDateTime);
+		dbBemDTO.setSourceVersionDateTime(svDT);
 
 		expect(mockPolicyDataService.getLatestBEMByPolicyId(EasyMock.anyObject(BenefitEnrollmentMaintenanceDTO.class)))
 		.andReturn(dbBemDTO);
@@ -628,9 +630,9 @@ public class FFMValidatorTest extends TestCase {
 
 		BenefitEnrollmentMaintenanceDTO bemh = EPSValidationTestUtil.createBEMForPolicyMatch();
 		bemh.getBem().getTransactionInformation().setPolicySnapshotVersionNumber("1");
-		bemh.getBem().getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(sourceVersionDateTime));
+		bemh.getBem().getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(svDT));
 
-		Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(ffmValidatorService, "checkIfDuplicateVesrionExists", dbBemDTO, bemh);
+		Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(ffmValidatorService, "checkIfDuplicateVersionExists", dbBemDTO, bemh);
 		assertEquals("Returned value", expected, actual.booleanValue());
 	}
 
@@ -638,14 +640,14 @@ public class FFMValidatorTest extends TestCase {
 	 * Tests checkForLaterVersionsOfPolicy.  
 	 */
 	@Test
-	public void testCheckIfDuplicateVesrionExists_false() {
+	public void testCheckIfDuplicateVersionExists_false() {
 
 		boolean expected = false;
-		DateTime sourceVersionDateTime = DateTime.now();
+		LocalDateTime svDT = LocalDateTime.now();
 
 		BenefitEnrollmentMaintenanceDTO dbBemDTO = EPSValidationTestUtil.createCurrentBEMForFFMValidatorTest();
 		dbBemDTO.setSourceVersionId(1L);
-		dbBemDTO.setSourceVersionDateTime(sourceVersionDateTime);
+		dbBemDTO.setSourceVersionDateTime(svDT);
 
 		expect(mockPolicyDataService.getLatestBEMByPolicyId(EasyMock.anyObject(BenefitEnrollmentMaintenanceDTO.class)))
 		.andReturn(dbBemDTO);
@@ -653,9 +655,9 @@ public class FFMValidatorTest extends TestCase {
 
 		BenefitEnrollmentMaintenanceDTO bemh = EPSValidationTestUtil.createBEMForPolicyMatch();
 		bemh.getBem().getTransactionInformation().setPolicySnapshotVersionNumber("1");
-		bemh.getBem().getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(sourceVersionDateTime.plusDays(1)));
+		bemh.getBem().getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(svDT.plusDays(1)));
 
-		Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(ffmValidatorService, "checkIfDuplicateVesrionExists", dbBemDTO, bemh);
+		Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(ffmValidatorService, "checkIfDuplicateVersionExists", dbBemDTO, bemh);
 		assertEquals("Returned value", expected, actual.booleanValue());
 	}
 	
@@ -722,16 +724,16 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_EED_null() {
 
-		DateTime esd = JAN_1;
-		DateTime eed = null;
+		LocalDate esd = JAN_1;
+		LocalDate eed = null;
 		BigDecimal aptc = new BigDecimal("50");
 		BigDecimal csr = new BigDecimal("25");
 		BigDecimal tpa = new BigDecimal("100");
 		BigDecimal tira = new BigDecimal("75");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = esd;
-		DateTime expectedEED_EPS1 = eed;
+		LocalDate expectedESD_EPS1 = esd;
+		LocalDate expectedEED_EPS1 = eed;
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -741,8 +743,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -757,12 +759,12 @@ public class FFMValidatorTest extends TestCase {
 		bem.getMember().add(inboundSubscriber);
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(esd);
 
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
@@ -775,16 +777,16 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_EED_not_null() {
 
-		DateTime esd = JAN_1;
-		DateTime eed = DEC_31;
+		LocalDate esd = JAN_1;
+		LocalDate eed = DEC_31;
 		BigDecimal aptc = new BigDecimal("50");
 		BigDecimal csr = new BigDecimal("25");
 		BigDecimal tpa = new BigDecimal("100");
 		BigDecimal tira = new BigDecimal("75");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = esd;
-		DateTime expectedEED_EPS1 = eed;
+		LocalDate expectedESD_EPS1 = esd;
+		LocalDate expectedEED_EPS1 = eed;
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -794,8 +796,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -810,12 +812,12 @@ public class FFMValidatorTest extends TestCase {
 		bem.getMember().add(inboundSubscriber);
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(esd);
 
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
@@ -828,16 +830,16 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_EED_mid_month_start() {
 
-		DateTime esd = JAN_15;
-		DateTime eed = DEC_31;
+		LocalDate esd = JAN_15;
+		LocalDate eed = DEC_31;
 		BigDecimal aptc = new BigDecimal("50");
 		BigDecimal csr = new BigDecimal("25");
 		BigDecimal tpa = new BigDecimal("100");
 		BigDecimal tira = new BigDecimal("75");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = esd;
-		DateTime expectedEED_EPS1 = eed;
+		LocalDate expectedESD_EPS1 = esd;
+		LocalDate expectedEED_EPS1 = eed;
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -847,8 +849,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -863,12 +865,12 @@ public class FFMValidatorTest extends TestCase {
 		bem.getMember().add(inboundSubscriber);
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(esd);
 
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
@@ -881,16 +883,16 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_EED_mid_month_end() {
 
-		DateTime esd = JAN_1;
-		DateTime eed = MAR_14;
+		LocalDate esd = JAN_1;
+		LocalDate eed = MAR_14;
 		BigDecimal aptc = new BigDecimal("50");
 		BigDecimal csr = new BigDecimal("25");
 		BigDecimal tpa = new BigDecimal("100");
 		BigDecimal tira = new BigDecimal("75");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = esd;
-		DateTime expectedEED_EPS1 = eed;
+		LocalDate expectedESD_EPS1 = esd;
+		LocalDate expectedEED_EPS1 = eed;
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -900,8 +902,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -916,12 +918,12 @@ public class FFMValidatorTest extends TestCase {
 		bem.getMember().add(inboundSubscriber);
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(esd);
 
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
@@ -934,16 +936,16 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_mid_month_start() {
 
-		DateTime esd = FEB_1;
-		DateTime eed = DEC_31;
+		LocalDate esd = FEB_1;
+		LocalDate eed = DEC_31;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = JAN_15;
-		DateTime expectedEED_EPS1 = eed;
+		LocalDate expectedESD_EPS1 = JAN_15;
+		LocalDate expectedEED_EPS1 = eed;
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -953,8 +955,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -969,14 +971,14 @@ public class FFMValidatorTest extends TestCase {
 		bem.getMember().add(inboundSubscriber);
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Only one premium record", 1, epsPremiums.size());
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(JAN_15);
 		
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
@@ -989,16 +991,16 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_mid_month_end() {
 
-		DateTime esd = JAN_1;
-		DateTime eed = APR_15;
+		LocalDate esd = JAN_1;
+		LocalDate eed = APR_15;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = esd;
-		DateTime expectedEED_EPS1 = eed;
+		LocalDate expectedESD_EPS1 = esd;
+		LocalDate expectedEED_EPS1 = eed;
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -1008,8 +1010,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -1025,14 +1027,14 @@ public class FFMValidatorTest extends TestCase {
 		bem.getMember().add(inboundSubscriber);
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Only one premium record", 1, epsPremiums.size());
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(esd);
 
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
@@ -1045,16 +1047,16 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_mid_month_start_and_end_current_Ipp() {
 
-		DateTime esd = FEB_1;
-		DateTime eed = DEC_15;
+		LocalDate esd = FEB_1;
+		LocalDate eed = DEC_15;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = JAN_15;
-		DateTime expectedEED_EPS1 = eed;
+		LocalDate expectedESD_EPS1 = JAN_15;
+		LocalDate expectedEED_EPS1 = eed;
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -1064,8 +1066,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -1081,14 +1083,14 @@ public class FFMValidatorTest extends TestCase {
 		bem.getMember().add(inboundSubscriber);
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Only one premium record", 1, epsPremiums.size());
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(JAN_15);
 
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
@@ -1101,16 +1103,16 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_intra_month_start_and_end_current_Ipp() {
 
-		DateTime esd = FEB_1;
-		DateTime eed = JAN_31;
+		LocalDate esd = FEB_1;
+		LocalDate eed = JAN_31;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = JAN_15;
-		DateTime expectedEED_EPS1 = eed;
+		LocalDate expectedESD_EPS1 = JAN_15;
+		LocalDate expectedEED_EPS1 = eed;
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -1120,8 +1122,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -1137,14 +1139,14 @@ public class FFMValidatorTest extends TestCase {
 		bem.getMember().add(inboundSubscriber);
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Only one premium record", 1, epsPremiums.size());
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(JAN_15);
 
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
@@ -1157,23 +1159,23 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_preceding_prorated() {
 
-		DateTime esd = FEB_1;
-		DateTime eed = DEC_31;
+		LocalDate esd = FEB_1;
+		LocalDate eed = DEC_31;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
-		DateTime esd2 = JAN_15;
-		DateTime eed2 = JAN_31;
+		LocalDate esd2 = JAN_15;
+		LocalDate eed2 = JAN_31;
 		BigDecimal proratedAptc2 = new BigDecimal("54.84");
 		BigDecimal proratedCsr2 = new BigDecimal("27.42");
 		BigDecimal proratedTpa2 = new BigDecimal("82.26");
 		BigDecimal proratedTira2 = new BigDecimal("54.84");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = esd;
-		DateTime expectedEED_EPS1 = eed;
+		LocalDate expectedESD_EPS1 = esd;
+		LocalDate expectedEED_EPS1 = eed;
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -1181,13 +1183,17 @@ public class FFMValidatorTest extends TestCase {
 
 		BenefitEnrollmentMaintenanceDTO bemDTO = new BenefitEnrollmentMaintenanceDTO();
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
+		bem.setPolicyInfo(new PolicyInfoType());
+		// Set same as monthly premium start/end (esd and eed).
+		bem.getPolicyInfo().setPolicyStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		bem.getPolicyInfo().setPolicyEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 
 		MemberType inboundSubscriber = makeSubscriberMaintenance("5555", JAN_15, DEC_31);
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -1201,8 +1207,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait2 = new AdditionalInfoType();
 		
-		ait2.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd2));
-		ait2.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed2));
+		ait2.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd2));
+		ait2.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed2));
 		
 		setAdditionalInfoTypeValue(ait2, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait2, "TIRA", tira, null);
@@ -1219,21 +1225,21 @@ public class FFMValidatorTest extends TestCase {
 
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Two premium records", 2, epsPremiums.size());
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(esd);
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
 		assertEquals("TIRA", expectedTIRA_EPS1, actualPremium1.getTotalIndividualResponsibilityAmount());
 
 		AdditionalInfoType actualPremium2 = epsPremiums.get(esd2);
-		assertEquals("ESD", esd2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveStartDate()));
-		assertEquals("EED", eed2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveEndDate()));
+		assertEquals("ESD", esd2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveStartDate()));
+		assertEquals("EED", eed2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium2.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium2.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium2.getTotalPremiumAmount());
@@ -1250,23 +1256,23 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_trailing_prorated() {
 
-		DateTime esd = JAN_1;
-		DateTime eed = APR_15;
+		LocalDate esd = JAN_1;
+		LocalDate eed = APR_15;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
-		DateTime esd2 = APR_1;
-		DateTime eed2 = APR_15;
+		LocalDate esd2 = APR_1;
+		LocalDate eed2 = APR_15;
 		BigDecimal proratedAptc2 = new BigDecimal("50");
 		BigDecimal proratedCsr2 = new BigDecimal("25");
 		BigDecimal proratedTpa2 = new BigDecimal("75");
 		BigDecimal proratedTira2 = new BigDecimal("50");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = esd;
-		DateTime expectedEED_EPS1 = esd2.minusDays(1);
+		LocalDate expectedESD_EPS1 = esd;
+		LocalDate expectedEED_EPS1 = esd2.minusDays(1);
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -1280,8 +1286,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -1295,8 +1301,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait2 = new AdditionalInfoType();
 		
-		ait2.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd2));
-		ait2.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed2));
+		ait2.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd2));
+		ait2.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed2));
 		
 		setAdditionalInfoTypeValue(ait2, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait2, "TIRA", tira, null);
@@ -1312,21 +1318,21 @@ public class FFMValidatorTest extends TestCase {
 
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Two premium records", 2, epsPremiums.size());
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(esd);
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
 		assertEquals("TIRA", expectedTIRA_EPS1, actualPremium1.getTotalIndividualResponsibilityAmount());
 
 		AdditionalInfoType actualPremium2 = epsPremiums.get(esd2);
-		assertEquals("ESD", esd2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveStartDate()));
-		assertEquals("EED", eed2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveEndDate()));
+		assertEquals("ESD", esd2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveStartDate()));
+		assertEquals("EED", eed2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium2.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium2.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium2.getTotalPremiumAmount());
@@ -1349,30 +1355,30 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_mid_month_start_and_end() {
 
-		DateTime esd = FEB_1;
-		DateTime eed = DEC_15;
+		LocalDate esd = FEB_1;
+		LocalDate eed = DEC_15;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
-		DateTime esd2 = JAN_15;
-		DateTime eed2 = JAN_31;
+		LocalDate esd2 = JAN_15;
+		LocalDate eed2 = JAN_31;
 		BigDecimal proratedAptc2 = new BigDecimal("54.84");
 		BigDecimal proratedCsr2 = new BigDecimal("27.42");
 		BigDecimal proratedTpa2 = new BigDecimal("82.26");
 		BigDecimal proratedTira2 = new BigDecimal("54.84");
 
-		DateTime esd3 = DEC_1;
-		DateTime eed3 = DEC_15;
+		LocalDate esd3 = DEC_1;
+		LocalDate eed3 = DEC_15;
 		BigDecimal proratedAptc3 = new BigDecimal("48.39");
 		BigDecimal proratedCsr3 = new BigDecimal("24.19");
 		BigDecimal proratedTpa3 = new BigDecimal("72.58");
 		BigDecimal proratedTira3 = new BigDecimal("48.39");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = esd;
-		DateTime expectedEED_EPS1 = esd3.minusDays(1);
+		LocalDate expectedESD_EPS1 = esd;
+		LocalDate expectedEED_EPS1 = esd3.minusDays(1);
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -1386,8 +1392,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -1401,8 +1407,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait2 = new AdditionalInfoType();
 		
-		ait2.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd2));
-		ait2.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed2));
+		ait2.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd2));
+		ait2.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed2));
 		
 		setAdditionalInfoTypeValue(ait2, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait2, "TIRA", tira, null);
@@ -1420,8 +1426,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait3 = new AdditionalInfoType();
 		
-		ait3.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd3));
-		ait3.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed3));
+		ait3.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd3));
+		ait3.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed3));
 		
 		setAdditionalInfoTypeValue(ait3, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait3, "TIRA", tira, null);
@@ -1437,21 +1443,21 @@ public class FFMValidatorTest extends TestCase {
 
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Three premium records", 3, epsPremiums.size());
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(esd);
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
 		assertEquals("TIRA", expectedTIRA_EPS1, actualPremium1.getTotalIndividualResponsibilityAmount());
 
 		AdditionalInfoType actualPremium2 = epsPremiums.get(esd2);
-		assertEquals("ESD", esd2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveStartDate()));
-		assertEquals("EED", eed2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveEndDate()));
+		assertEquals("ESD", esd2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveStartDate()));
+		assertEquals("EED", eed2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium2.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium2.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium2.getTotalPremiumAmount());
@@ -1462,8 +1468,8 @@ public class FFMValidatorTest extends TestCase {
 		assertEquals("P-TIRA", proratedTira2, actualPremium2.getProratedIndividualResponsibleAmount());
 
 		AdditionalInfoType actualPremium3 = epsPremiums.get(esd3);
-		assertEquals("ESD", esd3, EpsDateUtils.getDateTimeFromXmlGC(actualPremium3.getEffectiveStartDate()));
-		assertEquals("EED", eed3, EpsDateUtils.getDateTimeFromXmlGC(actualPremium3.getEffectiveEndDate()));
+		assertEquals("ESD", esd3, DateTimeUtil.getLocalDateFromXmlGC(actualPremium3.getEffectiveStartDate()));
+		assertEquals("EED", eed3, DateTimeUtil.getLocalDateFromXmlGC(actualPremium3.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium3.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium3.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium3.getTotalPremiumAmount());
@@ -1485,22 +1491,22 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_mid_month_start_and_end_A() {
 
-		DateTime esd = FEB_1;
-		DateTime eed = FEB_15;
+		LocalDate esd = FEB_1;
+		LocalDate eed = FEB_15;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
-		DateTime esd2 = JAN_15;
-		DateTime eed2 = JAN_31;
+		LocalDate esd2 = JAN_15;
+		LocalDate eed2 = JAN_31;
 		BigDecimal proratedAptc2 = new BigDecimal("54.84");
 		BigDecimal proratedCsr2 = new BigDecimal("27.42");
 		BigDecimal proratedTpa2 = new BigDecimal("82.26");
 		BigDecimal proratedTira2 = new BigDecimal("54.84");
 
-		DateTime esd3 = FEB_1;
-		DateTime eed3 = FEB_15;
+		LocalDate esd3 = FEB_1;
+		LocalDate eed3 = FEB_15;
 		BigDecimal proratedAptc3 = new BigDecimal("48.39");
 		BigDecimal proratedCsr3 = new BigDecimal("24.19");
 		BigDecimal proratedTpa3 = new BigDecimal("72.58");
@@ -1520,8 +1526,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -1535,8 +1541,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait2 = new AdditionalInfoType();
 		
-		ait2.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd2));
-		ait2.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed2));
+		ait2.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd2));
+		ait2.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed2));
 		
 		setAdditionalInfoTypeValue(ait2, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait2, "TIRA", tira, null);
@@ -1554,8 +1560,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait3 = new AdditionalInfoType();
 		
-		ait3.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd3));
-		ait3.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed3));
+		ait3.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd3));
+		ait3.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed3));
 		
 		setAdditionalInfoTypeValue(ait3, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait3, "TIRA", tira, null);
@@ -1571,13 +1577,13 @@ public class FFMValidatorTest extends TestCase {
 
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Three premium records", 2, epsPremiums.size());
 
 		AdditionalInfoType actualPremium2 = epsPremiums.get(esd2);
-		assertEquals("ESD", esd2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveStartDate()));
-		assertEquals("EED", eed2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveEndDate()));
+		assertEquals("ESD", esd2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveStartDate()));
+		assertEquals("EED", eed2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium2.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium2.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium2.getTotalPremiumAmount());
@@ -1588,8 +1594,8 @@ public class FFMValidatorTest extends TestCase {
 		assertEquals("P-TIRA", proratedTira2, actualPremium2.getProratedIndividualResponsibleAmount());
 
 		AdditionalInfoType actualPremium3 = epsPremiums.get(esd3);
-		assertEquals("ESD", esd3, EpsDateUtils.getDateTimeFromXmlGC(actualPremium3.getEffectiveStartDate()));
-		assertEquals("EED", eed3, EpsDateUtils.getDateTimeFromXmlGC(actualPremium3.getEffectiveEndDate()));
+		assertEquals("ESD", esd3, DateTimeUtil.getLocalDateFromXmlGC(actualPremium3.getEffectiveStartDate()));
+		assertEquals("EED", eed3, DateTimeUtil.getLocalDateFromXmlGC(actualPremium3.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium3.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium3.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium3.getTotalPremiumAmount());
@@ -1611,15 +1617,15 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_intra_month_start_and_end() {
 
-		DateTime esd = FEB_1;
-		DateTime eed = JAN_31;
+		LocalDate esd = FEB_1;
+		LocalDate eed = JAN_31;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
-		DateTime esd2 = JAN_15;
-		DateTime eed2 = JAN_31;
+		LocalDate esd2 = JAN_15;
+		LocalDate eed2 = JAN_31;
 		BigDecimal proratedAptc2 = new BigDecimal("54.84");
 		BigDecimal proratedCsr2 = new BigDecimal("27.42");
 		BigDecimal proratedTpa2 = new BigDecimal("82.26");
@@ -1644,8 +1650,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -1659,8 +1665,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait2 = new AdditionalInfoType();
 		
-		ait2.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd2));
-		ait2.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed2));
+		ait2.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd2));
+		ait2.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed2));
 		
 		setAdditionalInfoTypeValue(ait2, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait2, "TIRA", tira, null);
@@ -1681,7 +1687,7 @@ public class FFMValidatorTest extends TestCase {
 
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Only one premium record", 1, epsPremiums.size());
 
@@ -1689,8 +1695,8 @@ public class FFMValidatorTest extends TestCase {
 		assertNull("Only one premium record", actualPremium1);
 
 		AdditionalInfoType actualPremium2 = epsPremiums.get(esd2);
-		assertEquals("ESD", esd2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveStartDate()));
-		assertEquals("EED", eed2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveEndDate()));
+		assertEquals("ESD", esd2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveStartDate()));
+		assertEquals("EED", eed2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium2.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium2.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium2.getTotalPremiumAmount());
@@ -1713,23 +1719,23 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_FFM_Premium_Start_Date_Policy_Start_Date_Aligned() {
 
-		DateTime esd = JAN_15;
-		DateTime eed = DEC_31;
+		LocalDate esd = JAN_15;
+		LocalDate eed = DEC_31;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
-		DateTime esd2 = JAN_15;
-		DateTime eed2 = JAN_31;
+		LocalDate esd2 = JAN_15;
+		LocalDate eed2 = JAN_31;
 		BigDecimal proratedAptc2 = new BigDecimal("54.84");
 		BigDecimal proratedCsr2 = new BigDecimal("27.42");
 		BigDecimal proratedTpa2 = new BigDecimal("82.26");
 		BigDecimal proratedTira2 = new BigDecimal("54.84");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = FEB_1;
-		DateTime expectedEED_EPS1 = eed;
+		LocalDate expectedESD_EPS1 = FEB_1;
+		LocalDate expectedEED_EPS1 = eed;
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -1737,13 +1743,17 @@ public class FFMValidatorTest extends TestCase {
 
 		BenefitEnrollmentMaintenanceDTO bemDTO = new BenefitEnrollmentMaintenanceDTO();
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
+		bem.setPolicyInfo(new PolicyInfoType());
+		// Set same as monthly premium start/end (esd and eed).
+		bem.getPolicyInfo().setPolicyStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		bem.getPolicyInfo().setPolicyEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 
 		MemberType inboundSubscriber = makeSubscriberMaintenance("5555", JAN_15, DEC_31);
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -1757,8 +1767,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait2 = new AdditionalInfoType();
 		
-		ait2.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd2));
-		ait2.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed2));
+		ait2.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd2));
+		ait2.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed2));
 		
 		setAdditionalInfoTypeValue(ait2, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait2, "TIRA", tira, null);
@@ -1774,21 +1784,21 @@ public class FFMValidatorTest extends TestCase {
 
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Two premium records", 2, epsPremiums.size());
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(FEB_1);
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
 		assertEquals("TIRA", expectedTIRA_EPS1, actualPremium1.getTotalIndividualResponsibilityAmount());
 
 		AdditionalInfoType actualPremium2 = epsPremiums.get(esd2);
-		assertEquals("ESD", esd2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveStartDate()));
-		assertEquals("EED", eed2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveEndDate()));
+		assertEquals("ESD", esd2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveStartDate()));
+		assertEquals("EED", eed2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium2.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium2.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium2.getTotalPremiumAmount());
@@ -1811,30 +1821,30 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_mid_month_start_and_end_FFM_Premium_Start_Date_Policy_Start_Date_Aligned() {
 
-		DateTime esd = JAN_15;
-		DateTime eed = DEC_15;
+		LocalDate esd = JAN_15;
+		LocalDate eed = DEC_15;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
-		DateTime esd2 = JAN_15;
-		DateTime eed2 = JAN_31;
+		LocalDate esd2 = JAN_15;
+		LocalDate eed2 = JAN_31;
 		BigDecimal proratedAptc2 = new BigDecimal("54.84");
 		BigDecimal proratedCsr2 = new BigDecimal("27.42");
 		BigDecimal proratedTpa2 = new BigDecimal("82.26");
 		BigDecimal proratedTira2 = new BigDecimal("54.84");
 
-		DateTime esd3 = DEC_1;
-		DateTime eed3 = DEC_15;
+		LocalDate esd3 = DEC_1;
+		LocalDate eed3 = DEC_15;
 		BigDecimal proratedAptc3 = new BigDecimal("48.39");
 		BigDecimal proratedCsr3 = new BigDecimal("24.19");
 		BigDecimal proratedTpa3 = new BigDecimal("72.58");
 		BigDecimal proratedTira3 = new BigDecimal("48.39");
 
 		// Expected data after replacement, Record 1
-		DateTime expectedESD_EPS1 = FEB_1;
-		DateTime expectedEED_EPS1 = esd3.minusDays(1);
+		LocalDate expectedESD_EPS1 = FEB_1;
+		LocalDate expectedEED_EPS1 = esd3.minusDays(1);
 		BigDecimal expectedAPTC_EPS1 = aptc;
 		BigDecimal expectedCSR_EPS1 = csr;
 		BigDecimal expectedTPA_EPS1 = tpa;
@@ -1848,8 +1858,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -1863,8 +1873,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait2 = new AdditionalInfoType();
 		
-		ait2.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd2));
-		ait2.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed2));
+		ait2.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd2));
+		ait2.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed2));
 		
 		setAdditionalInfoTypeValue(ait2, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait2, "TIRA", tira, null);
@@ -1882,8 +1892,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait3 = new AdditionalInfoType();
 		
-		ait3.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd3));
-		ait3.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed3));
+		ait3.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd3));
+		ait3.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed3));
 		
 		setAdditionalInfoTypeValue(ait3, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait3, "TIRA", tira, null);
@@ -1899,21 +1909,21 @@ public class FFMValidatorTest extends TestCase {
 
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Three premium records", 3, epsPremiums.size());
 
 		AdditionalInfoType actualPremium1 = epsPremiums.get(FEB_1);
-		assertEquals("ESD", expectedESD_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveStartDate()));
-		assertEquals("EED", expectedEED_EPS1, EpsDateUtils.getDateTimeFromXmlGC(actualPremium1.getEffectiveEndDate()));
+		assertEquals("ESD", expectedESD_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveStartDate()));
+		assertEquals("EED", expectedEED_EPS1, DateTimeUtil.getLocalDateFromXmlGC(actualPremium1.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium1.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium1.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium1.getTotalPremiumAmount());
 		assertEquals("TIRA", expectedTIRA_EPS1, actualPremium1.getTotalIndividualResponsibilityAmount());
 
 		AdditionalInfoType actualPremium2 = epsPremiums.get(esd2);
-		assertEquals("ESD", esd2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveStartDate()));
-		assertEquals("EED", eed2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveEndDate()));
+		assertEquals("ESD", esd2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveStartDate()));
+		assertEquals("EED", eed2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium2.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium2.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium2.getTotalPremiumAmount());
@@ -1924,8 +1934,8 @@ public class FFMValidatorTest extends TestCase {
 		assertEquals("P-TIRA", proratedTira2, actualPremium2.getProratedIndividualResponsibleAmount());
 
 		AdditionalInfoType actualPremium3 = epsPremiums.get(esd3);
-		assertEquals("ESD", esd3, EpsDateUtils.getDateTimeFromXmlGC(actualPremium3.getEffectiveStartDate()));
-		assertEquals("EED", eed3, EpsDateUtils.getDateTimeFromXmlGC(actualPremium3.getEffectiveEndDate()));
+		assertEquals("ESD", esd3, DateTimeUtil.getLocalDateFromXmlGC(actualPremium3.getEffectiveStartDate()));
+		assertEquals("EED", eed3, DateTimeUtil.getLocalDateFromXmlGC(actualPremium3.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium3.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium3.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium3.getTotalPremiumAmount());
@@ -1947,22 +1957,22 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_mid_month_start_and_end_FFM_Premium_Start_Date_Policy_Start_Date_Aligned_1() {
 
-		DateTime esd = JAN_15;
-		DateTime eed = FEB_15;
+		LocalDate esd = JAN_15;
+		LocalDate eed = FEB_15;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
-		DateTime esd2 = JAN_15;
-		DateTime eed2 = JAN_31;
+		LocalDate esd2 = JAN_15;
+		LocalDate eed2 = JAN_31;
 		BigDecimal proratedAptc2 = new BigDecimal("54.84");
 		BigDecimal proratedCsr2 = new BigDecimal("27.42");
 		BigDecimal proratedTpa2 = new BigDecimal("82.26");
 		BigDecimal proratedTira2 = new BigDecimal("54.84");
 
-		DateTime esd3 = FEB_1;
-		DateTime eed3 = FEB_15;
+		LocalDate esd3 = FEB_1;
+		LocalDate eed3 = FEB_15;
 		BigDecimal proratedAptc3 = new BigDecimal("48.39");
 		BigDecimal proratedCsr3 = new BigDecimal("24.19");
 		BigDecimal proratedTpa3 = new BigDecimal("72.58");
@@ -1982,8 +1992,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -1997,8 +2007,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait2 = new AdditionalInfoType();
 		
-		ait2.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd2));
-		ait2.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed2));
+		ait2.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd2));
+		ait2.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed2));
 		
 		setAdditionalInfoTypeValue(ait2, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait2, "TIRA", tira, null);
@@ -2016,8 +2026,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait3 = new AdditionalInfoType();
 		
-		ait3.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd3));
-		ait3.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed3));
+		ait3.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd3));
+		ait3.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed3));
 		
 		setAdditionalInfoTypeValue(ait3, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait3, "TIRA", tira, null);
@@ -2034,13 +2044,13 @@ public class FFMValidatorTest extends TestCase {
 
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Three premium records", 2, epsPremiums.size());
 
 		AdditionalInfoType actualPremium2 = epsPremiums.get(esd2);
-		assertEquals("ESD", esd2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveStartDate()));
-		assertEquals("EED", eed2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveEndDate()));
+		assertEquals("ESD", esd2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveStartDate()));
+		assertEquals("EED", eed2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium2.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium2.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium2.getTotalPremiumAmount());
@@ -2051,8 +2061,8 @@ public class FFMValidatorTest extends TestCase {
 		assertEquals("P-TIRA", proratedTira2, actualPremium2.getProratedIndividualResponsibleAmount());
 
 		AdditionalInfoType actualPremium3 = epsPremiums.get(esd3);
-		assertEquals("ESD", esd3, EpsDateUtils.getDateTimeFromXmlGC(actualPremium3.getEffectiveStartDate()));
-		assertEquals("EED", eed3, EpsDateUtils.getDateTimeFromXmlGC(actualPremium3.getEffectiveEndDate()));
+		assertEquals("ESD", esd3, DateTimeUtil.getLocalDateFromXmlGC(actualPremium3.getEffectiveStartDate()));
+		assertEquals("EED", eed3, DateTimeUtil.getLocalDateFromXmlGC(actualPremium3.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium3.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium3.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium3.getTotalPremiumAmount());
@@ -2074,15 +2084,15 @@ public class FFMValidatorTest extends TestCase {
 	@Test
 	public void test_processInboundPremiums_intra_month_start_and_end_FFM_Premium_Start_Date_Policy_Start_Date_Aligned() {
 
-		DateTime esd = JAN_15;
-		DateTime eed = JAN_31;
+		LocalDate esd = JAN_15;
+		LocalDate eed = JAN_31;
 		BigDecimal aptc = new BigDecimal("100");
 		BigDecimal csr = new BigDecimal("50");
 		BigDecimal tpa = new BigDecimal("150");
 		BigDecimal tira = new BigDecimal("100");
 
-		DateTime esd2 = JAN_15;
-		DateTime eed2 = JAN_31;
+		LocalDate esd2 = JAN_15;
+		LocalDate eed2 = JAN_31;
 		BigDecimal proratedAptc2 = new BigDecimal("54.84");
 		BigDecimal proratedCsr2 = new BigDecimal("27.42");
 		BigDecimal proratedTpa2 = new BigDecimal("82.26");
@@ -2096,6 +2106,9 @@ public class FFMValidatorTest extends TestCase {
 
 		BenefitEnrollmentMaintenanceDTO bemDTO = new BenefitEnrollmentMaintenanceDTO();
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
+		bem.setPolicyInfo(new PolicyInfoType());
+		bem.getPolicyInfo().setPolicyStartDate(DateTimeUtil.getXMLGregorianCalendar(JAN_15));
+		bem.getPolicyInfo().setPolicyEndDate(DateTimeUtil.getXMLGregorianCalendar(JAN_31));
 
 		MemberType dependent = new MemberType();
 		dependent.setMemberInformation(new MemberRelatedInfoType());
@@ -2106,8 +2119,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait = new AdditionalInfoType();
 		
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
-		ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
+		ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		
 		setAdditionalInfoTypeValue(ait, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait, "TIRA", tira, null);
@@ -2121,8 +2134,8 @@ public class FFMValidatorTest extends TestCase {
 		
 		AdditionalInfoType ait2 = new AdditionalInfoType();
 		
-		ait2.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd2));
-		ait2.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed2));
+		ait2.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd2));
+		ait2.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed2));
 		
 		setAdditionalInfoTypeValue(ait2, "TPA", tpa, null);
 		setAdditionalInfoTypeValue(ait2, "TIRA", tira, null);
@@ -2143,7 +2156,7 @@ public class FFMValidatorTest extends TestCase {
 
 		bemDTO.setBem(bem);
 
-		Map<DateTime, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
+		Map<LocalDate, AdditionalInfoType> epsPremiums = ReflectionTestUtils.invokeMethod(ffmValidatorService, "processInboundPremiums", bemDTO);
 
 		assertEquals("Only one premium record", 1, epsPremiums.size());
 
@@ -2151,8 +2164,8 @@ public class FFMValidatorTest extends TestCase {
 		assertNull("Only one premium record", actualPremium1);
 
 		AdditionalInfoType actualPremium2 = epsPremiums.get(esd2);
-		assertEquals("ESD", esd2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveStartDate()));
-		assertEquals("EED", eed2, EpsDateUtils.getDateTimeFromXmlGC(actualPremium2.getEffectiveEndDate()));
+		assertEquals("ESD", esd2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveStartDate()));
+		assertEquals("EED", eed2, DateTimeUtil.getLocalDateFromXmlGC(actualPremium2.getEffectiveEndDate()));
 		assertEquals("APTC", expectedAPTC_EPS1, actualPremium2.getAPTCAmount());
 		assertEquals("CSR", expectedCSR_EPS1, actualPremium2.getCSRAmount());
 		assertEquals("TPA", expectedTPA_EPS1, actualPremium2.getTotalPremiumAmount());
@@ -2169,12 +2182,12 @@ public class FFMValidatorTest extends TestCase {
 
 	}
 
-	protected AdditionalInfoType makeAdditionalInfoType(String type, DateTime esd, DateTime eed, BigDecimal amt, BigDecimal proratedAmt) {
+	protected AdditionalInfoType makeAdditionalInfoType(String type, LocalDate esd, LocalDate eed, BigDecimal amt, BigDecimal proratedAmt) {
 
 		AdditionalInfoType ait = new AdditionalInfoType();
-		ait.setEffectiveStartDate(EpsDateUtils.getXMLGregorianCalendar(esd));
+		ait.setEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(esd));
 		if (eed != null) {
-			ait.setEffectiveEndDate(EpsDateUtils.getXMLGregorianCalendar(eed));
+			ait.setEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(eed));
 		}
 		if (type.equals("APTC")) {
 			ait.setAPTCAmount(amt); 
@@ -2220,7 +2233,7 @@ public class FFMValidatorTest extends TestCase {
 		return ait;
 	}
 
-	protected MemberType makeSubscriberMaintenance(String id, DateTime policyStartDt, DateTime policyEndDate) {
+	protected MemberType makeSubscriberMaintenance(String id, LocalDate policyStartDt, LocalDate policyEndDate) {
 
 		MemberType subscriber = new MemberType();
 		subscriber.setMemberInformation(new MemberRelatedInfoType());
@@ -2235,20 +2248,20 @@ public class FFMValidatorTest extends TestCase {
 		subscriber.getHealthCoverage().get(0).setHealthCoverageDates(new HealthCoverageDatesType());
 
 		if (policyStartDt != null)
-			subscriber.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitBeginDate(EpsDateUtils.getXMLGregorianCalendar(policyStartDt));
+			subscriber.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitBeginDate(DateTimeUtil.getXMLGregorianCalendar(policyStartDt));
 
 		if (policyEndDate != null) 
-			subscriber.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitEndDate(EpsDateUtils.getXMLGregorianCalendar(policyEndDate));
+			subscriber.getHealthCoverage().get(0).getHealthCoverageDates().setBenefitEndDate(DateTimeUtil.getXMLGregorianCalendar(policyEndDate));
 
 		return subscriber;
 	}
 	
-	private PolicyInfoType makePolicyInfoType(String mgpi, DateTime psd, DateTime ped, PolicyStatus policyStatus) {
+	private PolicyInfoType makePolicyInfoType(String mgpi, LocalDate psd, LocalDate ped, PolicyStatus policyStatus) {
 
 		PolicyInfoType policyInfo = new PolicyInfoType();
 		policyInfo.setMarketplaceGroupPolicyIdentifier(mgpi);
-		policyInfo.setPolicyStartDate(EpsDateUtils.getXMLGregorianCalendar(psd));
-		policyInfo.setPolicyEndDate(EpsDateUtils.getXMLGregorianCalendar(ped));
+		policyInfo.setPolicyStartDate(DateTimeUtil.getXMLGregorianCalendar(psd));
+		policyInfo.setPolicyEndDate(DateTimeUtil.getXMLGregorianCalendar(ped));
 		policyInfo.setPolicyStatus(policyStatus.getValue());
 		return policyInfo;
 	}
@@ -2260,4 +2273,5 @@ public class FFMValidatorTest extends TestCase {
 		extractionStatus.setExtractionStatusText("Extraction Errored out due to connection error");;
 		return extractionStatus;
 	}
+
 }

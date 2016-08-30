@@ -7,7 +7,7 @@ import gov.cms.dsh.bem.MemberType;
 import gov.hhs.cms.ff.fm.eps.ep.BEMDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberDatePO;
 
-import org.joda.time.DateTime;
+import java.time.LocalDate;
 
 /**
  * @author j.radziewski
@@ -27,8 +27,8 @@ public class PolicyMemberDateMapper {
 
 		PolicyMemberDatePO po = null;
 
-		DateTime hcBBD = BEMDataUtil.getBenefitBeginDate(member);
-		DateTime hcBED = BEMDataUtil.getBenefitEndDate(member);
+		LocalDate hcBBD = BEMDataUtil.getBenefitBeginDate(member);
+		LocalDate hcBED = BEMDataUtil.getBenefitEndDate(member);
 
 		if (hcBBD != null || hcBED != null) {
 

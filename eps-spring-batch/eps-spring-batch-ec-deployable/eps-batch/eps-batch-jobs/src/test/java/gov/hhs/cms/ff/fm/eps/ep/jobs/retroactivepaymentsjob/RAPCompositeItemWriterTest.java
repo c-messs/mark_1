@@ -48,8 +48,8 @@ public class RAPCompositeItemWriterTest extends BaseBatchTest {
 	
 	@Before
 	public void setup() {
-		coverageDate = JAN_1;
-		maintStart = JAN_1;
+		coverageDate = new DateTime(2016, 1, 1, 0, 0);
+		maintStart = new DateTime(2016, 1, 1, 0, 0);
 		
 		mockPaymentTransactionWriter = createMock(JdbcBatchItemWriter.class);
 		mockPaymentTransStatusWriter = createMock(JdbcBatchItemWriter.class);

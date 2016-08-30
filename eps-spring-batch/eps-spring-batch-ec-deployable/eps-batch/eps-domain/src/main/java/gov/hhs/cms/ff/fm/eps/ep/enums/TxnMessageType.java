@@ -13,7 +13,10 @@ public enum TxnMessageType {
 	MSG_834	("1", "834"),
 	MSG_BAA ("2", "BAA"),
 	MSG_999 ("3", "999"),
-	MEDICAID_CHIP ("4", "MedicaidCHIP")
+	MEDICAID_CHIP ("4", "MedicaidCHIP"),
+	// TODO: update from 3 to correct value once schema ref data is added.
+	// Temporarily set to 3 for unit testing.
+	MSG_SBMI ("3", "SBMI")
 	;	
 	private String value;
 	private String description;

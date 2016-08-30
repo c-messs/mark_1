@@ -5,10 +5,10 @@ import gov.cms.dsh.bem.FileInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageDirectionType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageType;
 
+import java.time.LocalDateTime;
+
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.joda.time.DateTime;
 
 /**
  * @author eps
@@ -25,7 +25,7 @@ public class BenefitEnrollmentRequestDTO {
 	private String fileInfoXml;
 	private String berXml;
 	private BenefitEnrollmentRequest ber;
-	private DateTime fileNmDateTime;
+	private LocalDateTime fileNmDateTime;
 	private Long txnMessageFileInfoId;
 	private FileInformationType fileInformation;
 	private Long batchId;
@@ -37,7 +37,7 @@ public class BenefitEnrollmentRequestDTO {
 	private boolean insertFileInfo;
 	private String exchangeTypeCd;
 	private JAXBElement<?> jaxbElement;
-	private DateTime sourceVersionDateTime;
+	private LocalDateTime sourceVersionDateTime;
 	private boolean versionSkippedInPast = false;
 	private String subscriberStateCd;
 	private String planId;
@@ -61,11 +61,11 @@ public class BenefitEnrollmentRequestDTO {
 		this.fileNm = fileNm;
 	}
 
-	public DateTime getFileNmDateTime() {
+	public LocalDateTime getFileNmDateTime() {
 		return fileNmDateTime;
 	}
 
-	public void setFileNmDateTime(DateTime fileNmDateTime) {
+	public void setFileNmDateTime(LocalDateTime fileNmDateTime) {
 		this.fileNmDateTime = fileNmDateTime;
 	}
 
@@ -231,14 +231,14 @@ public class BenefitEnrollmentRequestDTO {
 	/**
 	 * @return the sourceVersionDateTime
 	 */
-	public DateTime getSourceVersionDateTime() {
+	public LocalDateTime getSourceVersionDateTime() {
 		return sourceVersionDateTime;
 	}
 
 	/**
 	 * @param sourceVersionDateTime the sourceVersionDateTime to set
 	 */
-	public void setSourceVersionDateTime(DateTime sourceVersionDateTime) {
+	public void setSourceVersionDateTime(LocalDateTime sourceVersionDateTime) {
 		this.sourceVersionDateTime = sourceVersionDateTime;
 	}
 

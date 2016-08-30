@@ -13,13 +13,18 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
 import gov.hhs.cms.ff.fm.eps.ep.enums.ProcessedToDbInd;
 import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageDirectionType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageType;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -28,8 +33,6 @@ import java.util.regex.Pattern;
 import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.BatchStatus;
@@ -49,19 +52,27 @@ public abstract class BaseBatchTest extends TestCase {
 	private static final Logger LOG = LoggerFactory.getLogger(BaseBatchTest.class);
 	
 	protected Long JOB_ID = -9999990L;
-	protected final DateTime DATETIME = new DateTime();
-	protected final int YEAR = DATETIME.getYear();
+	protected final LocalDate DATE = LocalDate.now();
+	protected final LocalDateTime DATETIME = LocalDateTime.now();
+	protected final int YEAR = DATE.getYear();
 	protected final SimpleDateFormat sdf = new SimpleDateFormat("'D'yyMMdd'.T'HHmmssSSS");
+	protected final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("'D'yyMMdd'.T'HHmmssSSS");
 	protected final DateFormatter dateFormatter = new DateFormatter("yyyy-MM-dd HH:mm:ss.SSS");
-
-	protected final DateTime JAN_1 = new DateTime(YEAR, 1, 1, 0, 0);
-	protected final DateTime JAN_15 = new DateTime(YEAR, 1, 15, 0, 0);
-	protected final DateTime JAN_31 = new DateTime(YEAR, 1, 31, 0, 0);
-	protected final DateTime FEB_1 = new DateTime(YEAR, 2, 1, 0, 0);
-	protected final DateTime FEB_MAX = new DateTime(YEAR, 2, FEB_1.dayOfMonth().getMaximumValue(), 0, 0);
-	protected final DateTime MAR_1 = new DateTime(YEAR, 3, 1, 0, 0);
-	protected final DateTime MAR_31 = new DateTime(YEAR, 3, 31, 0, 0);
-	protected final DateTime APR_1 = new DateTime(YEAR, 4, 1, 0, 0);
+	
+	protected final LocalDate JAN_1 = LocalDate.of(YEAR, 1, 1);
+	protected final LocalDate JAN_15 = LocalDate.of(YEAR, 1, 15);
+	protected final LocalDate JAN_31 = LocalDate.of(YEAR, 1, 31);
+	protected final LocalDate FEB_1 = LocalDate.of(YEAR, 2, 1);
+	protected final LocalDate FEB_MAX = DATE.with(TemporalAdjusters.lastDayOfMonth());
+	protected final LocalDate MAR_1 = LocalDate.of(YEAR, 3, 1);
+	protected final LocalDate MAR_31 = LocalDate.of(YEAR, 3, 31);
+	protected final LocalDate APR_1 = LocalDate.of(YEAR, 4, 1);
+	
+	protected final LocalDateTime JAN_1_1am = LocalDateTime.of(YEAR, 1, 1, 1, 0, 0, 111111000);
+	protected final LocalDateTime FEB_1_2am = LocalDateTime.of(YEAR, 2, 1, 2, 0, 0, 222222000);
+	protected final LocalDateTime MAR_1_3am = LocalDateTime.of(YEAR, 3, 1, 3, 0, 0, 333333000);
+	protected final LocalDateTime APR_1_4am = LocalDateTime.of(YEAR, 4, 1, 4, 0, 0, 444444000);
+	protected final LocalDateTime JUN_1_1am = LocalDateTime.of(YEAR, 6, 1, 1, 0, 0, 666666000);
 
 	protected final String SUBSCRIBER_STATE_CD = "AA";
 	protected final String ISSUER_STATE_CD = "VA";
@@ -175,35 +186,35 @@ public abstract class BaseBatchTest extends TestCase {
 	}
 
 
-	protected BenefitEnrollmentMaintenanceType makeBem(String versionNum, DateTime versionDt, PolicyStatus policyStatus, String exchangePolicyId) {
+	protected BenefitEnrollmentMaintenanceType makeBem(String versionNum, LocalDateTime versionDt, PolicyStatus policyStatus, String exchangePolicyId) {
 
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setTransactionInformation(new TransactionInformationType());
 		bem.getTransactionInformation().setPolicySnapshotVersionNumber(versionNum);
-		bem.getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(versionDt));
-		bem.getTransactionInformation().setCurrentTimeStamp(EpsDateUtils.getXMLGregorianCalendar(versionDt));
+		bem.getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(versionDt));
+		bem.getTransactionInformation().setCurrentTimeStamp(DateTimeUtil.getXMLGregorianCalendar(versionDt));
 
 		bem.setPolicyInfo(new PolicyInfoType());
 		bem.getPolicyInfo().setPolicyStatus(policyStatus.getValue());
-		bem.getPolicyInfo().setPolicyStartDate(EpsDateUtils.getXMLGregorianCalendar(versionDt));
+		bem.getPolicyInfo().setPolicyStartDate(DateTimeUtil.getXMLGregorianCalendar(versionDt));
 		bem.getPolicyInfo().setMarketplaceGroupPolicyIdentifier("MPGPID");
 		bem.getPolicyInfo().setGroupPolicyNumber(exchangePolicyId);
 		
 		return bem;
 	}
 
-	protected BenefitEnrollmentMaintenanceDTO makeBemDTO(Long batchId, Long transMsgId, String versionNum, DateTime versionDt, PolicyStatus policyStatus, String exchangePolicyId) {
+	protected BenefitEnrollmentMaintenanceDTO makeBemDTO(Long batchId, Long transMsgId, String versionNum, LocalDateTime versionDt, PolicyStatus policyStatus, String exchangePolicyId) {
 
 		BenefitEnrollmentMaintenanceDTO bemDTO = new BenefitEnrollmentMaintenanceDTO();
 
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
 		bem.setTransactionInformation(new TransactionInformationType());
 		bem.getTransactionInformation().setPolicySnapshotVersionNumber(versionNum);
-		bem.getTransactionInformation().setPolicySnapshotDateTime(EpsDateUtils.getXMLGregorianCalendar(versionDt));
+		bem.getTransactionInformation().setPolicySnapshotDateTime(DateTimeUtil.getXMLGregorianCalendar(versionDt));
 		
 		bem.setPolicyInfo(new PolicyInfoType());
 		bem.getPolicyInfo().setPolicyStatus(policyStatus.getValue());
-		bem.getPolicyInfo().setPolicyStartDate(EpsDateUtils.getXMLGregorianCalendar(versionDt));
+		bem.getPolicyInfo().setPolicyStartDate(DateTimeUtil.getXMLGregorianCalendar(versionDt));
 		bem.getPolicyInfo().setMarketplaceGroupPolicyIdentifier("MPGPID");
 		bem.getPolicyInfo().setGroupPolicyNumber(exchangePolicyId);
 		
@@ -331,12 +342,12 @@ public abstract class BaseBatchTest extends TestCase {
 	}
 
 	protected void insertBatchTransMsg(Long transMsgId, Long batchId, ProcessedToDbInd ind, String stateCd, 
-			String exchangePolicyId, String hiosId, String srcVerNum, DateTime srcVerDt) {
+			String exchangePolicyId, String hiosId, String srcVerNum, LocalDateTime srcVerDt) {
 		insertBatchTransMsg(transMsgId, batchId, ind, stateCd, exchangePolicyId, hiosId, srcVerNum, srcVerDt, null, null);
 	}
 
 	protected void insertBatchTransMsg(Long transMsgId, Long batchId, ProcessedToDbInd ind, String stateCd, 
-			String exchangePolicyId, String hiosId, String srcVerNum, DateTime srcVerDt, String skipEPROD, String skipReason) {
+			String exchangePolicyId, String hiosId, String srcVerNum, LocalDateTime srcVerDt, String skipEPROD, String skipReason) {
 
 		String args = "INSERT INTO BATCHTRANSMSG (TRANSMSGID, BATCHID, CREATEBY";
 		String values = ") VALUES (" + transMsgId + ", " + batchId + ", " + batchId;
@@ -377,7 +388,7 @@ public abstract class BaseBatchTest extends TestCase {
 		jdbc.execute(sql);
 	}
 
-	protected void insertDailyBemIndexer(Long transMsgId, String bemXml, String fileNm, DateTime fileDt) {
+	protected void insertDailyBemIndexer(Long transMsgId, String bemXml, String fileNm, LocalDateTime fileDt) {
 
 		String sql = "INSERT INTO DAILYBEMINDEXER (BEMINDEXID, INDEXDATETIME, TRANSMSGID, FILENM, FILENMDATETIME, EXCHANGETYPECD)" +
 				" VALUES(BEMINDEXSEQ.nextval, current_timestamp, " + transMsgId + ", '" + fileNm + "', " +
@@ -397,7 +408,7 @@ public abstract class BaseBatchTest extends TestCase {
 	 * @param fileName
 	 * @return
 	 */
-	public static DateTime getFileNameDateTime(String fileName) {
+	public static LocalDateTime getFileNameDateTime(String fileName) {
 		
 		Pattern p = Pattern.compile("\\w{1,10}\\.\\w{1,10}\\.D(\\d{6})\\.T(\\d{9})(\\.\\w?+)?(\\.\\w*+)?");
 		Matcher m = p.matcher(fileName);
@@ -405,8 +416,8 @@ public abstract class BaseBatchTest extends TestCase {
 			String timeStr=m.group(2);
 			String dateStr=m.group(1);
 			String fileDate = dateStr+timeStr;
-			DateTimeFormatter format = DateTimeFormat.forPattern("yyMMddHHmmssSSS");
-			DateTime fileNameDateTime = format.parseDateTime(fileDate);
+			DateTimeFormatter format = DateTimeFormatter.ofPattern("yyMMddHHmmssSSS");
+			LocalDateTime fileNameDateTime = LocalDateTime.parse(fileDate, format);
 
 			return fileNameDateTime;
 		}
@@ -416,10 +427,10 @@ public abstract class BaseBatchTest extends TestCase {
 	}
 
 
-	private java.sql.Date convertToDate(DateTime dateTime) {
+	private java.sql.Timestamp convertToDate(LocalDateTime localDateTime) {
 
-		if(dateTime != null) {
-			return new java.sql.Date(dateTime.getMillis());
+		if(localDateTime != null) {
+			return Timestamp.valueOf(localDateTime);
 		}
 		return null;
 	}
@@ -436,9 +447,9 @@ public abstract class BaseBatchTest extends TestCase {
 		return fileNm;
 	}
 
-	protected String makeFileNameERL(DateTime fileDt) {
+	protected String makeFileNameERL(LocalDateTime fileDt) {
 
-		return "9999999999.IC834." + sdf.format(fileDt.toDate()) + ".T.IN";	
+		return "9999999999.IC834." + fileDt.format(dateTimeFormatter) + ".T.IN";	
 	}
 
 
@@ -516,7 +527,7 @@ public abstract class BaseBatchTest extends TestCase {
 	 *
 	 * @return policyVersionId
 	 */
-	protected Long insertPolicyVersion(Long transMsgId, DateTime maintStart, DateTime policyStart, DateTime policyEnd, 
+	protected Long insertPolicyVersion(Long transMsgId, LocalDateTime maintStart, LocalDate policyStart, LocalDate policyEnd, 
 			String stateCd, String exchangePolicyId, String hios, String planId, Integer sourceVersionId) {
 
 		Long policyVersionId = jdbc.queryForObject("SELECT POLICYVERSIONSEQ.NEXTVAL FROM DUAL", Long.class);
@@ -525,7 +536,7 @@ public abstract class BaseBatchTest extends TestCase {
 				"SUBSCRIBERSTATECD, ISSUERPOLICYID, ISSUERHIOSID, ISSUERSUBSCRIBERID, EXCHANGEPOLICYID, " +
 				"POLICYSTARTDATE, POLICYENDDATE, PLANID, X12INSRNCLINETYPECD, " +
 				"INSRNCAPLCTNTYPECD, TRANSMSGID, SOURCEVERSIONID, " + getSysArgs() + ") " + 
-				"VALUES ("+ policyVersionId + ", " + toDateValue(maintStart) + ", " +
+				"VALUES ("+ policyVersionId + ", " + toTimestampValue(maintStart) + ", " +
 				"TO_TIMESTAMP('9999-12-31 23:59:59.999', 'YYYY-MM-DD HH24:MI:SS.FF'), '" + stateCd + "', 'P"+policyVersionId+"', "+
 				"'" + hios + "', 'SCB" + policyVersionId +"', '" + exchangePolicyId + "', " +
 				toDateValue(policyStart) + ", " + toDateValue(policyEnd) + ", " +
@@ -537,7 +548,7 @@ public abstract class BaseBatchTest extends TestCase {
 	/**
 	 * Inserts a minimal record into POLICYPAYMENTTRANS with parentPolPayTransId and issLevelTransId
 	 */
-	protected Long insertPolicyPaymentTrans(Long policyVersionId, DateTime coverageDate, DateTime maintStart, String hios, String transPeriodCd, 
+	protected Long insertPolicyPaymentTrans(Long policyVersionId, LocalDate coverageDate, LocalDateTime maintStart, String hios, String transPeriodCd, 
 			BigDecimal paymentAmt, BigDecimal totPrem, String insrnceAplTypeCd, String exchangePolId) {
 
 		Long policyPaymentTransId = jdbc.queryForObject("SELECT POLICYPAYMENTTRANSSEQ.NEXTVAL FROM DUAL", Long.class);
@@ -547,7 +558,7 @@ public abstract class BaseBatchTest extends TestCase {
 				"MAINTENANCESTARTDATETIME, COVERAGEDATE, " + getSysArgs() + ", SUBSCRIBERSTATECD, EXCHANGEPOLICYID, INSRNCAPLCTNTYPECD ";
 		sql += ") VALUES (" + policyPaymentTransId +", " + policyVersionId + ", '" + "APTC" + "', '" + 
 				transPeriodCd + "', '" + hios + "', " + paymentAmt + ", " + totPrem + ", '" + ISSUER_STATE_CD +
-				"', " + toDateValue(maintStart) +", "  + toDateValue(coverageDate) + ", " + getSysValues() + ", '" + 
+				"', " + toTimestampValue(maintStart) +", "  + toDateValue(coverageDate) + ", " + getSysValues() + ", '" + 
 				SUBSCRIBER_STATE_CD + "', '" + exchangePolId + "', '" + insrnceAplTypeCd + "')";
 		jdbc.execute(sql);
 
@@ -557,7 +568,7 @@ public abstract class BaseBatchTest extends TestCase {
 	/**
 	 * Inserts a minimal record into PAYMENTPROCESSINGSTATUS
 	 */
-	protected void insertPaymentProcessingStatus(Long policyPaymentTransId, String payProcStatusCd, DateTime statusDateTime) {
+	protected void insertPaymentProcessingStatus(Long policyPaymentTransId, String payProcStatusCd, LocalDateTime statusDateTime) {
 
 		String sql = "INSERT INTO PAYMENTPROCESSINGSTATUS (POLICYPAYMENTTRANSID, TRANSACTIONLOGTYPECD, " +
 				"PAYMENTPROCSTATUSTYPECD, STATUSDATETIME, " + getSysArgs() + ") VALUES (" + policyPaymentTransId + ", '" +
@@ -567,7 +578,7 @@ public abstract class BaseBatchTest extends TestCase {
 	}
 
 
-	protected void insertCoveragePeriodPaid(DateTime coverage, DateTime enrollRecCutoff, DateTime initiation) {
+	protected void insertCoveragePeriodPaid(LocalDate coverage, LocalDate enrollRecCutoff, LocalDate initiation) {
 
 		String sql = "INSERT INTO COVERAGEPERIODPAID (COVERAGEDATE, ENROLLMENTRECORDCUTOFFDATETIME, " + 
 				"INITIATIONDATETIME, " + getSysArgs() + ") VALUES (" + toDateValue(coverage) + ", " +
@@ -601,24 +612,18 @@ public abstract class BaseBatchTest extends TestCase {
 		return "CREATEDATETIME, LASTMODIFIEDDATETIME, CREATEBY, LASTMODIFIEDBY";
 	}
 
-	private String toDateValue(DateTime dt) {
-		return " TO_DATE('" + getSqlDate(dt) + "', 'YYYY-MM-DD HH24:MI:SS')";
+	private String toDateValue(LocalDate localDate) {
+		return " TO_DATE('" + java.sql.Date.valueOf(localDate) + "', 'YYYY-MM-DD HH24:MI:SS')";
 	}
 
 	private String getSysValues() {
 		return toTimestampValue(DATETIME) + ", " + toTimestampValue(DATETIME) +", '" + JOB_ID +"', '" + JOB_ID +"'";
 	}
 
-	private String toTimestampValue(DateTime ts) {
-		return "TO_TIMESTAMP('" + getSqlDate(ts) + "', 'YYYY-MM-DD HH24:MI:SS.FF3')";
+	private String toTimestampValue(LocalDateTime ts) {
+		return "TO_TIMESTAMP('" + Timestamp.valueOf(ts) + "', 'YYYY-MM-DD HH24:MI:SS.FF3')";
 	}
-	
-	private java.sql.Date getSqlDate(DateTime dateTime) {
-		if(dateTime != null) {
-			return new java.sql.Date(dateTime.getMillis());
-		}
-		return null;
-	}
+
 
 	/**
 	 * @return the jdbc

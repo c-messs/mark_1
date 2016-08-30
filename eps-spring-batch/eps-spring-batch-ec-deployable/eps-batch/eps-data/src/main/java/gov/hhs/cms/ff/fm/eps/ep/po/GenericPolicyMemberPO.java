@@ -1,6 +1,6 @@
 package gov.hhs.cms.ff.fm.eps.ep.po;
 
-import org.joda.time.DateTime;
+import java.time.LocalDate;
 
 
 /**
@@ -14,57 +14,82 @@ public class GenericPolicyMemberPO<T> {
 	
 	boolean isPolicyMemberChanged = true;
 	
-	private DateTime createDateTime;
-	private DateTime lastModifiedDateTime;
+	private LocalDate createDateTime;
+	private LocalDate lastModifiedDateTime;
 	private String createBy;
 	private String lastModifiedBy;
-	
+	/**
+	 * @return the policyMemberVersionId
+	 */
 	public Long getPolicyMemberVersionId() {
 		return policyMemberVersionId;
 	}
-
+	/**
+	 * @param policyMemberVersionId the policyMemberVersionId to set
+	 */
 	public void setPolicyMemberVersionId(Long policyMemberVersionId) {
 		this.policyMemberVersionId = policyMemberVersionId;
 	}
-	
+	/**
+	 * @return the isPolicyMemberChanged
+	 */
 	public boolean isPolicyMemberChanged() {
 		return isPolicyMemberChanged;
 	}
-
+	/**
+	 * @param isPolicyMemberChanged the isPolicyMemberChanged to set
+	 */
 	public void setPolicyMemberChanged(boolean isPolicyMemberChanged) {
 		this.isPolicyMemberChanged = isPolicyMemberChanged;
 	}
-
-	public DateTime getCreateDateTime() {
+	/**
+	 * @return the createDateTime
+	 */
+	public LocalDate getCreateDateTime() {
 		return createDateTime;
 	}
-	
-	public void setCreateDateTime(DateTime createDateTime) {
+	/**
+	 * @param createDateTime the createDateTime to set
+	 */
+	public void setCreateDateTime(LocalDate createDateTime) {
 		this.createDateTime = createDateTime;
 	}
-	
-	public DateTime getLastModifiedDateTime() {
+	/**
+	 * @return the lastModifiedDateTime
+	 */
+	public LocalDate getLastModifiedDateTime() {
 		return lastModifiedDateTime;
 	}
-	
-	public void setLastModifiedDateTime(DateTime lastModifiedDateTime) {
+	/**
+	 * @param lastModifiedDateTime the lastModifiedDateTime to set
+	 */
+	public void setLastModifiedDateTime(LocalDate lastModifiedDateTime) {
 		this.lastModifiedDateTime = lastModifiedDateTime;
 	}
-	
+	/**
+	 * @return the createBy
+	 */
 	public String getCreateBy() {
 		return createBy;
 	}
-	
+	/**
+	 * @param createBy the createBy to set
+	 */
 	public void setCreateBy(String createBy) {
 		this.createBy = createBy;
 	}
-	
+	/**
+	 * @return the lastModifiedBy
+	 */
 	public String getLastModifiedBy() {
 		return lastModifiedBy;
 	}
-	
+	/**
+	 * @param lastModifiedBy the lastModifiedBy to set
+	 */
 	public void setLastModifiedBy(String lastModifiedBy) {
 		this.lastModifiedBy = lastModifiedBy;
 	}
-
+	
+	
 }

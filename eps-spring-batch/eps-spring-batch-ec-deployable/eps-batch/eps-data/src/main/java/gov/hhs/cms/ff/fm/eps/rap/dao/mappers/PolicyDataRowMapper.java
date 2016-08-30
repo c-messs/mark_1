@@ -43,6 +43,9 @@ public class PolicyDataRowMapper implements RowMapper<PolicyDataDTO> {
 		if (policyVersionTs != null) {
 			dto.setMaintenanceStartDateTime(new DateTime(policyVersionTs.getTime()));
 		}
+		
+		dto.setIssuerStartDate(DataCommonUtil.convertToDateTime(rs.getDate("ISSUEREFFECTIVEDATE")));
+		
 		return dto;
 	}
 

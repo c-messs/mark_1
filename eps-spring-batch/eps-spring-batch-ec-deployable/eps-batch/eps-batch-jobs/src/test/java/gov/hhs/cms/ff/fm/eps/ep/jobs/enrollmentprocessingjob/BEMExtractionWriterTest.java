@@ -9,20 +9,19 @@ import gov.cms.dsh.bem.BenefitEnrollmentMaintenanceType;
 import gov.cms.dsh.bem.BenefitEnrollmentRequest;
 import gov.cms.dsh.bem.TransactionInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentRequestDTO;
-import gov.hhs.cms.ff.fm.eps.ep.EPSValidationRequest;
 import gov.hhs.cms.ff.fm.eps.ep.enums.ExchangeType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageDirectionType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageType;
 import gov.hhs.cms.ff.fm.eps.ep.services.TransMsgFileInfoCompositeDAO;
-import gov.hhs.cms.ff.fm.eps.ep.util.EpsDateUtils;
+import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
-import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -120,7 +119,7 @@ public class BEMExtractionWriterTest extends TestCase {
 		List<BenefitEnrollmentRequestDTO> bers = new ArrayList<BenefitEnrollmentRequestDTO>();
 		BenefitEnrollmentRequest ber = new BenefitEnrollmentRequest();
 		BenefitEnrollmentMaintenanceType bem = new BenefitEnrollmentMaintenanceType();
-		DateTime fileDate = EpsDateUtils.getCurrentDateTime();
+		LocalDateTime fileDate = LocalDateTime.now();
 		
 		BenefitEnrollmentRequestDTO ber1  = new BenefitEnrollmentRequestDTO();
 		ber1.setFileInfoXml("<FileInformation>Test</FileInformation>");
@@ -130,7 +129,7 @@ public class BEMExtractionWriterTest extends TestCase {
 		ber1.setExchangeTypeCd(ExchangeType.FFM.getValue());
 		
 		TransactionInformationType transInfoType = new TransactionInformationType();
-		transInfoType.setCurrentTimeStamp(EpsDateUtils.getXMLGregorianCalendar(new DateTime()));
+		transInfoType.setCurrentTimeStamp(DateTimeUtil.getXMLGregorianCalendar(LocalDateTime.now()));
 		bem.setTransactionInformation(transInfoType);
 		
 		ber.getBenefitEnrollmentMaintenance().add(bem);

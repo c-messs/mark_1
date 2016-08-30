@@ -18,6 +18,7 @@
 		<property name="selectPolicyPmtTrans" value="${SELECT_POLICY_PMT_TRANS}"/>
 		<property name="selectPolicyPremiums" value="${SELECT_POLICY_PREMIUMS}"/>
 		<property name="selectIssuerRates" value="${ISSUERUSERFEERATE_ALLSTATES_SQL}"/>
+		<property name="selectProrationConfig" value="${SELECT_PRORATION_CONFIG}"/>
 	</bean>
 
 

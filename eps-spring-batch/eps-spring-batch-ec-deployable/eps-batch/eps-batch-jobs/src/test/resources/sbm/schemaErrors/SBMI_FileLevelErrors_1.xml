@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- TestCase: No policy tags -->
+<p:Enrollment xmlns:p="http://sbmi.dsh.cms.gov" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://sbmi.dsh.cms.gov SBMI_v3.xsd ">
+  <p:FileInformation>
+    <p:FileId>p:FileId</p:FileId>
+    <p:FileCreateDateTime>2001-12-31T12:00:00</p:FileCreateDateTime>
+    <p:TenantId>CA1</p:TenantId>
+    <p:CoverageYear>2017</p:CoverageYear>
+    <p:IssuerFileInformation>
+      <p:IssuerId>12345</p:IssuerId>
+      <p:IssuerFileSet>
+        <p:IssuerFileSetId>12345678</p:IssuerFileSetId>
+        <p:FileNumber>1</p:FileNumber>
+        <p:TotalIssuerFiles>1</p:TotalIssuerFiles>
+      </p:IssuerFileSet>
+    </p:IssuerFileInformation>
+  </p:FileInformation> 
+</p:Enrollment>
