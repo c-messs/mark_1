@@ -1,54 +1,53 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
-		<artifactId>eps</artifactId>
-		<version>26.0.0-SNAPSHOT</version>	
-	</parent>
-	<artifactId>eps-domain</artifactId>
-	<name>eps-domain</name>
-        <distributionManagement>
-                <site>
-                        <id />
-                        <name>Maven site</name>
-                        <url>file://</url>
-                </site>
-                <repository>
-                        <id>nexus.public</id>
-                        <name>ffm-libs-PRErelease-local</name>
-                        <url>https://calt.cms.gov/nexus/content/repositories/ffm-libs-PRErelease-local</url>
-                </repository>
-                <snapshotRepository>
-                                <id>nexus.public</id>
-                                <name>ffm-libs-snapshot-local</name>
-                                <url>https://calt.cms.gov/nexus/content/repositories/ffm-libs-snapshot-local</url>
-                </snapshotRepository>
-        </distributionManagement>
-
-	<build>
-		<plugins>
-			<!-- Plugin required to build java classes from XSD using XJC -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jaxb2-maven-plugin</artifactId>
-                <version>1.5</version>
-                <executions>
-                    <execution>
-                        <id>xjc</id>
-                        <goals>
-                            <goal>xjc</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                   <schemaDirectory>${project.basedir}/src/main/resources/xsd</schemaDirectory>
-                   <bindingDirectory>${project.basedir}/src/main/resources/xsd</bindingDirectory>
-                   <bindingFiles>StringTrim.xjb</bindingFiles>
-                   <extension>true</extension>
-                </configuration>
-            </plugin>
-          <!-- <plugin>
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation='http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd' xmlns='http://maven.apache.org/POM/4.0.0' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
+    <artifactId>eps</artifactId>
+    <version>26.0.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>eps-domain</artifactId>
+  <name>eps-domain</name>
+  <distributionManagement>
+    <site>
+      <id/>
+      <name>Maven site</name>
+      <url>file://</url>
+    </site>
+    <repository>
+      <id>nexus.public</id>
+      <name>ffm-libs-PRErelease-local</name>
+      <url>https://calt.cms.gov/nexus/content/repositories/ffm-libs-PRErelease-local</url>
+    </repository>
+    <snapshotRepository>
+      <id>nexus.public</id>
+      <name>ffm-libs-snapshot-local</name>
+      <url>https://calt.cms.gov/nexus/content/repositories/ffm-libs-snapshot-local</url>
+    </snapshotRepository>
+  </distributionManagement>
+  <build>
+    <plugins>
+      <!-- Plugin required to build java classes from XSD using XJC -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>jaxb2-maven-plugin</artifactId>
+        <version>1.5</version>
+        <executions>
+          <execution>
+            <id>xjc</id>
+            <goals>
+              <goal>xjc</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <schemaDirectory>${project.basedir}/src/main/resources/xsd</schemaDirectory>
+          <bindingDirectory>${project.basedir}/src/main/resources/xsd</bindingDirectory>
+          <bindingFiles>StringTrim.xjb</bindingFiles>
+          <extension>true</extension>
+        </configuration>
+      </plugin>
+      <!-- <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<executions>
@@ -59,11 +58,17 @@
 					</execution>
 				</executions>
 			</plugin>-->
-		</plugins>
-	</build>
-	<scm>
- 		<connection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-domain</connection>
- 		<developerConnection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-domain</developerConnection>
- 		<url>https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-domain</url>
- 	</scm>
+    </plugins>
+  </build>
+  <scm>
+    <connection>
+      scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-domain
+    </connection>
+    <developerConnection>
+      scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-domain
+    </developerConnection>
+    <url>
+      https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-spring-batch/eps-spring-batch-ec-deployable/eps-batch/eps-domain
+    </url>
+  </scm>
 </project>

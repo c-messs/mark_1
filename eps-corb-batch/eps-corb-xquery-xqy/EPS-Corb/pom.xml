@@ -1,86 +1,79 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	
-		<groupId>gov.hhs.cms.ffe.fm.corb-batch</groupId>
-		<version>26.0.0-SNAPSHOT</version>		
-	    <artifactId>eps-corb-xquery</artifactId>
-	    <name>eps-corb-xquery</name>
-	    <packaging>pom</packaging>
-	
-        <distributionManagement>
-                <site>
-                        <id />
-                        <name>Maven site</name>
-                        <url>file://</url>
-                </site>
-                <repository>
-                        <id>nexus.public</id>
-                        <name>ffm-libs-PRErelease-local</name>
-                        <url>https://calt.cms.gov/nexus/content/repositories/ffm-libs-PRErelease-local</url>
-                </repository>
-                <snapshotRepository>
-                                <id>nexus.public</id>
-                                <name>ffm-libs-snapshot-local</name>
-                                <url>https://calt.cms.gov/nexus/content/repositories/ffm-libs-snapshot-local</url>
-                </snapshotRepository>
-        </distributionManagement>
-	
-	
-	<build>
-	
-				
-		<plugins>
-			 <plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				
-				<executions>
-				<execution>
-						<id>copy-target</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${project.build.directory}</outputDirectory>
-							<resources>
-								<resource>
-									<directory>src/main/resources/scripts</directory>
-									<filtering>true</filtering>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-				 
-					<execution>
-						<id>copy-scripts</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${project.build.directory}/../../buildoutput/EPS-Corb/scripts</outputDirectory>
-							<resources>
-								<resource>
-									<directory>src/main/resources/scripts</directory>
-									<filtering>true</filtering>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					
-				</executions>
-			</plugin> 
-			
-		 
-      		
-		</plugins>
-	</build>
-
-	<scm>
- 		<connection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-corb-batch/eps-corb-xquery-xqy/EPS-Corb</connection>
- 		<developerConnection>scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-corb-batch/eps-corb-xquery-xqy/EPS-Corb</developerConnection>
- 		<url>https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-corb-batch/eps-corb-xquery-xqy/EPS-Corb</url>
- 	</scm>
+<?xml version='1.0' encoding='UTF-8'?>
+<project xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns='http://maven.apache.org/POM/4.0.0' xsi:schemaLocation='http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd'>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>gov.hhs.cms.ffe.fm.corb-batch</groupId>
+  <version>26.0.0-SNAPSHOT</version>
+  <artifactId>eps-corb-xquery</artifactId>
+  <name>eps-corb-xquery</name>
+  <packaging>pom</packaging>
+  <distributionManagement>
+    <site>
+      <id/>
+      <name>Maven site</name>
+      <url>file://</url>
+    </site>
+    <repository>
+      <id>nexus.public</id>
+      <name>ffm-libs-PRErelease-local</name>
+      <url>https://calt.cms.gov/nexus/content/repositories/ffm-libs-PRErelease-local</url>
+    </repository>
+    <snapshotRepository>
+      <id>nexus.public</id>
+      <name>ffm-libs-snapshot-local</name>
+      <url>https://calt.cms.gov/nexus/content/repositories/ffm-libs-snapshot-local</url>
+    </snapshotRepository>
+  </distributionManagement>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-target</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/resources/scripts</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-scripts</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/../../buildoutput/EPS-Corb/scripts</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/resources/scripts</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <scm>
+    <connection>
+      scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-corb-batch/eps-corb-xquery-xqy/EPS-Corb
+    </connection>
+    <developerConnection>
+      scm:svn:https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-corb-batch/eps-corb-xquery-xqy/EPS-Corb
+    </developerConnection>
+    <url>
+      https://calt.cms.gov/svn/repos/feps_ffe/eps/branches/RLS_EPM_26.0/eps-corb-batch/eps-corb-xquery-xqy/EPS-Corb
+    </url>
+  </scm>
 </project>
