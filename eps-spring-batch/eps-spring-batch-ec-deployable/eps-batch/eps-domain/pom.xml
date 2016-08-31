@@ -24,8 +24,6 @@
           </execution>
         </executions>
         <configuration>
-          <packageName>gov.cms.dsh.bem</packageName>
-          <!-- The name of your generated source package -->
           <schemaDirectory>${project.basedir}/src/main/resources/xsd</schemaDirectory>
           <bindingDirectory>${project.basedir}/src/main/resources/xsd</bindingDirectory>
           <bindingFiles>StringTrim.xjb</bindingFiles>
@@ -51,3 +49,4 @@
     <tag>eps-25.0.2</tag>
   </scm>
 </project>
+
