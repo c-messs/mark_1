@@ -33,6 +33,7 @@
   <modules>
     <module>eps-spring-batch</module>
     <module>eps-corb-batch</module>
+    <module>eps-distribution</module>
   </modules>
   <profiles>
     <profile>
