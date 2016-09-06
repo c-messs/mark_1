@@ -14,7 +14,7 @@
 	<parent>
               <groupId>gov.hhs.cms.ffe.fm.eps-batch</groupId>
               <artifactId>eps</artifactId>
-              <version>25.0.0-SNAPSHOT</version>
+              <version>25.0.100-SNAPSHOT</version>
 	</parent>
 	<artifactId>eps-distribution</artifactId>
         <packaging>pom</packaging>
