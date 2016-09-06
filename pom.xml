@@ -8,7 +8,11 @@
   <properties>
     <git.url>ssh://git@origin-github.cms.gov:2222</git.url>
     <git.repo.url>${git.url}/FFM-FM-Dev/fm-epm.git</git.repo.url>
-  </properties>
+
+    <!-- product and release versions according to naming convention: RLS_EPM_25.6 & EPM_25.6.x.x -->
+    <product.release>GIT_EPM_25</product.release>
+    <release.version>GIT_EPM_${project.version}</release.version>
+</properties>
   <distributionManagement>
     <repository>
       <id>nexus.public</id>
