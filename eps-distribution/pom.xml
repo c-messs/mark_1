@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	
+	<!-- ############################################## 
+	  Maven POM definition that knows how to assemble the artifacts from this build and
+	  produce manifest.txt (ZIP) and checksum.txt (ZIP) needed for staging and deployment.
+	  The files basically contain one line per downloadable asset from Nexus with the proper
+	  GAV coordinates for finding them. The manifest.zip file must be uploaded to a specific 
+	  GAV location within Nexus so the staging jobs in Jenkins know how to find it.
+	-->
+
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+              <groupId>gov.hhs.cms.ffe.fm.eps-batch</groupId>
+              <artifactId>eps</artifactId>
+              <version>25.0.100-SNAPSHOT</version>
+	</parent>
+	<artifactId>eps-distribution</artifactId>
+        <packaging>pom</packaging>
+	     
+	<dependencies />
+
+	<build>
+
+		<plugins>
+
+<!-- The assembly plugin is spoecified in the parent pom and this pom tries to inheret the parent properties 
+adding this blocl here with "<phase>none</phase>" nullifies the parent assembly plugin configuration -->
+                <plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-assembly-plugin</artifactId>
+		<configuration>
+		</configuration>
+		<executions>
+			<execution>
+				<phase>none</phase>
+				<goals>
+					<goal>single</goal>
+				</goals>
+			</execution>
+		</executions>
+		</plugin>
+
+	      <!-- Determine which repository we are using for this build. We need it later to determine where 
+	            to upload our manifest.zip and checksum.zip files. If the POM version is "-SNAPSHOT", then 
+	            we record the 'snapshotRepository' otherwise we use the 'repository' one. This sets a 
+	            'targetRepository' property which is used during subsequent runs.
+	            
+	            We use Groovy because it's easiest to access the information. 
+	            TODO: There should be an easier way to do this. 
+	      -->
+
+			  <plugin>
+				  <groupId>org.codehaus.gmaven</groupId>
+				  <artifactId>groovy-maven-plugin</artifactId>
+			  <executions>
+					<execution>
+						<id>choose-target-repository</id>
+						<phase>initialize</phase>
+						<goals>
+							<goal>execute</goal>
+						</goals>
+	          			<configuration>
+							<source>
+								if (project.version.endsWith("-SNAPSHOT")){
+								  project.properties.targetRepositoryName = project.distributionManagement.snapshotRepository.name;
+								  project.properties.targetRepositoryUrl = project.distributionManagement.snapshotRepository.url;
+								  project.properties.targetRepositoryId = project.distributionManagement.snapshotRepository.id;
+								}
+								else {
+								  project.properties.targetRepositoryName = project.distributionManagement.repository.name;
+								  project.properties.targetRepositoryUrl = project.distributionManagement.repository.url;
+								  project.properties.targetRepositoryId = project.distributionManagement.repository.id;
+								}
+								println "Using Maven repository ${project.properties.targetRepositoryName}."
+							</source>
+						</configuration>
+					</execution>
+				</executions>
+			   </plugin> 
+                         
+                        
+  
+	      <!-- Generate the manifest.txt and checksum.txt files with one entry per artifact that has the 
+	            proper GAV coordinates for downloading. The manifest file is used by Jenkins jobs and 
+	            "Download_from_Nexus" scripts to stage the assets. The checksum file is used by EC to verify
+	            the files during deployment.
+	            Format:
+	            {MD5} {dest_file_name} {groupId} {artifactId} {version} {repository}
+	            In this case, we find GAV :groupId:artifactId:version from the {repository}, then 
+	            download and save it as {dest_file_name}.
+	            
+	            We use Antrun plugin because it is easiest to run executable code in Maven.
+	            TODO: Consider combining this with the Groovy code above?
+	      -->	
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<id>Packing-EPM</id>
+						<phase>package</phase>
+              				<configuration>
+							<tasks>
+								<delete file="${project.build.directory}/../../target/checksum.${project.version}.zip" />
+								<delete file="${project.build.directory}/../../target/manifest.${project.version}.zip" />
+								<delete file="${project.build.directory}/../../target/checksum.txt" />
+								<delete file="${project.build.directory}/../../target/manifest.txt" />
+
+								<checksum file="${project.build.directory}/../../eps-spring-batch/eps-spring-batch-ec-deployable/target/eps-spring-batch.zip" property="eps-spring-batch-MD5" />
+								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-spring-batch-MD5}  eps-spring-batch.zip${line.separator}</echo>
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-MD5}  eps-spring-batch.zip gov.hhs.cms.ffe.fm.spring-batch eps-spring-batch-ec-deployable ${project.version} ${targetRepositoryName}${line.separator}</echo>
+							
+								<checksum file="${project.build.directory}/../../eps-spring-batch/eps-spring-batch-config/target/eps-spring-batch-config.zip" property="eps-spring-batch-config-MD5" />
+								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-spring-batch-config-MD5}  eps-spring-batch-config.zip${line.separator}</echo>
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-spring-batch-config-MD5}  eps-spring-batch-config.zip gov.hhs.cms.ffe.fm.spring-batch eps-spring-batch-config ${project.version} ${targetRepositoryName}${line.separator}</echo>
+								
+                                                                <checksum file="${project.build.directory}/../../eps-corb-batch/eps-corb-batch-ec-deployable/target/eps-corb-batch.zip" property="eps-corb-batch-MD5" />
+								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-corb-batch-MD5}  eps-corb-batch.zip${line.separator}</echo>
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-MD5}  eps-corb-batch.zip gov.hhs.cms.ffe.fm.corb-batch eps-corb-batch-ec-deployable ${project.version} ${targetRepositoryName}${line.separator}</echo>
+
+                                                                <checksum file="${project.build.directory}/../../eps-corb-batch/eps-corb-batch-config/target/eps-corb-batch-config.zip" property="eps-corb-batch-config-MD5" />
+								<echo file="${project.build.directory}/../../target/checksum.txt" append="true">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip${line.separator}</echo>
+								<echo file="${project.build.directory}/../../target/manifest.txt" append="true">${eps-corb-batch-config-MD5}  eps-corb-batch-config.zip gov.hhs.cms.ffe.fm.corb-batch eps-corb-batch-config ${project.version} ${targetRepositoryName}${line.separator}</echo>
+																					      
+								<zip destfile="${project.build.directory}/checksum.${project.version}.zip" basedir="${project.build.directory}/../../target" includes="checksum.txt" />
+								<zip destfile="${project.build.directory}/manifest.${project.version}.zip" basedir="${project.build.directory}/../../target" includes="manifest.txt" />
+
+					  		</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			
+
+	      <!-- Explicitly deploy the manifest.zip and checksum.zip files to the proper location in Nexus.
+	            These have to be in gov.hhs.cms.deploy.{product.release} (e.g., EPM_25.5.0.3) so that the 
+	            Jenkins jobs and Download_From_Nexus scripts know where to find them.
+	            
+	            TODO: We should be able to just declare these dependency artifacts somewhere and have 
+	            maven automatically upload them.
+	      -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>deploy-manifest-zip-file</id>
+						<phase>deploy</phase>
+						<goals>
+							<goal>deploy-file</goal>
+						</goals>
+						<configuration>
+							<repositoryId>${targetRepositoryId}</repositoryId>
+							<url>${targetRepositoryUrl}</url>
+							<file>${project.build.directory}/manifest.${project.version}.zip</file>
+							<!-- standard location where we find manifest files -->
+							<groupId>gov.hhs.cms.deploy.${product.release}</groupId>
+							<!-- force the name of the manifest artifact -->
+							<artifactId>manifest-zip</artifactId>
+							<!-- force version number similar to EPM_25.6.x.x -->
+							<version>${release.version}</version>
+              				<packaging>zip</packaging>
+							<generatePom>true</generatePom>
+						</configuration>
+					</execution>
+					<execution>
+						<id>deploy-checksum-zip-file</id>
+						<phase>deploy</phase>
+						<goals>
+							<goal>deploy-file</goal>
+						</goals>
+						<configuration>
+							<repositoryId>${targetRepositoryId}</repositoryId>
+							<url>${targetRepositoryUrl}</url>
+							<file>${project.build.directory}/checksum.${project.version}.zip</file>
+							<groupId>gov.hhs.cms.deploy.${product.release}</groupId>
+							<artifactId>checksum-zip</artifactId>
+							<version>${release.version}</version>
+							<packaging>zip</packaging>
+							<generatePom>true</generatePom>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
