@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>gov.hhs.cms.ffe.fm.spring-batch</groupId>
   <artifactId>eps-spring-batch-config</artifactId>
-  <version>26.0.100-SNAPSHOT</version>
+  <version>26.0.101-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
     <git.url>ssh://git@origin-github.cms.gov:2222</git.url>
