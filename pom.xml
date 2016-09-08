@@ -10,7 +10,7 @@
     <git.repo.url>${git.url}/FFM-FM-Dev/fm-epm.git</git.repo.url>
 
    <!-- product and release versions according to naming convention: RLS_EPM_25.6 & EPM_25.6.x.x -->
-    <product.release>GIT_EPM_25</product.release>
+    <product.release>GIT_EPM_26</product.release>
     <release.version>GIT_EPM_${project.version}</release.version>
   </properties>
   <distributionManagement>
