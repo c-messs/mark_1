@@ -22,8 +22,6 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMUpdateStatusErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMUpdateStatusRecordDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmErrWarningLogDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmResponseDTO;
-import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmXMLSchemaError;
-import gov.hhs.cms.ff.fm.eps.ep.sbm.XMLSchemaError;
 import gov.hhs.cms.ff.fm.eps.rap.domain.BatchProcessLog;
 import gov.hhs.cms.ff.fm.eps.rap.domain.IssuerUserFeeRate;
 import gov.hhs.cms.ff.fm.eps.rap.domain.PolicyPaymentTrans;

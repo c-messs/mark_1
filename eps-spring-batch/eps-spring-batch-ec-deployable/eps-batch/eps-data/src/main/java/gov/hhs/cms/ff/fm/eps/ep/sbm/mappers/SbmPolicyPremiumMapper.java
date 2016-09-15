@@ -1,3 +1,4 @@
+
 package gov.hhs.cms.ff.fm.eps.ep.sbm.mappers;
 
 import java.time.LocalDate;
@@ -7,8 +8,6 @@ import java.util.Map;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyPremiumPO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMPremium;
-
-
 
 /**
  * The Mapper class for PolicyPremium table to translate inbound sbmPremium data to EPS.
@@ -23,9 +22,9 @@ public class SbmPolicyPremiumMapper {
 	/**
 	 * Maps/translates "processed" SBMPremiums from business validation to EPS PO.  SBMPremiums are
 	 * processed from inbound SBM Policy FinancialInformation.
-	 * @param sbmPremiumList
-	 * @param epsPremiumList
-	 * @return
+	 * @param inboundPremiums
+	 * @param epsPremiums
+	 * @return poList
 	 */
 	public List<SbmPolicyPremiumPO> mapSbmToStaging(Map<LocalDate, SBMPremium> inboundPremiums, List<SbmPolicyPremiumPO> epsPremiums) {
 

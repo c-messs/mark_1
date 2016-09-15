@@ -16,8 +16,12 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.SbmFileInfoDao;
 import gov.hhs.cms.ff.fm.eps.ep.dao.mappers.SBMFileInfoRowMapper;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileInfoPO;
 
+/**
+ * 
+ * Implementation of SBMFileInfoDao 
+ *
+ */
 public class SBMFileInfoDaoImpl extends GenericEpsDao<SbmFileInfoPO> implements SbmFileInfoDao {
-
 
 	private String selectSbmFileInfoSql;
 	private String selectSBMFileInfoSqlByFileSetId;
@@ -25,9 +29,10 @@ public class SBMFileInfoDaoImpl extends GenericEpsDao<SbmFileInfoPO> implements 
 	private String selectFileInfoXmlSql;
 	private String insertSBMFileInfoSql;
 
-
+	/**
+	 * Constructor
+	 */
 	public SBMFileInfoDaoImpl() {
-
 		this.setRowMapper(new SBMFileInfoRowMapper());
 	}
 

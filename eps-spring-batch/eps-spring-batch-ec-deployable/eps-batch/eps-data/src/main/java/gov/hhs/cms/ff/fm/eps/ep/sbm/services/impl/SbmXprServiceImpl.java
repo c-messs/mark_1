@@ -33,6 +33,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmTransMsgCompositeDao;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmXprService;
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmXprServiceImpl implements SbmXprService {
 
 	private final static Logger LOG = LoggerFactory.getLogger(SbmXprServiceImpl.class);
@@ -451,7 +455,5 @@ public class SbmXprServiceImpl implements SbmXprService {
 	public void setUserVO(UserVO userVO) {
 		this.userVO = userVO;
 	}
-
-
 
 }

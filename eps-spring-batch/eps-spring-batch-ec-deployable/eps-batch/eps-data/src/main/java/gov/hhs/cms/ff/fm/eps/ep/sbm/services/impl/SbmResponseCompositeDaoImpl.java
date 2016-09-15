@@ -3,6 +3,7 @@ package gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +55,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmTransMsgValidationMapper;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmResponseCompositeDao;
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
+/**
+ * Composite DAO for assembling SBMR.
+ *
+ */
 public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 
 	private final static Logger LOG = LoggerFactory.getLogger(SbmResponseCompositeDaoImpl.class);
@@ -101,8 +106,6 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		}
 
 		SbmFileProcessingSummaryPO epsSummaryPO = sbmFileProcSumDao.selectSbmFileProcessingSummary(sbmFileProcSumId);
-		
-		//TODO add condition to only insert missing policies when not backing out.
 
 		// First, find/extract missing policies that are in the files in StagingSbmFile but 
 		// not in EPS PolicyVersion.  Then insert the ids into SbmFileSummaryMissingPolicy table.
@@ -116,12 +119,15 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 
 		getSummaryTotals(epsSummaryPO);
 
+		String stateCd = SbmDataUtil.getStateCd(epsSummaryPO.getTenantId());
+		BigInteger cntEffectuatedPoliciesCancelled = policyDao.selectCountEffectuatedPoliciesCancelled(sbmFileProcSumId, stateCd);
+
 		List<SbmFileInfoPO> filePOList = sbmFileInfoDao.getSbmFileInfoList(sbmFileProcSumId);
 		epsSummaryPO.setTotalIssuerFileCount(filePOList.size());
 
 		boolean isAccepted = false;
-		
-		FileAcceptanceRejection fileAR = sbmFileProcSumMapper.mapEpsToSbmr(epsSummaryPO, isAccepted, missingPolicyDataList);
+
+		FileAcceptanceRejection fileAR = sbmFileProcSumMapper.mapEpsToSbmr(epsSummaryPO, isAccepted, missingPolicyDataList, cntEffectuatedPoliciesCancelled.intValue());
 		fileAR.getMissingPolicy().addAll(sbmFileSumMissingPolicyMapper.mapEpsToSbmr(missingPolicyDataList));
 
 
@@ -136,7 +142,7 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 				PolicyErrorType policyError = sbmTransMsgMapper.mapEpsToSbmr(sbmTransMsgPO);
 
 				List<SbmTransMsgValidationPO> validationPOList = sbmTransMsgValidationDao.selectValidation(sbmTransMsgPO.getSbmTransMsgId());
-				
+
 				if(CollectionUtils.isEmpty(validationPOList)) {
 					//No validation errors
 					continue;
@@ -183,7 +189,6 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 	public SbmResponseDTO generateUpdateStatusSBMR(Long sbmFileProcSumId) {
 
 		SbmResponseDTO responseDTO = new SbmResponseDTO();
-		List<SbmFileSummaryMissingPolicyData> missingPolicyDataList = null;
 
 		if (SBMCache.getJobExecutionId() != null) {
 			userVO.setUserId(SBMCache.getJobExecutionId().toString());
@@ -201,8 +206,14 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 			getApprovalTotals(epsSummaryPO);
 		}
 
+		String stateCd = SbmDataUtil.getStateCd(epsSummaryPO.getTenantId());
+		BigInteger cntEffectuatedPoliciesCancelled = policyDao.selectCountEffectuatedPoliciesCancelled(sbmFileProcSumId, stateCd);
+
+		// Retrieve the missing policy data for the outbound response and for Termination count determination.
+		List<SbmFileSummaryMissingPolicyData> missingPolicyDataList = sbmFileSumMissingPolicyDao.selectMissingPolicyList(sbmFileProcSumId);
+
 		// Now all counts and missing policies are retrieved and set in PO and data list, map them to outbound.
-		FileAcceptanceRejection fileAR = sbmFileProcSumMapper.mapEpsToSbmr(epsSummaryPO, isAccepted, missingPolicyDataList);
+		FileAcceptanceRejection fileAR = sbmFileProcSumMapper.mapEpsToSbmr(epsSummaryPO, isAccepted, missingPolicyDataList, cntEffectuatedPoliciesCancelled.intValue());
 		fileAR.getMissingPolicy().addAll(sbmFileSumMissingPolicyMapper.mapEpsToSbmr(missingPolicyDataList));
 
 		List<SbmFileInfoPO> filePOList = sbmFileInfoDao.getSbmFileInfoList(sbmFileProcSumId);
@@ -269,8 +280,8 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		Long sbmFileProcSumId = epsPO.getSbmFileProcSumId();
 
 		epsPO.setTotalRecordProcessedCnt(stagingSbmFileDao.selectPolicyCount(sbmFileProcSumId));
-		epsPO.setTotalRecordRejectedCnt(sbmTransMsgDao.selectRejectCount(sbmFileProcSumId));
-	
+		epsPO.setTotalRecordRejectedCnt(sbmTransMsgDao.selectRejectCount(sbmFileProcSumId));		
+
 	}
 
 	private void getApprovalTotals(SbmFileProcessingSummaryPO epsPO) {
@@ -282,14 +293,18 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		int matchingACC = sbmTransMsgDao.selectMatchCount(sbmFileProcSumId, SbmTransMsgStatus.ACCEPTED_WITH_CHANGES);
 		int matchingCorrected = sbmTransMsgDao.selectMatchCountCorrected(sbmFileProcSumId);
 
-		epsPO.setTotalPolicyApprovedCnt(matchingACC + matchingANC);
 		epsPO.setMatchingPlcNoChangeCnt(matchingANC);
-		epsPO.setMatchingPlcChgApplCnt(matchingANC - matchingCorrected);
+		epsPO.setMatchingPlcChgApplCnt(matchingACC - matchingCorrected);
 		epsPO.setMatchingPlcCorrectedChgApplCnt(matchingCorrected);
 
 		// New policies, ones that did not "policy match"
-		epsPO.setNewPlcCreatedAsSentCnt(sbmTransMsgDao.selectNoMatchCount(sbmFileProcSumId, SbmTransMsgStatus.ACCEPTED_NO_CHANGE));
-		epsPO.setNewPlcCreatedCorrectionApplCnt(sbmTransMsgDao.selectNoMatchCount(sbmFileProcSumId, SbmTransMsgStatus.ACCEPTED_WITH_CHANGES));
+		int newANC = sbmTransMsgDao.selectNoMatchCount(sbmFileProcSumId, SbmTransMsgStatus.ACCEPTED_NO_CHANGE);
+		int newACC = sbmTransMsgDao.selectNoMatchCount(sbmFileProcSumId, SbmTransMsgStatus.ACCEPTED_WITH_CHANGES);
+		
+		epsPO.setNewPlcCreatedAsSentCnt(newANC);
+		epsPO.setNewPlcCreatedCorrectionApplCnt(newACC);
+		
+		epsPO.setTotalPolicyApprovedCnt(matchingACC + matchingANC + newACC + newANC);
 
 		BigInteger countEffectuated = policyDao.selectPolicyCountByStatus(sbmFileProcSumId, stateCd, PolicyStatus.EFFECTUATED_2);
 		epsPO.setEffectuatedPolicyCount(countEffectuated.intValue());
@@ -358,12 +373,15 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 	 * @return
 	 */
 	private boolean determineEffectuatedPolicyTerminated(LocalDate policyEndDate) {
-
+		
 		boolean isTerm = false;
 
 		if (policyEndDate != null) {
+			
+			YearMonth pedYrMon = YearMonth.of(policyEndDate.getYear(), policyEndDate.getMonthValue());
+			YearMonth curYrMon = YearMonth.now();
 
-			if (policyEndDate.getMonthValue() <= LocalDate.now().getMonthValue()) {
+			if (pedYrMon.isBefore(curYrMon) || pedYrMon.equals(curYrMon)) {
 				isTerm = true;
 			}
 		}

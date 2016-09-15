@@ -2,6 +2,16 @@ package gov.hhs.cms.ff.fm.eps.ep.po;
 
 import java.math.BigDecimal;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity class for SBM specific attributes of STAGINGPOLICYPREMIUM and POLICYPREMIUM table.
+ * 
+ * Note: Comparisions use both this method's hashCode and equals and parent PO.
+ * 		 Do not auto generate equals method.  All BigDecimal comparisons are custom and
+ *       contain and additional null check.
+ * 
+ */
 public class SbmPolicyPremiumPO extends PolicyPremiumPO {
 	
 		private BigDecimal otherPaymentAmount1;

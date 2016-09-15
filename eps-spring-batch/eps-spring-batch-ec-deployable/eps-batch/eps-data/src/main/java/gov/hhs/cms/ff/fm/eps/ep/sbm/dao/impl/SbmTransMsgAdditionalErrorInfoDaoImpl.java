@@ -15,14 +15,20 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgAdditionalErrorInfoPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgValidationPO;
 
+/**
+ * 
+ *SbmTransMsgAdditionalErrorInfoDao implementation
+ *
+ */
 public class SbmTransMsgAdditionalErrorInfoDaoImpl extends GenericEpsDao<SbmTransMsgAdditionalErrorInfoPO> 
 implements SbmTransMsgAdditionalErrorInfoDao {
-
 
 	private String insertErrAddlInfoListSql;
 	private String selectErrAddlInfoSql;
 
-	
+	/**
+	 * Constructor
+	 */
 	public SbmTransMsgAdditionalErrorInfoDaoImpl() {
 		
 		this.rowMapper = new SbmTransMsgAdditionalErrorInfoRowMapper();

@@ -8,11 +8,16 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMPolicyDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmPolicyVersionMapper {
 
 	/**
-	 * @param bem
-	 * @return
+	 * @param inboundDTO
+	 * @param epsPO
+	 * @return SbmPolicyVersionPO
 	 */
 	public SbmPolicyVersionPO mapSbmToStaging(SBMPolicyDTO inboundDTO, SbmPolicyVersionPO epsPO) {
 

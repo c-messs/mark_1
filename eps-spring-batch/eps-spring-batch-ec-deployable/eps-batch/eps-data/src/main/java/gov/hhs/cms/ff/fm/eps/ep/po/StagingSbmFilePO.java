@@ -1,5 +1,12 @@
 package gov.hhs.cms.ff.fm.eps.ep.po;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity class for  attributes of STAGINGSBMFILE table.
+ * 
+ *
+ */
 public class StagingSbmFilePO extends GenericSbmFilePO<StagingSbmFilePO>{
 	
 	private String sbmXML;

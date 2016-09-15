@@ -55,6 +55,7 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.accenture.foundation.common.exception.EnvironmentException;
+import com.sun.org.apache.xerces.internal.impl.io.MalformedByteSequenceException;
 
 import gov.cms.dsh.sbmi.Enrollment;
 import gov.cms.dsh.sbmi.FileInformationType;
@@ -68,6 +69,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMScemaErrorsDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmXMLSchemaError;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.XMLSchemaError;
 
+/**
+ * @author rajesh.talanki
+ *
+ */
 public class SbmXMLValidator {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmXMLValidator.class);
@@ -88,7 +93,9 @@ public class SbmXMLValidator {
 	
 	private Marshaller enrollmentMarshaller;
 	
-	
+	/**
+	 * The Constructor
+	 */
 	public SbmXMLValidator() {
 		try {
 			JAXBContext sbmiFileInfoContext = JAXBContext.newInstance(FileInformationType.class);
@@ -154,10 +161,23 @@ public class SbmXMLValidator {
 			LOG.warn("Invalid XML:  "+ xmlFileURL + "\n\tReason: " + e.getMessage());
 			valid = false;
 			inputStream.close();
+		} catch(MalformedByteSequenceException me) {
+			LOG.warn("Malformed XML:  "+ xmlFileURL + "\n\tReason: " + me.getMessage());
+			valid = false;
+			inputStream.close();
 		}
 		return valid;
 	}
 	
+	/**
+	 * Unmarshall FileInfo
+	 * 
+	 * @param sbmiFile
+	 * @return fileInfoType
+	 * @throws JAXBException
+	 * @throws IOException
+	 * @throws XMLStreamException
+	 */
 	public FileInformationType unmarshallSBMIFileInfo(File sbmiFile) throws JAXBException, IOException, XMLStreamException {
 		
 		URL xmlFileURL = sbmiFile.toURI().toURL();
@@ -458,6 +478,14 @@ public class SbmXMLValidator {
 		return sbmFileErrorList;		
 	}
 	
+	/**
+	 * Validates FileInfo Schema
+	 * 
+	 * @param sbmFileInfoId
+	 * @param sbmiFile
+	 * @return sbmFileErrorList
+	 * @throws IOException
+	 */
 	public List<SBMErrorDTO> validateSchemaForFileInfo(Long sbmFileInfoId, File sbmiFile) throws IOException {
 		
 		List<SBMErrorDTO> sbmFileErrorList = new ArrayList<>();		
@@ -478,8 +506,11 @@ public class SbmXMLValidator {
 		return sbmFileErrorList;		
 	}
 	
-	/*
-	 * Parsing schema errors is same for file level or record level and this can be separated in future if need arises.
+	/**
+	 * Parse schema errors - Parsing schema errors is same for file level or record level and this can be separated in future if need arises.
+	 * 
+	 * @param dto
+	 * @return sbmErrors
 	 */
 	public List<SBMErrorDTO> parseSchemaErrors(SBMScemaErrorsDTO dto) {
 		
@@ -652,7 +683,6 @@ public class SbmXMLValidator {
 			else {
 				errorsNotIdentified.add(error);
 			}		
-			
 		}	
 		
 		LOG.info("Errors not identified (before filtering):{}", errorsNotIdentified);
@@ -696,6 +726,9 @@ public class SbmXMLValidator {
 		loadXMLElementsFromXSD();
 	}
 	
+	/*
+	 * load the XML Elements From the XSD
+	 */
 	private void loadXMLElementsFromXSD() throws ParserConfigurationException, SAXException, IOException {
 		
 		LOG.info("Extracting xml elements from xsd");
@@ -719,8 +752,6 @@ public class SbmXMLValidator {
 		LOG.info("validXMLElementMap: {}", validXMLElementMap);
 		LOG.info("xmlOptionalElementsMap: {}", xmlOptionalElementsMap);
 	}
-	
-	
 	
 }
 

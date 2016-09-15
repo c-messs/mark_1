@@ -20,8 +20,8 @@ public class SbmPolicyMemberDateMapper {
 	 * meaning 1 PolicyMemberVersion could have more than 1 set of member dates.  Determines if
 	 * inbound MemberDates are different than EPS.
 	 * @param member
-	 * @param epsPO
-	 * @return
+	 * @param epsPOList
+	 * @return poList
 	 */
 	public List<SbmPolicyMemberDatePO> mapSbmToStaging(PolicyMemberType member, List<SbmPolicyMemberDatePO> epsPOList) {
 

@@ -21,7 +21,7 @@ public class ErrorWarningLogDaoImpl extends GenericEpsDao<ErrorWarningLogPO> imp
 	private String selectErrorsListByTransMsgId;
 	
 	/**
-	 * 
+	 * Constructor, set rowMapper once.
 	 */
 	public ErrorWarningLogDaoImpl() {
 		

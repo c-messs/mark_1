@@ -44,12 +44,14 @@ public class BEMExtractionReader<T> extends StaxEventItemReader<Object>  {
 			throw new EnvironmentException("EPROD-24 EPS JAXB Marshalling error (BEM to XML).", ex);
         }
     }
+	
 	/**
-	 * 
+	 * The Constructor
 	 */
 	public BEMExtractionReader(){
 		super();
 	}
+	
 	@Override
 	public void setResource(Resource resource) {
 		super.setResource(resource);

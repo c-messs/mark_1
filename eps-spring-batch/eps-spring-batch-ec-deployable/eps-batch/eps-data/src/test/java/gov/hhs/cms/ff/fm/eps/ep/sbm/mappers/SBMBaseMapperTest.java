@@ -5,9 +5,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 
+import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileInfoPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileProcessingSummaryPO;
+import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyStatusPO;
 import gov.hhs.cms.ff.fm.eps.ep.util.sbm.TestDataSBMUtility;
 import junit.framework.TestCase;
 
@@ -37,13 +39,13 @@ public abstract class SBMBaseMapperTest extends TestCase {
 	protected final LocalDateTime MAR_1_3am = LocalDateTime.of(YEAR, 3, 1, 3, 0, 0, 333333000);
 	protected final LocalDateTime APR_1_4am = LocalDateTime.of(YEAR, 4, 1, 4, 0, 0, 444444000);
 
-	
+
 	private  LocalDateTime getLocalDateTime() {
 
 		return LocalDateTime.now();
 	}
-	
-	
+
+
 	protected SbmFileProcessingSummaryPO makeSbmFileProcessingSummaryPO(String tenantId, String issuerId, String issuerFileSetId) {
 
 		SbmFileProcessingSummaryPO po = new SbmFileProcessingSummaryPO();
@@ -71,8 +73,8 @@ public abstract class SBMBaseMapperTest extends TestCase {
 		po.setSbmFileStatusTypeCd(SBMFileStatus.IN_PROCESS.getValue());
 		return po;
 	}
-	
-	
+
+
 	protected SbmFileInfoPO makeSBMFileInfoPO(Long sbmFileProcSumId) {
 
 		SbmFileInfoPO po = new SbmFileInfoPO();
@@ -86,6 +88,17 @@ public abstract class SBMBaseMapperTest extends TestCase {
 		po.setTradingPartnerId("TRADEPARTNR-" + sbmFileProcSumId.toString());
 		po.setFunctionCd("FUNC_CD-" + sbmFileProcSumId.toString());
 		return po;
+	}
+
+	protected SbmPolicyStatusPO makeSbmPolicyStatusPO(LocalDateTime transDateTime, PolicyStatus status) {
+
+		SbmPolicyStatusPO po = new SbmPolicyStatusPO();
+
+		po.setTransDateTime(transDateTime);
+		po.setInsuranacePolicyStatusTypeCd(status.getValue());
+
+		return po;
+
 	}
 
 

@@ -2,6 +2,11 @@ package gov.hhs.cms.ff.fm.eps.ep.sbm;
 
 import java.time.LocalDateTime;
 
+/**
+ * DTO to hold SBM Execution Log data
+ * @author girish.padmanabhan
+ *
+ */
 public class SBMExecutionReportDTO {
 
 	private Integer coverageYear;

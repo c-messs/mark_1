@@ -1,5 +1,9 @@
 package gov.hhs.cms.ff.fm.eps.ep.enums;
 
+/**
+ * SBM file ans XPR errors and warnings.
+ *
+ */
 public enum SBMErrorWarningCode {
 	
 	ER_001 ("ER-001"),		

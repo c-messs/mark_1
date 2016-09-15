@@ -49,12 +49,13 @@ public class SBMEvaluatePendingFiles {
 	
 	/**
 	 * Evaluate all pending files for deadline expiration
-	 * @param jobExecId
+	 * @param jobId
+	 * @param sendSBMSForPendingFiles
 	 * @throws JAXBException
 	 * @throws SQLException
 	 * @throws IOException
 	 */
-	public void evaluatePendingFiles(Long jobExecId, boolean sendSBMSForPendingFiles) throws JAXBException, SQLException, IOException {
+	public void evaluatePendingFiles(Long jobId, boolean sendSBMSForPendingFiles) throws JAXBException, SQLException, IOException {
 		
 		LOG.info("Evaluating all pending files.");
 		LOG.info("fileSetDeadlineDays:{}", fileSetDeadlineHours);
@@ -71,7 +72,7 @@ public class SBMEvaluatePendingFiles {
 		LocalDateTime currentTime = LocalDateTime.now();
 		LocalDateTime freezeStartDateTime =  LocalDate.now().withDayOfMonth(freezePeriodStartDay).atStartOfDay();
 		//freezeEndDateTime is exclusive so any dateTime less than freezeEndDateTime is freeze period but not equal to freezeEndDateTime 
-		LocalDateTime freezeEndDateTime =  LocalDate.now().withDayOfMonth(freezePeriodEndDay + 1).atStartOfDay(); 
+		LocalDateTime freezeEndDateTime =  LocalDate.now().withDayOfMonth(freezePeriodEndDay).plusDays(1).atStartOfDay(); 
 		LOG.info("In DateTime: freezeStartDateTime:{}, freezeEndDateTime (exclusive):{}", freezeStartDateTime, freezeEndDateTime);
 		
 		
@@ -119,7 +120,7 @@ public class SBMEvaluatePendingFiles {
 			else if(firstFileCreateDatetime.compareTo(freezeEndDateTime) >= 0 || fileSetDeadline.compareTo(freezeStartDateTime) <= 0 ) {
 				LOG.info("Deadline expired for SbmFileProcSumId {}", summaryDto.getSbmFileProcSumId());
 				summaryDto.setSbmFileStatusType(SBMFileStatus.EXPIRED);
-				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType());		
+				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);		
 				sendSBMSForAllSBMFileInfos(summaryDto);
 				continue;
 			}
@@ -144,7 +145,7 @@ public class SBMEvaluatePendingFiles {
 			if(currentTime.compareTo(fileSetDeadline) >= 0) {
 				LOG.info("Deadline expired for SbmFileProcSumId {}", summaryDto.getSbmFileProcSumId());
 				summaryDto.setSbmFileStatusType(SBMFileStatus.EXPIRED);
-				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType());		
+				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);		
 				sendSBMSForAllSBMFileInfos(summaryDto);
 				continue;
 			}
@@ -160,12 +161,12 @@ public class SBMEvaluatePendingFiles {
 	
 	/**
 	 * Evaluate all On-Hold files and set to IN_PROCESS if no other file is processing or pending approval for the SBM state	
-	 * @param jobExecId
+	 * @param jobId
 	 * @throws JAXBException
 	 * @throws SQLException
 	 * @throws IOException
 	 */
-	public void evaluateOnHoldFiles(Long jobExecId) throws JAXBException, SQLException, IOException {
+	public void evaluateOnHoldFiles(Long jobId) throws JAXBException, SQLException, IOException {
 		
 		LOG.info("Evaluating all On-Hold files.");
 		
@@ -191,7 +192,7 @@ public class SBMEvaluatePendingFiles {
 			}
 			else if(StringUtils.isBlank(summaryDto.getIssuerFileSetId()) || isIssuerFileSetFilesReceived(summaryDto)) {
 				summaryDto.setSbmFileStatusType(SBMFileStatus.IN_PROCESS);
-				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType());
+				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);
 				LOG.info("Status updated from ON_HOLD to IN_PROCESS for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
 				fileCompositeDao.insertStagingSbmGroupLockForExtract(summaryDto.getSbmFileProcSumId());
 				LOG.info("Inserted StagingSbmGroupLock for extract process for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
@@ -199,9 +200,9 @@ public class SBMEvaluatePendingFiles {
 			else {
 				//All files in fileSet not received
 				summaryDto.setSbmFileStatusType(SBMFileStatus.PENDING_FILES);
-				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType());
+				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);
 				LOG.info("Status updated from ON_HOLD to PENDING_FILES for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
-				sendSBMSForAllSBMFileInfos(summaryDto);
+				//SBMS will be sent when all PENDING_FILES files were evaluated later
 			}
 		}
 		
@@ -210,12 +211,12 @@ public class SBMEvaluatePendingFiles {
 	/**
 	 * Evaluate all FREEZE files and set to IN_PROCESS if no other file is processing or pending approval for the SBM state.
 	 * 
-	 * @param jobExecId
+	 * @param jobId
 	 * @throws JAXBException
 	 * @throws SQLException
 	 * @throws IOException
 	 */
-	public void evaluateFreezeFiles(Long jobExecId) throws JAXBException, SQLException, IOException {
+	public void evaluateFreezeFiles(Long jobId) throws JAXBException, SQLException, IOException {
 		
 		LOG.info("Evaluating all FREEZE files.");
 		
@@ -240,23 +241,23 @@ public class SBMEvaluatePendingFiles {
 				LOG.info("Other file(s) processing or pending approval for state :{}; List of files: {}", stateCode, currentlyInprocess);
 				
 				if(StringUtils.isBlank(summaryDto.getIssuerFileSetId()) || isIssuerFileSetFilesReceived(summaryDto)) {
-					LOG.info("setting status from FREEZE to ON_HOLD and sending SBMS for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
+					LOG.info("setting status from FREEZE to ON_HOLD for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
 					summaryDto.setSbmFileStatusType(SBMFileStatus.ON_HOLD);
-					fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType());
-					sendSBMSForAllSBMFileInfos(summaryDto);
+					fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);
+					//SBMS will be sent when all On-Hold files were evaluated later
 				}
 				else {
-					LOG.info("All files for fileSet not received; setting status from FREEZE to PENDING_FILES and sending SBMS for SbmFileProcSumId :{}"
+					LOG.info("All files in fileSet not received; setting status from FREEZE to PENDING_FILES for SbmFileProcSumId :{}"
 							, summaryDto.getSbmFileProcSumId());
 					summaryDto.setSbmFileStatusType(SBMFileStatus.PENDING_FILES);
-					fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType());
-					sendSBMSForAllSBMFileInfos(summaryDto);
+					fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);
+					//SBMS will be sent when all PENDING_FILES files were evaluated later
 				}
 				continue;
 			}
 			else if(StringUtils.isBlank(summaryDto.getIssuerFileSetId()) || isIssuerFileSetFilesReceived(summaryDto)) {
 				summaryDto.setSbmFileStatusType(SBMFileStatus.IN_PROCESS);
-				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType());
+				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);
 				LOG.info("Status updated from FREEZE to IN_PROCESS for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
 				fileCompositeDao.insertStagingSbmGroupLockForExtract(summaryDto.getSbmFileProcSumId());
 				LOG.info("Inserted StagingSbmGroupLock for extract process for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
@@ -264,9 +265,9 @@ public class SBMEvaluatePendingFiles {
 			else {
 				//All files in fileSet not received
 				summaryDto.setSbmFileStatusType(SBMFileStatus.PENDING_FILES);
-				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType());
+				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);
 				LOG.info("Status updated from FREEZE to PENDING_FILES for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
-				sendSBMSForAllSBMFileInfos(summaryDto);
+				//SBMS will be sent when all PENDING_FILES files were evaluated later
 			}
 		}
 		
@@ -275,12 +276,12 @@ public class SBMEvaluatePendingFiles {
 	/**
 	 * Evaluate all BYPASS_FREEZE files and set to IN_PROCESS if no other file is processing or pending approval for the SBM state.
 	 * 
-	 * @param jobExecId
+	 * @param jobId
 	 * @throws IOException 
 	 * @throws SQLException 
 	 * @throws JAXBException 
 	 */
-	public void evaluateBypassFreeze(Long jobExecId) throws JAXBException, SQLException, IOException {
+	public void evaluateBypassFreeze(Long jobId) throws JAXBException, SQLException, IOException {
 		
 		LOG.info("Evaluating all BypassFreeze files.");
 		
@@ -305,7 +306,7 @@ public class SBMEvaluatePendingFiles {
 			}
 			else if(StringUtils.isBlank(summaryDto.getIssuerFileSetId()) || isIssuerFileSetFilesReceived(summaryDto)) {
 				summaryDto.setSbmFileStatusType(SBMFileStatus.IN_PROCESS);
-				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType());
+				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);
 				LOG.info("Status updated from BYPASS_FREEZE to IN_PROCESS for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
 				fileCompositeDao.insertStagingSbmGroupLockForExtract(summaryDto.getSbmFileProcSumId());
 				LOG.info("Inserted StagingSbmGroupLock for extract process for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
@@ -313,7 +314,7 @@ public class SBMEvaluatePendingFiles {
 			else if( ! isFreezePeriod) {
 				//All files in fileSet not received
 				summaryDto.setSbmFileStatusType(SBMFileStatus.PENDING_FILES);
-				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType());
+				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);
 				LOG.info("Status updated from BYPASS_FREEZE to PENDING_FILES for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
 				sendSBMSForAllSBMFileInfos(summaryDto);
 			}

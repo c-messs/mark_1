@@ -5,6 +5,12 @@ import java.util.List;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileProcessingSummaryPO;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity DAO for table SBMFILEPROCESSINGSUMMARY.
+ *
+ */
 public interface SbmFileProcessingSummaryDao {
 	
 	
@@ -36,12 +42,6 @@ public interface SbmFileProcessingSummaryDao {
 	 */
 	public List<SbmFileProcessingSummaryPO> findSbmFileProcessingSummary(final String issuerId, final String fileSetId, final String tenantId);
 		
-	/**
-	 * @param fileSetId
-	 * @param fileNumber
-	 * @return
-	 */
-	public List<SbmFileProcessingSummaryPO> findSbmFileProcessingSummary(String fileSetId, final int fileNumber);
 		
 	/**
 	 * @param fileName
@@ -58,7 +58,6 @@ public interface SbmFileProcessingSummaryDao {
 	/**
 	 * WHERE sfps.SBMFILESTATUSTYPECD IN ('ACC', 'ACE', 'ACW', 'IPC')
 	 * @param stateCd
-	 * @param status
 	 * @return
 	 */
 	public List<SbmFileProcessingSummaryPO> findSbmFileProcessingSummaryInProcess(String stateCd);
@@ -66,13 +65,15 @@ public interface SbmFileProcessingSummaryDao {
 	/**
 	 * Insert new SbmFileProcessingSummary record.
 	 * @param po
+	 * @return
 	 */
 	public Long insertSbmFileProcessingSummary(final SbmFileProcessingSummaryPO po);
 	
 	/**
-	 * Update File Status (SbmFileProcessingSummary FileSet status) by sbmFileProcSumId
+	 * Update File Status (SbmFileProcessingSummary FileSet status) by sbmFileProcSumId.
 	 * @param sbmFileProcSumId
 	 * @param fileStatus
+	 * @return
 	 */
 	public boolean updateStatus(Long sbmFileProcSumId, SBMFileStatus fileStatus);
 	

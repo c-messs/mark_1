@@ -2,13 +2,22 @@ package gov.hhs.cms.ff.fm.eps.ep.sbm;
 
 import org.xml.sax.SAXParseException;
 
+/**
+ * Holds XML Schema Error
+ *
+ */
 public class XMLSchemaError {
 	
 	private SAXParseException exception;
 	private String elementLocalName;
 	private String qName;
 	
-		
+	/**
+	 * Constructor
+	 * @param exception
+	 * @param elementLocalName
+	 * @param qName
+	 */
 	public XMLSchemaError(SAXParseException exception, String elementLocalName, String qName) {
 		super();
 		this.exception = exception;
@@ -16,6 +25,11 @@ public class XMLSchemaError {
 		this.qName = qName;
 	}
 	
+	/**
+	 * Constructor
+	 * @param exception
+	 * @param elementLocalName
+	 */
 	public XMLSchemaError(SAXParseException exception, String elementLocalName) {
 		super();
 		this.exception = exception;

@@ -114,6 +114,19 @@ public class SBMFileInfoMapperTest extends SBMBaseMapperTest {
 		assertEquals("TradingPartnerId", expectedSBMFileInfo.getTradingPartnerId(), actual.getTradingPartnerId());
 		assertEquals("FunctionCd", expectedSBMFileInfo.getFunctionCd(), actual.getFunctionCd());
 	}
+	
+	@Test
+	public void test_mapSbmToEps_XML_only() {
+
+		SBMFileProcessingDTO expectedDTO = new SBMFileProcessingDTO();
+		String expectedFileInfoXML = "<Xml>FileInfo stuff</Xml>";
+		expectedDTO.setFileInfoXML(expectedFileInfoXML);
+		
+		SbmFileInfoPO actual = mapper.mapSbmToEps(expectedDTO);
+
+		assertNotNull("SBMFileInfoPO", actual);
+		assertEquals("SbmFileNm", expectedFileInfoXML, actual.getFileInfoXML());
+	}
 
 
 	@Test

@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -33,16 +34,15 @@ public class SbmPolicyStatusDaoImpl extends GenericEpsDao<SbmPolicyStatusPO> imp
 	private String selectStatusListSql;
 	private String insertStatusListSql;
 	private String mergeStatusSql;
-	private String selectStatusLatestSql;
 	private String deleteStagingStatusSql;
 	
-    
-	
+	/**
+	 * Constructor
+	 */
 	public SbmPolicyStatusDaoImpl() {
 
 		this.rowMapper = new SbmPolicyStatusRowMapper();
 	}
-
 
 	@Override
 	public void insertStagingPolicyStatusList(List<SbmPolicyStatusPO> statusList) {
@@ -144,21 +144,22 @@ public class SbmPolicyStatusDaoImpl extends GenericEpsDao<SbmPolicyStatusPO> imp
 		});
 		return count;
 	}
-	
-	@Override
-	public SbmPolicyStatusPO getPolicyStatusLatest(Long policyVersionId) {
 
-		return (SbmPolicyStatusPO) jdbcTemplate.query(selectStatusLatestSql, rowMapper, policyVersionId);
-	}
 	
 	@Override
 	public List<PolicyStatusPO> getPolicyStatusList(Long policyVersionId) {
 		
-		return null;
+		return Collections.emptyList();
 	}
 	
+	
 	static private class SbmPolicyStatusRowMapper implements RowMapper<SbmPolicyStatusPO> {
-
+		
+		/**
+		 * @param rs
+		 * @param rowNum
+		 * @return po
+		 */
 		public SbmPolicyStatusPO mapRow(ResultSet rs, int rowNum) throws SQLException {
 
 			SbmPolicyStatusPO po = new SbmPolicyStatusPO();
@@ -196,15 +197,6 @@ public class SbmPolicyStatusDaoImpl extends GenericEpsDao<SbmPolicyStatusPO> imp
 	public void setMergeStatusSql(String mergeStatusSql) {
 		this.mergeStatusSql = mergeStatusSql;
 	}
-
-
-	/**
-	 * @param selectStatusLatestSql the selectStatusLatestSql to set
-	 */
-	public void setSelectStatusLatestSql(String selectStatusLatestSql) {
-		this.selectStatusLatestSql = selectStatusLatestSql;
-	}
-
 
 	/**
 	 * @param deleteStagingStatusSql the deleteStagingStatusSql to set

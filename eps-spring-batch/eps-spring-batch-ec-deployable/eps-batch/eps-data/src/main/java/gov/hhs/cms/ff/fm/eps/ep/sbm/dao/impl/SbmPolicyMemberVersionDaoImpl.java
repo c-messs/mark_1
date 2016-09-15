@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -24,6 +25,11 @@ import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyMemberVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * 
+ * Implementation of SbmPolicyMemberVersionDao 
+ *
+ */
 public class SbmPolicyMemberVersionDaoImpl extends GenericEpsDao<SbmPolicyMemberVersionPO> implements SbmPolicyMemberVersionDao {
 	
 	private final static Logger LOG = LoggerFactory.getLogger(SbmPolicyMemberVersionDaoImpl.class);
@@ -40,12 +46,20 @@ public class SbmPolicyMemberVersionDaoImpl extends GenericEpsDao<SbmPolicyMember
 	
 	private String deleteStagingPMVSql;
 
+	/**
+	 * Constructor
+	 */
 	public SbmPolicyMemberVersionDaoImpl() {
 
 		this.rowMapper = new SbmPolicyMemberVersionRowMapper();
-
 	}
 
+	/**
+	 * Returns PolicyMemberVersions For Policy Match
+	 * @param subscriberStateCd
+	 * @param policyVersionId
+	 * @return List<SbmPolicyMemberVersionPO>
+	 */
 	public List<SbmPolicyMemberVersionPO> getPolicyMemberVersionsForPolicyMatch(String subscriberStateCd, Long policyVersionId) {
 		return (List<SbmPolicyMemberVersionPO>) jdbcTemplate.query(
 				selectPMVListPolicyMatchSql, new PolicyMatchSbmRowMapper(), subscriberStateCd, policyVersionId);
@@ -291,12 +305,18 @@ public class SbmPolicyMemberVersionDaoImpl extends GenericEpsDao<SbmPolicyMember
 	@Override
 	public List<PolicyMemberVersionPO> getPolicyMemberVersions(Long policyVersionId, String subscriberStateCd) {
 		// TODO Auto-generated method stub
-		return null;
+		return Collections.emptyList();
 	}
 
 
 	static private class PolicyMatchSbmRowMapper implements RowMapper<SbmPolicyMemberVersionPO> {
-
+		
+		/**
+		 * Maps Resultset
+		 * @param rs
+		 * @param rowNum
+		 * @return po		 
+		 */
 		public SbmPolicyMemberVersionPO mapRow(ResultSet rs, int rowNum) throws SQLException {
 
 			SbmPolicyMemberVersionPO po = new SbmPolicyMemberVersionPO();

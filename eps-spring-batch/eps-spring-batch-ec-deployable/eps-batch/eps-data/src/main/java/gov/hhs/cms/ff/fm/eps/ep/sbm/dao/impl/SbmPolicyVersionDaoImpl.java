@@ -10,8 +10,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowMapper;
@@ -28,23 +26,26 @@ import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 import gov.hhs.cms.ff.fm.eps.ep.vo.PolicyVersionSearchCriteriaVO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmPolicyVersionDaoImpl extends GenericEpsDao<SbmPolicyVersionPO> implements SbmPolicyVersionDao {
 
 	private final static Logger LOG = LoggerFactory.getLogger(SbmPolicyVersionDaoImpl.class);
-	
 	
 	private String selectPolicyMatchSql;
 	private String selectPVSql;
 	private String insertStagingPVSql;
 	private String mergePVSql;
-	private String selectPolicyCountStateSql;
-	private String selectPolicyCountIssuerSql;
 	private String selectPolicyCountByStatusSql;
+	private String selectPolicyCountCancelledSql;
 	private String deleteStagingPVSql;
 	
-
+	/**
+	 * Constructor
+	 */
 	public SbmPolicyVersionDaoImpl() {
-		
 		this.rowMapper = new SbmPolicyVersionRowMapper();
 	}
 
@@ -143,32 +144,20 @@ public class SbmPolicyVersionDaoImpl extends GenericEpsDao<SbmPolicyVersionPO> i
 		
 	}
 	
-	@Override
-	public BigInteger selectPolicyCount(final String stateCd, final String issuerId) {
-		
-		final String sql = (stateCd != null) ? selectPolicyCountStateSql : selectPolicyCountIssuerSql;
-		final String arg = (stateCd != null) ? stateCd : issuerId;
-
-		int countRows = jdbcTemplate.execute(sql, new PreparedStatementCallback<Integer>() {
-
-			@Override
-			public Integer doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
-
-				ps.setString(1, arg);
-
-				int rowsEffected = ps.executeUpdate();
-
-				return Integer.valueOf(rowsEffected);
-			}
-		});	
-		return BigInteger.valueOf(countRows);
-	}
 	
 	@Override
 	public BigInteger selectPolicyCountByStatus(final Long sbmFileProcSumId, final String stateCd, PolicyStatus policyStatus) {
 		
 		return jdbcTemplate.queryForObject(selectPolicyCountByStatusSql, new Object[] {sbmFileProcSumId, stateCd, policyStatus.getValue()}, BigInteger.class);
 	}
+	
+	
+	@Override
+	public BigInteger selectCountEffectuatedPoliciesCancelled(Long sbmFileProcSumId, String stateCd) {
+
+		return jdbcTemplate.queryForObject(selectPolicyCountCancelledSql, new Object[] {sbmFileProcSumId, stateCd}, BigInteger.class);
+	}
+
 	
 	
 	@Override
@@ -223,6 +212,11 @@ public class SbmPolicyVersionDaoImpl extends GenericEpsDao<SbmPolicyVersionPO> i
 
 	static private class PolicyMatchSbmRowMapper implements RowMapper<PolicyVersionPO> {
 
+		/**
+		 * @param rs
+		 * @param rowNum
+		 * @return po
+		 */
 		public PolicyVersionPO mapRow(ResultSet rs, int rowNum) throws SQLException {
 
 			PolicyVersionPO po = new PolicyVersionPO();
@@ -234,7 +228,6 @@ public class SbmPolicyVersionDaoImpl extends GenericEpsDao<SbmPolicyVersionPO> i
 			return po;
 		}
 	}
-
 
 	/**
 	 * @param selectPolicyMatchSql the selectPolicyMatchSql to set
@@ -265,20 +258,6 @@ public class SbmPolicyVersionDaoImpl extends GenericEpsDao<SbmPolicyVersionPO> i
 	}
 
 	/**
-	 * @param selectPolicyCountStateSql the selectPolicyCountStateSql to set
-	 */
-	public void setSelectPolicyCountStateSql(String selectPolicyCountStateSql) {
-		this.selectPolicyCountStateSql = selectPolicyCountStateSql;
-	}
-
-	/**
-	 * @param selectPolicyCountIssuerSql the selectPolicyCountIssuerSql to set
-	 */
-	public void setSelectPolicyCountIssuerSql(String selectPolicyCountIssuerSql) {
-		this.selectPolicyCountIssuerSql = selectPolicyCountIssuerSql;
-	}
-
-	/**
 	 * @param selectPolicyCountByStatusSql the selectPolicyCountByStatusSql to set
 	 */
 	public void setSelectPolicyCountByStatusSql(String selectPolicyCountByStatusSql) {
@@ -290,6 +269,13 @@ public class SbmPolicyVersionDaoImpl extends GenericEpsDao<SbmPolicyVersionPO> i
 	 */
 	public void setDeleteStagingPVSql(String deleteStagingPVSql) {
 		this.deleteStagingPVSql = deleteStagingPVSql;
+	}
+
+	/**
+	 * @param selectPolicyCountCancelledSql the selectPolicyCountCancelledSql to set
+	 */
+	public void setSelectPolicyCountCancelledSql(String selectPolicyCountCancelledSql) {
+		this.selectPolicyCountCancelledSql = selectPolicyCountCancelledSql;
 	}
 
 }

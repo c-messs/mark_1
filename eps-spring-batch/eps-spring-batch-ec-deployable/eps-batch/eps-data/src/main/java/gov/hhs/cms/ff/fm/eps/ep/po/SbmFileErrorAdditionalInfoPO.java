@@ -1,5 +1,11 @@
 package gov.hhs.cms.ff.fm.eps.ep.po;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity class for table SBMFILEERRORADDITIONALINFO.
+ *
+ */
 public class SbmFileErrorAdditionalInfoPO extends GenericSbmFilePO<SbmFileErrorAdditionalInfoPO> {
 	
 	private String additionalErrorInfoText;

@@ -3,6 +3,10 @@ package gov.hhs.cms.ff.fm.eps.ep.sbm;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author rajesh.talanki
+ *
+ */
 public class SBMErrorDTO {
 	
 	private Long sbmFileInfoId;

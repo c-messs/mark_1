@@ -6,9 +6,17 @@ import java.util.List;
 import gov.cms.dsh.sbmr.MissingPolicyType;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileSummaryMissingPolicyData;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmFileSummaryMissingPolicyMapper {
 
-
+	/**
+	 * 
+	 * @param dataList
+	 * @return missingPolicyList
+	 */
 	public List<MissingPolicyType> mapEpsToSbmr(List<SbmFileSummaryMissingPolicyData> dataList) {
 
 		List<MissingPolicyType> missingPolicyList = new ArrayList<MissingPolicyType>();

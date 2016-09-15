@@ -44,9 +44,11 @@ public class EFTDispatchDriver {
 	 * @param FileName the file name
 	 * @param physicalDocumentTypeCd the physical document type cd
 	 * @param serverEnvironmentTypeCd the server environment type cd
+	 * @param tradingPartnerId the trading Partner 	Id
 	 * @param issuerHIOSId the issuer hios id
 	 * @param statePostalCd the state postal cd
 	 * @param targetEFTTypeApplicationTypeCd the target eft type application type cd
+	 * @return physicalDocId
 	 * @throws SQLException the SQL exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
@@ -170,8 +172,11 @@ public class EFTDispatchDriver {
 			format = new SimpleDateFormat("HHmmssSSS");
 			String time = format.format(dateTime.toDate());	
 		
-			String environmentTypeCD = (serverEnvironmentTypeCd.equalsIgnoreCase("P") || serverEnvironmentTypeCd.equalsIgnoreCase("R") )? "P" : "T";
-
+			String environmentTypeCD = "T";			
+			if(serverEnvironmentTypeCd.equalsIgnoreCase("P") || serverEnvironmentTypeCd.equalsIgnoreCase("R")) {
+				environmentTypeCD =  serverEnvironmentTypeCd;
+			}
+			
 			String fileName =  targetsourceID + "."+ targetFunctionCode + targetEnvTypeCd + "."+ "D" + day + "." + "T" + time + "." + environmentTypeCD;
 
 			logger.debug("physicalDocumentFileName created: " + fileName);
@@ -181,11 +186,11 @@ public class EFTDispatchDriver {
 		return fileNames;
 	}
 	
-	
 	/**
 	 * Generate file names.
-	 *
-	 * @param physicalDocumentTypeCd the physical document type cd
+	 * 
+	 * @param tradingPartnerId the trading Partner cd
+	 * @param functionCd the function cd
 	 * @param serverEnvironmentTypeCd the server environment type cd
 	 * @param dateTime the date time
 	 * @return fileNames

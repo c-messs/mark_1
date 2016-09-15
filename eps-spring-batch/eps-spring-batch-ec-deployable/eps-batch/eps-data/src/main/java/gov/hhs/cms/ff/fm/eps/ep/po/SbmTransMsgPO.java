@@ -2,6 +2,13 @@ package gov.hhs.cms.ff.fm.eps.ep.po;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity class for attributes of SBMTRANSMSG table.
+ * 
+ *
+ */
 public class SbmTransMsgPO {
 	
 	private Long sbmTransMsgId;

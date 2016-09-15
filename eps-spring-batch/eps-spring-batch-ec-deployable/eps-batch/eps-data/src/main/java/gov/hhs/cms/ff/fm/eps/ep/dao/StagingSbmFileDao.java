@@ -4,6 +4,10 @@ import java.util.List;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.StagingSbmFilePO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public interface StagingSbmFileDao {
 	
 	

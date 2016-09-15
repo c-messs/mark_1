@@ -7,6 +7,10 @@ import org.springframework.jdbc.core.RowMapper;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.StagingSbmGroupLockPO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class StagingSbmGroupLockRowMapper implements RowMapper<StagingSbmGroupLockPO> {
 
 	@Override

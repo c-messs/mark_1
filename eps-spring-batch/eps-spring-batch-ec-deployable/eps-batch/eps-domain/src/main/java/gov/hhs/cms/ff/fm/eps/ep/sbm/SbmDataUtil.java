@@ -8,11 +8,22 @@ import gov.cms.dsh.sbmi.FileInformationType;
 import gov.cms.dsh.sbmi.PolicyMemberType;
 import gov.cms.dsh.sbmi.PolicyType;
 
+/**
+ * @author j.radziewski
+ * 
+ * Utility class for extracting SBM specific data from Enrollment transactions.
+ *
+ */
 public class SbmDataUtil {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SbmDataUtil.class);
 
 	
+	/**
+	 * Extract StateCd from TenantId.
+	 * @param tenantId
+	 * @return
+	 */
 	public static String getStateCd(String tenantId) {
 
 		String stateCd = null;
@@ -24,6 +35,11 @@ public class SbmDataUtil {
 		return stateCd;
 	}
 
+	/**
+	 * Extract StateCd from SBM FileInformationType.
+	 * @param fileInfoType
+	 * @return
+	 */
 	public static String getStateCd(FileInformationType fileInfoType) {
 
 		String stateCd = null;
@@ -34,6 +50,11 @@ public class SbmDataUtil {
 	}
 
 
+	/**
+	 * Extract IssuerId from QhpId.
+	 * @param qhpId
+	 * @return
+	 */
 	public static String getIssuerIdFromQhpId(String qhpId) {
 		String issuerId = StringUtils.EMPTY;
 		int HIOS_ID_INDEX = 5;
@@ -50,6 +71,7 @@ public class SbmDataUtil {
 	/**
 	 * Method to get State code from QHP id. 
 	 * @param qhpId
+	 * @return stateCd
 	 */
 	public static String getStateCdFromQhpId(String qhpId) {
 		String stateCd = StringUtils.EMPTY;
@@ -63,6 +85,11 @@ public class SbmDataUtil {
 		return stateCd;
 	}
 
+	/**
+	 * Extract Tenant number from TenantId.
+	 * @param tenantId
+	 * @return
+	 */
 	public static String getTenantNum(String tenantId) {
 
 		String num = null;
@@ -74,6 +101,11 @@ public class SbmDataUtil {
 		return num;
 	}
 
+	/**
+	 * Extract Tenant number from SBM FileInformationType.
+	 * @param fileInfoType
+	 * @return
+	 */
 	public static String getTenantNum(FileInformationType fileInfoType) {
 
 		String num = null;
@@ -84,6 +116,11 @@ public class SbmDataUtil {
 	}
 
 
+	/**
+	 * Extract IssuerId from SBM FileInformationType.
+	 * @param fileInfoType
+	 * @return
+	 */
 	public static String getIssuerId(FileInformationType fileInfoType) {
 
 		String issuerId = null;
@@ -95,28 +132,14 @@ public class SbmDataUtil {
 		return issuerId;
 	}
 
-
-
-	/** Gets the first occurrance of CSRVariantId in a policies financial info.
-	 * @param policy
-	 * @return
-	 */
-	public static String getCSRVariantId(PolicyType policy) {
-
-		String csrVariantId = null;
-		if (policy != null) {
-			if (!policy.getFinancialInformation().isEmpty()) {
-				csrVariantId = policy.getFinancialInformation().get(0).getCSRVariantId();
-			}
-		}
-		return csrVariantId;
-	}
-
-
 	/**
 	 * Determines if variant ID is a Non-CSR Variant (01)
 	 * @param variantId
 	 * @return isValidCsrVariant
+	 */
+	/**
+	 * @param variantId
+	 * @return
 	 */
 	public static boolean isNonCsrVariant(String variantId) {
 
@@ -141,6 +164,11 @@ public class SbmDataUtil {
 		return isCsrVariant;
 	}
 	
+	/**
+	 * Extract PolicyMemberType from SBM PolicyType.
+	 * @param policy
+	 * @return
+	 */
 	public static PolicyMemberType getSubsciber(PolicyType policy) {
 		
 		PolicyMemberType subscriber = null;

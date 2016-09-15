@@ -2,6 +2,7 @@ package gov.hhs.cms.ff.fm.eps.ep.sbm.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.TransactionConfiguration;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import gov.cms.dsh.sbmi.Enrollment;
@@ -18,6 +20,8 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMResponsePhaseTypeCode;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SbmTransMsgStatus;
+import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileProcessingSummaryPO;
+import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileSummaryMissingPolicyData;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmResponsePO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMCache;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
@@ -35,7 +39,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 
 	@Autowired
 	private SbmResponseCompositeDao sbmResponseCompositeDao;
-	
+
 	@Autowired
 	private UserVO userVO;
 
@@ -50,7 +54,6 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		String state = TestDataSBMUtility.getRandomSbmState();
 		String sbmFileId = TestDataSBMUtility.getRandomNumberAsString(3);
 		String tenantId = state + "0";
-		SBMFileStatus fileStatus = SBMFileStatus.ACCEPTED;
 
 		SBMFileProcessingDTO fileDTO = insertParentFileRecords(tenantId, sbmFileId, SBMFileStatus.IN_PROCESS);
 
@@ -58,6 +61,53 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		String exchangePolicyId = "EXPOLID-" + sbmFileId;
 		SbmTransMsgStatus status = SbmTransMsgStatus.ACCEPTED_WITH_CHANGES;
 
+		Long sbmTransMsgId = insertSbmTransMsg(sbmFileInfoId, state, exchangePolicyId, status);
+
+		SBMErrorDTO fileErrorDTO = TestDataSBMUtility.makeSBMErrorDTO(1);
+		insertSbmTransMsgValidation(sbmTransMsgId, fileErrorDTO, 1);
+
+		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(fileDTO.getSbmFileProcSumId());
+
+		assertNotNull("SbmResponseDTO", responseDTO);
+
+		SBMSummaryAndFileInfoDTO summaryDTO = responseDTO.getSbmSummaryAndFileInfo();
+
+		assertNotNull("SBMSummaryAndFileInfoDTO", summaryDTO);
+
+		assertEquals("ErrorThresholdPercent", fileDTO.getErrorThresholdPercent(), summaryDTO.getErrorThresholdPercent());
+
+		assertEquals("XprErrorExist", true, responseDTO.isXprErrorsExist());
+		assertEquals("XprWarningsExist", false, responseDTO.isXprWarningsExist());
+
+		/*
+		 * private SBMSummaryAndFileInfoDTO sbmSummaryAndFileInfo;
+	private FileAcceptanceRejection sbmr;	
+	private boolean xprErrorsExist;	
+	private boolean xprWarningsExist;
+	private SBMResponsePhaseTypeCode sbmResponsePhaseTypeCd; 
+	private Long physicalDocumentId;
+
+		 */
+
+	}
+
+	@Test
+	public void test_generateSBMR_Addl_Errors() {
+
+		assertNotNull("SbmResponseCompositeDao is NOT null.", sbmResponseCompositeDao);
+
+		SBMCache.setJobExecutionId(TestDataSBMUtility.getRandomNumberAsLong(3));
+		userVO.setUserId(SBMCache.getJobExecutionId().toString());
+
+		String state = TestDataSBMUtility.getRandomSbmState();
+		String sbmFileId = TestDataSBMUtility.getRandomNumberAsString(3);
+		String tenantId = state + "0";
+
+		SBMFileProcessingDTO fileDTO = insertParentFileRecords(tenantId, sbmFileId, SBMFileStatus.IN_PROCESS);
+
+		Long sbmFileInfoId = fileDTO.getSbmFileInfo().getSbmFileInfoId();
+		String exchangePolicyId = "EXPOLID-" + sbmFileId;
+		SbmTransMsgStatus status = SbmTransMsgStatus.ACCEPTED_WITH_CHANGES;
 
 		Long sbmTransMsgId = insertSbmTransMsg(sbmFileInfoId, state, exchangePolicyId, status);
 
@@ -85,6 +135,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		 */
 
 	}
+
 
 	@Test
 	public void test_generateUpdateStatusSBMR() {
@@ -147,7 +198,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 	@Test
 	public void test_isRecExistsInStagingSBMPolicy() {
 
-		
+
 		boolean expected = true;
 		String state = TestDataSBMUtility.getRandomSbmState();
 		String sbmFileId = TestDataSBMUtility.getRandomNumberAsString(5);
@@ -419,7 +470,10 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 				SbmTransMsgStatus.ACCEPTED_NO_CHANGE, SbmTransMsgStatus.ACCEPTED_NO_CHANGE, 
 		};
 
-		BigDecimal expected_TOT = new BigDecimal(statuses.length);
+		// Since 2 policies are inserted per ExchangePolicyId for this SbmFileProcSumId
+		// and TotalPolicyApprovedCnt is both matching and new policies.
+		// The *2 is for this test only and would not occur.  Both cycles are using the same SbmfileProcSumId for this test.
+		BigDecimal expected_TOT = new BigDecimal(statuses.length * 2); 
 		BigDecimal expected_ANC = new BigDecimal(4);
 		BigDecimal expected_ACC = new BigDecimal(3);
 		BigDecimal expected_ACC_Corrected = new BigDecimal(1);
@@ -515,7 +569,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 
 			exchangePolicyId = exchangePolicyIdPrefix + "-" + i + "" + i + "" + i;
 			Long sbmTransMsgId = insertSbmTransMsg(sbmFileInfoId, stateCd, exchangePolicyId, statuses[i]);
-			Long pvId = insertPolicyVersion(JAN_1_1am, psd, ped, stateCd, exchangePolicyId, qhpId, sbmTransMsgId);
+			insertPolicyVersion(JAN_1_1am, psd, ped, stateCd, exchangePolicyId, qhpId, sbmTransMsgId);
 
 			if (i == 0) {
 
@@ -538,19 +592,17 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 
 		Map<String, Object> actual = actualList.get(0);
 
-
-
 		assertEquals("NewPlcCreatedAsSentCnt", expected_ANC, actual.get("NEWPLCCREATEDASSENTCNT"));
 		assertEquals("NewPlcCreatedCorrectionApplCnt", expected_ACC_Corrected, actual.get("NEWPLCCREATEDCORRECTIONAPPLCNT"));
 	}
 
 	@Test
 	public void test_createSBMResponseRecord() {
-		
+
 		String state = TestDataSBMUtility.getRandomSbmState();
 		String sbmFileId = TestDataSBMUtility.getRandomNumberAsString(3);
 		String tenantId = state + "0";
-		
+
 		SBMFileProcessingDTO fileDTO = insertParentFileRecords(tenantId, sbmFileId);
 		Long  sbmFileProcSumId = fileDTO.getSbmFileProcSumId();
 		Long sbmFileInfoId = fileDTO.getSbmFileInfo().getSbmFileInfoId();
@@ -565,13 +617,238 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 			po.setResponseCd(responseCd.getValue());
 		}
 		sbmResponseCompositeDao.createSBMResponseRecord(sbmFileProcSumId, sbmFileInfoId, physicalDocumentId, responseCd);
-		
+
 		String sql = "SELECT * FROM SBMRESPONSE WHERE SBMFILEPROCESSINGSUMMARYID = " + sbmFileProcSumId;
 
 		List<Map<String, Object>> actualList = jdbc.queryForList(sql);
 		assertEquals("SBMFILEPROCESSINGSUMMARY record list size", 1, actualList.size());
 
 		Map<String, Object> actual = actualList.get(0);
+	}
+
+
+	@Test
+	public void test_getMissingPolicyTotals_null_MissingPolicyDataList() {
+
+		int expectedTotalPreviousPoliciesNotSubmit = 0 ;
+		int expectedNotSubmittedEffectuatedCnt = 0 ;
+		int expectedNotSubmittedCancelledCnt = 0 ;
+		int expectedNotSubmittedTerminatedCnt = 0 ;
+
+		SbmFileProcessingSummaryPO epsPO = new SbmFileProcessingSummaryPO();
+		List<SbmFileSummaryMissingPolicyData> missingPolicyDataList = null;
+
+		ReflectionTestUtils.invokeMethod(sbmResponseCompositeDao, "getMissingPolicyTotals", epsPO, missingPolicyDataList);
+
+		assertEquals("TotalPreviousPoliciesNotSubmit", expectedTotalPreviousPoliciesNotSubmit, epsPO.getTotalPreviousPoliciesNotSubmit().intValue());
+		assertEquals("NotSubmittedEffectuatedCnt", expectedNotSubmittedEffectuatedCnt, epsPO.getNotSubmittedEffectuatedCnt().intValue());
+		assertEquals("NotSubmittedCancelledCnt", expectedNotSubmittedCancelledCnt, epsPO.getNotSubmittedCancelledCnt().intValue());
+		assertEquals("NotSubmittedTerminatedCnt", expectedNotSubmittedTerminatedCnt, epsPO.getNotSubmittedTerminatedCnt().intValue());		
+	}
+
+
+	/**
+	 * Though rare, verify an EPS policy with status INITIAL_1, SUPERSEDED_5,  or SBMVOID_6 does not effect counts.
+	 */
+	@Test
+	public void test_getMissingPolicyTotals_Status_1_5_6() {
+
+		PolicyStatus[] expectedStatuses = {PolicyStatus.INITIAL_1, PolicyStatus.EFFECTUATED_2, PolicyStatus.EFFECTUATED_2,
+				PolicyStatus.CANCELLED_3, PolicyStatus.TERMINATED_4, PolicyStatus.SUPERSEDED_5, PolicyStatus.SBMVOID_6};
+
+		int expectedNotSubmittedEffectuatedCnt = 1;
+		int expectedNotSubmittedCancelledCnt = 1;
+		int expectedNotSubmittedTerminatedCnt = 1;
+		int expectedTotalPreviousPoliciesNotSubmit = expectedNotSubmittedEffectuatedCnt + expectedNotSubmittedCancelledCnt  + expectedNotSubmittedTerminatedCnt;
+
+
+		SbmFileProcessingSummaryPO epsPO = new SbmFileProcessingSummaryPO();
+		List<SbmFileSummaryMissingPolicyData> missingPolicyDataList = new ArrayList<SbmFileSummaryMissingPolicyData>();
+
+		for (int i = 0; i < expectedStatuses.length; ++ i) {
+
+			SbmFileSummaryMissingPolicyData missingData = new SbmFileSummaryMissingPolicyData();
+			missingData.setPolicyStatus(expectedStatuses[i]);
+			if (i == 2) {
+				missingData.setPolicyEndDate(LocalDate.now().minusDays(2));
+			}
+			missingPolicyDataList.add(missingData);
+		}
+
+		ReflectionTestUtils.invokeMethod(sbmResponseCompositeDao, "getMissingPolicyTotals", epsPO, missingPolicyDataList);
+
+		assertEquals("TotalPreviousPoliciesNotSubmit", expectedTotalPreviousPoliciesNotSubmit, epsPO.getTotalPreviousPoliciesNotSubmit().intValue());
+		assertEquals("NotSubmittedEffectuatedCnt", expectedNotSubmittedEffectuatedCnt, epsPO.getNotSubmittedEffectuatedCnt().intValue());
+		assertEquals("NotSubmittedCancelledCnt", expectedNotSubmittedCancelledCnt, epsPO.getNotSubmittedCancelledCnt().intValue());
+		assertEquals("NotSubmittedTerminatedCnt", expectedNotSubmittedTerminatedCnt, epsPO.getNotSubmittedTerminatedCnt().intValue());		
+	}
+
+
+	/**
+	 * Tests all SbmFileStatuses.
+	 */
+	@Test
+	public void test_determineAccepted() {
+
+		boolean expected = true;
+		SBMFileStatus[] expectedStatus = SBMFileStatus.values();
+
+		for (SBMFileStatus status : expectedStatus) {
+			SbmFileProcessingSummaryPO epsPO = new SbmFileProcessingSummaryPO();
+			epsPO.setSbmFileStatusTypeCd(status.getValue());
+
+			if (SBMFileStatus.ACCEPTED.equals(status) 
+					|| SBMFileStatus.ACCEPTED_WITH_ERRORS.equals(status) 
+					|| SBMFileStatus.ACCEPTED_WITH_WARNINGS.equals(status)) {
+				expected = true;
+			} else {
+				expected = false;
+			}
+			Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(sbmResponseCompositeDao, "determineAccepted", epsPO);
+			assertEquals("should be " + expected + " for status: " + status.getValue(), expected, actual.booleanValue());
+		}
+	}
+
+
+	/**
+	 * Tests all SbmFileStatuses.
+	 */
+	@Test
+	public void test_determineBackOut() {
+
+		boolean expected = true;
+		SBMFileStatus[] expectedStatus = SBMFileStatus.values();
+
+		for (SBMFileStatus status : expectedStatus) {
+			SbmFileProcessingSummaryPO epsPO = new SbmFileProcessingSummaryPO();
+			epsPO.setSbmFileStatusTypeCd(status.getValue());
+
+			if (SBMFileStatus.BACKOUT.equals(status)) {
+				expected = true;
+			} else {
+				expected = false;
+			}
+			Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(sbmResponseCompositeDao, "determineBackOut", epsPO);
+			assertEquals("should be " + expected + " for status: " + status.getValue(), expected, actual.booleanValue());
+		}
+	}
+	
+	
+	@Test
+	public void test_determineEffectuatedPolicyTerminated_Before() {
+
+		boolean expected = true;
+		
+		LocalDate ped = LocalDate.now().minusMonths(9);
+		
+		Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(sbmResponseCompositeDao, "determineEffectuatedPolicyTerminated", ped);
+			
+		assertEquals("should be " + expected + " for PolicyEndDate=" + ped.toString(), expected, actual.booleanValue());
+	}
+	
+	@Test
+	public void test_determineEffectuatedPolicyTerminated_Same() {
+
+		boolean expected = true;
+		
+		LocalDate ped = LocalDate.now();
+		
+		Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(sbmResponseCompositeDao, "determineEffectuatedPolicyTerminated", ped);
+			
+		assertEquals("should be " + expected + " for PolicyEndDate=" + ped.toString(), expected, actual.booleanValue());
+	}
+	
+	@Test
+	public void test_determineEffectuatedPolicyTerminated_After() {
+
+		boolean expected = false;
+		
+		LocalDate ped = LocalDate.now().plusMonths(2);
+		
+		Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(sbmResponseCompositeDao, "determineEffectuatedPolicyTerminated", ped);
+			
+		assertEquals("should be " + expected + " for PolicyEndDate=" + ped.toString(), expected, actual.booleanValue());
+	}
+
+	@Test
+	public void test_lockSummaryIdForSBMR_false() {
+
+		boolean expected = false;
+
+		Long sbmFileProcSumId = TestDataSBMUtility.getRandomNumberAsLong(7);
+		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(4);
+
+		boolean actual = sbmResponseCompositeDao.lockSummaryIdForSBMR(sbmFileProcSumId, batchId);
+
+		assertEquals("lockSummaryIdForSBMR should be false for 2 random ids.", expected, actual);
+	}
+
+
+	/**
+	 * Coverage and SQL compilation test only.
+	 */
+	@Test
+	public void test_removeLockOnSummaryIdForSBMR() {
+
+		assertNotNull("SbmResponseCompositeDao is NOT null.", sbmResponseCompositeDao);
+
+		Long sbmFileProcSumId = TestDataSBMUtility.getRandomNumberAsLong(7);
+		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(4);
+
+		sbmResponseCompositeDao.removeLockOnSummaryIdForSBMR(sbmFileProcSumId, batchId);
+
+	}
+
+	/*
+	 *  "WHERE ssgl.PROCESSINGGROUPID = 0" 
+	 */
+	@Test
+	public void test_retrieveSummaryIdsReadyForSBMR() {
+
+		int expectedListSize = 3;
+		List<Long> expectedIdList = new ArrayList<Long>();
+		String tenantId = TestDataSBMUtility.getRandomSbmState() + "1";
+		Long procGroupId = Long.valueOf(0);
+
+		for (int i = 0; i < expectedListSize; ++i) {
+			Long sbmFileProcSumId = insertSBMFileProcessingSummary(tenantId);
+			expectedIdList.add(sbmFileProcSumId);
+			insertStagingSbmGroupLock(sbmFileProcSumId, procGroupId);
+		}
+
+		List<Long> actualIdList = sbmResponseCompositeDao.retrieveSummaryIdsReadyForSBMR();
+
+		assertTrue("sbmFileProcSumId list size",actualIdList.size() >= expectedListSize);	
+
+		// Reverse "contains" in case there is other data in table.
+		for (Long expectedId : expectedIdList) {
+			assertTrue("actualId is contained in expected list", actualIdList.contains(expectedId));
+		}
+	}
+
+
+	@Test
+	public void test_getSummaryIdsForSBMRFromStagingSBMGroupLock() {
+
+		int expectedListSize = 3;
+		List<Long> expectedIdList = new ArrayList<Long>();
+		String tenantId = TestDataSBMUtility.getRandomSbmState() + "1";
+		Long procGroupId = Long.valueOf(0);
+		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(6);
+
+		for (int i = 0; i < expectedListSize; ++i) {
+			Long sbmFileProcSumId = insertSBMFileProcessingSummary(tenantId);
+			expectedIdList.add(sbmFileProcSumId);
+			insertStagingSbmGroupLock(sbmFileProcSumId, procGroupId, batchId);
+		}
+
+		List<Long> actualIdList = sbmResponseCompositeDao.getSummaryIdsForSBMRFromStagingSBMGroupLock(batchId);
+
+		assertEquals("sbmFileProcSumId list size", expectedListSize, actualIdList.size());	
+
+		for (Long actualId : actualIdList) {
+			assertTrue("actualId is contained in expected list", expectedIdList.contains(actualId));
+		}
 	}
 
 

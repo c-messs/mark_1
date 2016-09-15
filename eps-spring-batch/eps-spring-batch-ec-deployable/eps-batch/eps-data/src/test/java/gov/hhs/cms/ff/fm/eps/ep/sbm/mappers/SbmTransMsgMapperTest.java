@@ -3,12 +3,14 @@ package gov.hhs.cms.ff.fm.eps.ep.sbm.mappers;
 import org.junit.Test;
 
 import gov.cms.dsh.sbmi.PolicyType;
+import gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SbmTransMsgStatus;
 import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageDirectionType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.TxnMessageType;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgPO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMPolicyDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmErrWarningLogDTO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 import gov.hhs.cms.ff.fm.eps.ep.util.sbm.TestDataSBMUtility;
 
@@ -62,5 +64,20 @@ public class SbmTransMsgMapperTest extends SBMBaseMapperTest {
 		SbmTransMsgPO actual = mapper.mapSBMToEPS(expectedDTO);
 		assertNotNull("SbmTransMsgPO", actual);
 	}
+	
+	@Test
+	public void test_mapSBMToEPS_Policy_Errors() {
+		
+		SbmTransMsgStatus expectedStatus = SbmTransMsgStatus.ACCEPTED_WITH_CHANGES;
+		SBMPolicyDTO expectedDTO = new SBMPolicyDTO();
+		SbmErrWarningLogDTO errWarnDTO = new SbmErrWarningLogDTO();
+		errWarnDTO.setErrorWarningTypeCd(SBMErrorWarningCode.ER_001.getCode());
+		expectedDTO.getErrorList().add(errWarnDTO);
+		SbmTransMsgPO actual = mapper.mapSBMToEPS(expectedDTO);
+		assertNotNull("SbmTransMsgPO", actual);
+		assertEquals("SbmTransMsg Status", expectedStatus.getCode(), actual.getSbmTransMsgProcStatusTypeCd());
+	}
+	
+	
 
 }

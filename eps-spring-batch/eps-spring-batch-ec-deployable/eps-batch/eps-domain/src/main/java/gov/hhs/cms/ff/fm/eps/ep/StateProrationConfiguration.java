@@ -2,6 +2,10 @@ package gov.hhs.cms.ff.fm.eps.ep;
 
 import java.math.BigDecimal;
 
+/**
+ * @author rajesh.talanki
+ *
+ */
 public class StateProrationConfiguration {
 
 	private String stateCd;

@@ -5,6 +5,10 @@ import java.math.BigDecimal;
 import gov.cms.dsh.sbmr.FileAcceptanceRejection;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMResponsePhaseTypeCode;
 
+/**
+ * Holds SBM Response data
+ *
+ */
 public class SbmResponseDTO {
 	
 	private SBMSummaryAndFileInfoDTO sbmSummaryAndFileInfo;

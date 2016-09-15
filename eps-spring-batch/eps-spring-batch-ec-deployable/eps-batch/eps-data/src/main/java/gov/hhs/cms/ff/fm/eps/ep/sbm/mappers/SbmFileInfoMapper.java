@@ -10,9 +10,17 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmFileInfoMapper {
 
-
+	/**
+	 * 
+	 * @param inboundDTO
+	 * @return po
+	 */
 	public SbmFileInfoPO mapSbmToEps(SBMFileProcessingDTO inboundDTO) {
 
 		SbmFileInfoPO po = null;
@@ -68,7 +76,11 @@ public class SbmFileInfoMapper {
 		return po;
 	}
 
-
+	/**
+	 * 
+	 * @param poList
+	 * @return fileInfoList
+	 */
 	public List<SBMFileInfo> mapEpsToSbm(List<SbmFileInfoPO> poList) {
 
 		List<SBMFileInfo> fileInfoList = new ArrayList<SBMFileInfo>();
@@ -93,7 +105,12 @@ public class SbmFileInfoMapper {
 		return fileInfoList;
 	}
 
-
+	/**
+	 * 
+	 * @param po
+	 * @param summaryStatus
+	 * @return fileInfo
+	 */
 	public gov.cms.dsh.sbmr.FileInformationType mapEpsToSbmr(SbmFileInfoPO po, String summaryStatus) {
 
 		gov.cms.dsh.sbmr.FileInformationType fileInfo = new gov.cms.dsh.sbmr.FileInformationType();
@@ -105,7 +122,5 @@ public class SbmFileInfoMapper {
 
 		return fileInfo;
 	}
-
-
 
 }

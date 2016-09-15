@@ -5,6 +5,11 @@ import java.util.Map;
 
 import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
 
+/**
+ * 
+ * SbmConfigDao interface
+ *
+ */
 public interface SbmConfigDao {
 
 	/**

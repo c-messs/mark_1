@@ -10,21 +10,11 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameter;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
-import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
-import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.datetime.DateFormatter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -42,8 +32,6 @@ import gov.hhs.cms.ff.fm.eps.ep.jobs.util.SBMTestDataDBUtil;
 @ContextConfiguration(locations={"/sbmi-batch-context.xml"})
 @RunWith(SpringJUnit4ClassRunner.class)
 public class SBMJob_FileValidationTest {
-	
-	private static final Logger LOG = LoggerFactory.getLogger(SBMJob_FileValidationTest.class);
 	
 	private static final String SQL_ERROR_COUNT = "select count(*) from SBMFILEERROR where SBMERRORWARNINGTYPECD = ?";
 	
@@ -95,7 +83,14 @@ public class SBMJob_FileValidationTest {
 		FileUtils.cleanDirectory(privateFolder);
 		FileUtils.cleanDirectory(processedFolder);
 		FileUtils.cleanDirectory(invalidFolder);
-       
+	}
+	
+	@After
+	public void tearDown() throws IOException {
+        FileUtils.cleanDirectory(eftFolder);
+		FileUtils.cleanDirectory(privateFolder);
+		FileUtils.cleanDirectory(processedFolder);
+		FileUtils.cleanDirectory(invalidFolder);
 	}
 	
 	//TODO - Work In progress

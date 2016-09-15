@@ -5,6 +5,10 @@ import java.util.List;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyMemberDatePO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public interface SbmPolicyMemberDateDao extends PolicyMemberDateDao {
 	
 	
@@ -15,13 +19,14 @@ public interface SbmPolicyMemberDateDao extends PolicyMemberDateDao {
 	public List<SbmPolicyMemberDatePO> getPolicyMemberDate(Long policyVersionId);
 	
 	/**
-	 * @param po
-	 * @return
+	 * Inserts a list of dates per member.
+	 * @param poList
 	 */
 	public void insertStagingPolicyMemberDate(final List<SbmPolicyMemberDatePO> poList);
 	
 	
 	/**
+	 * Merge from Staging to EPS.
 	 * @param sbmFileProcSumId
 	 * @return
 	 */

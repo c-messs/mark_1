@@ -15,6 +15,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmExecutionReportDataService;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmExecutionReportDataServiceImpl implements SbmExecutionReportDataService  {
 	
 	private final static Logger LOG = LoggerFactory.getLogger(SbmExecutionReportDataServiceImpl.class);

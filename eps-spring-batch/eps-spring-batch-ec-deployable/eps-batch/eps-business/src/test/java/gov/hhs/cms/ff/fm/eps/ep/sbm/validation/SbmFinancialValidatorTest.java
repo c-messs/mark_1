@@ -1038,6 +1038,38 @@ public class SbmFinancialValidatorTest extends TestCase {
 	 * performStateSpecificFinancialValidations
 	 */
 	@Test
+	public void test_performStateSpecificValidations_R006_Valid_SameMonth_Dec() {
+		
+		String qhpId = RandomStringUtils.randomAlphanumeric(16).toUpperCase();
+		String stateCd = qhpId.substring(5, 7);
+		
+		List<String> bizRules = Arrays.asList("R006");
+		SBMCache.getBusinessRules(stateCd).addAll(bizRules);
+		
+		expect(mockSbmDataService.getMetalLevelByQhpid(EasyMock.anyString(), EasyMock.anyString()))
+		.andReturn(null).anyTimes();
+		replay(mockSbmDataService);	
+		
+		PolicyType policy = new PolicyType();
+		policy.setPolicyStartDate(DateTimeUtil.getXMLGregorianCalendar(DEC_1));
+		policy.setPolicyEndDate(DateTimeUtil.getXMLGregorianCalendar(DEC_31));
+		policy.setQHPId(qhpId);
+		
+		FinancialInformation fit = new FinancialInformation();
+		
+		fit.setFinancialEffectiveStartDate(DateTimeUtil.getXMLGregorianCalendar(DEC_1));
+		fit.setFinancialEffectiveEndDate(DateTimeUtil.getXMLGregorianCalendar(DEC_31));
+		
+		policy.getFinancialInformation().add(fit);
+		
+		List<SbmErrWarningLogDTO> stateFinErrors = sbmFinancialValidator.validateFinancialInfo(policy);		
+		assertTrue("stateFinErrors", stateFinErrors.isEmpty());
+	}
+	
+	/*
+	 * performStateSpecificFinancialValidations
+	 */
+	@Test
 	public void test_performStateSpecificValidations_R007_Invalid() {
 		
 		String qhpId = RandomStringUtils.randomAlphanumeric(16).toUpperCase();

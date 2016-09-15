@@ -2,6 +2,13 @@ package gov.hhs.cms.ff.fm.eps.ep.enums;
 
 import com.accenture.foundation.common.exception.ApplicationException;
 
+/**
+ * SBM TransMsg statuses for processed transactions.  
+ * - "Good" transactions will be either ACC or ANC.
+ * - Replicated transactions from previous cycles will not have an SbmTransMsg record and 
+ *   therefore no SbmTransMsg status.
+ *
+ */
 public enum SbmTransMsgStatus {
 	
 	REJECTED             ("RJC", "Rejected", "Policy that failed schema and business validations, or belonging to a file that failed error threshold validation."),

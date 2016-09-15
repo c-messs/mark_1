@@ -10,8 +10,17 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMPolicyDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmErrWarningLogDTO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmTransMsgValidationMapper {
 
+	/**
+	 * 
+	 * @param inboundPolicyDTO
+	 * @return poList
+	 */
 	public List<SbmTransMsgValidationPO> mapSbmToEps(SBMPolicyDTO inboundPolicyDTO) {
 
 		List<SbmTransMsgValidationPO> poList = new ArrayList<SbmTransMsgValidationPO>();
@@ -44,6 +53,11 @@ public class SbmTransMsgValidationMapper {
 		return poList;	   
 	}
 	
+	/**
+	 * 
+	 * @param po
+	 * @return err
+	 */
 	public PolicyErrorType.Error mapEpsToSbmr(SbmTransMsgValidationPO po) {
 		
 		PolicyErrorType.Error err = new PolicyErrorType.Error();
@@ -55,7 +69,6 @@ public class SbmTransMsgValidationMapper {
 		err.setErrorDescription(SBMCache.getErrorDescription(po.getSbmErrorWarningTypeCd()));
 		
 		return err;
-		
 	}
 
 }

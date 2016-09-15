@@ -266,10 +266,9 @@ public class RapProcessingHelper {
 	/**
 	 * Determine whether the SBM Premium records for the month has prorated amounts
 	 * 
-	 * @param subscriberStateCd
-	 * @param year
+	 * @param proration
 	 * @param premiumRecs
-	 * @return
+	 * @return boolean
 	 */
 	public static boolean isSbmWithoutProratedAmounts(ProrationType proration,
 			List<PolicyPremium> premiumRecs) {

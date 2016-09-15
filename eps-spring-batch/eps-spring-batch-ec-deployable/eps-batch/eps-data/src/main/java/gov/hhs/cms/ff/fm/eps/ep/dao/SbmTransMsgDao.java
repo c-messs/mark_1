@@ -24,10 +24,11 @@ public interface SbmTransMsgDao {
 	
 	
 	/**
-	 * @param SbmFileInfo
+	 * @param sbmFileInfo
 	 * @return
 	 */
 	public List<SbmTransMsgPO> selectSbmTransMsg(Long sbmFileInfo);
+	
 	
 	/**
 	 * @param sbmFileProcSumId

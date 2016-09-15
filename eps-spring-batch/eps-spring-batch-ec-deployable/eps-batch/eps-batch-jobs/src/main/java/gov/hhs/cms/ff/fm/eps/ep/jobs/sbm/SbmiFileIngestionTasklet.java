@@ -31,10 +31,10 @@ public class SbmiFileIngestionTasklet implements Tasklet {
 	public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {		
 		
 		JobExecution jobExec = chunkContext.getStepContext().getStepExecution().getJobExecution();
-		Long jobExecId = chunkContext.getStepContext().getStepExecution().getJobExecutionId();
+		Long jobId = chunkContext.getStepContext().getStepExecution().getJobExecution().getJobId();
 				
 		//read one file and write
-		SBMFileProcessingDTO dto = fileIngestionReader.read(jobExecId);
+		SBMFileProcessingDTO dto = fileIngestionReader.read(jobId);
 		
 		if(dto != null) {
 			jobExec.getExecutionContext().put(JOB_EXIT_CODE, CONTINUE);			
@@ -43,13 +43,13 @@ public class SbmiFileIngestionTasklet implements Tasklet {
 		else {
 			//no files to process so evaluate all existing files			
 			//evaluate all Bypass Freeze files
-			sbmEvaluatePendingFiles.evaluateBypassFreeze(jobExecId);
+			sbmEvaluatePendingFiles.evaluateBypassFreeze(jobId);
 			
 			//evaluate all Freeze files
-			sbmEvaluatePendingFiles.evaluateFreezeFiles(jobExecId);
+			sbmEvaluatePendingFiles.evaluateFreezeFiles(jobId);
 			
 			//evaluate all On-Hold files
-			sbmEvaluatePendingFiles.evaluateOnHoldFiles(jobExecId);
+			sbmEvaluatePendingFiles.evaluateOnHoldFiles(jobId);
 						
 			jobExec.getExecutionContext().put(JOB_EXIT_CODE, EXIT);
 		}

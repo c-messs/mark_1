@@ -7,6 +7,10 @@ import org.springframework.jdbc.core.RowMapper;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgAdditionalErrorInfoPO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmTransMsgAdditionalErrorInfoRowMapper implements RowMapper<SbmTransMsgAdditionalErrorInfoPO> {
 
 	@Override

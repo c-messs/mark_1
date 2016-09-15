@@ -14,17 +14,18 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
  * @author eps
  *
  */
-public class PolicyStatusDaoImpl extends GenericEpsDao<PolicyStatusPO> implements
-		PolicyStatusDao {
+public class PolicyStatusDaoImpl extends GenericEpsDao<PolicyStatusPO> implements PolicyStatusDao {
+	
+	private String selectPolicyStatusList;
+
+	
 	/**
-	 * 
+	 * Constructor, set rowMapper once.
 	 */
 	public PolicyStatusDaoImpl() {
 		
 		this.setRowMapper(new PolicyStatusRowMapper());
 	}
-
-	private String selectPolicyStatusList;
 
 	/**
 	 * @param sql

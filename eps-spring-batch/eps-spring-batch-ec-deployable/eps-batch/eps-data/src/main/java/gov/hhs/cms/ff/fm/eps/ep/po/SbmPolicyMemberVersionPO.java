@@ -2,6 +2,14 @@ package gov.hhs.cms.ff.fm.eps.ep.po;
 
 import java.time.LocalDate;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity class for SBM specific attributes of STAGINGPOLICYMEMBERVERSION and some of POLICYMEMBERVERSION table.
+ * 
+ * Note: Comparisions use both this method's hashCode and equals and parent PO.
+ *
+ */
 public class SbmPolicyMemberVersionPO extends PolicyMemberVersionPO {
 
 
@@ -178,11 +186,6 @@ public class SbmPolicyMemberVersionPO extends PolicyMemberVersionPO {
 				return false;
 		} else if (!incorrectGenderTypeCode.equals(other.incorrectGenderTypeCode))
 			return false;
-//	TODO	if (nonCoveredSubscriberInd == null) {
-//			if (other.nonCoveredSubscriberInd != null)
-//				return false;
-//		} else if (!nonCoveredSubscriberInd.equals(other.nonCoveredSubscriberInd))
-//			return false;
 		if (policyMemberDeathDate == null) {
 			if (other.policyMemberDeathDate != null)
 				return false;

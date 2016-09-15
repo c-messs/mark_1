@@ -2,6 +2,10 @@ package gov.hhs.cms.ff.fm.eps.ep.enums;
 
 import com.accenture.foundation.common.exception.ApplicationException;
 
+/**
+ * SBM Response phase codes.
+ *
+ */
 public enum SBMResponsePhaseTypeCode {
 
 	INITIAL	    ("I"),

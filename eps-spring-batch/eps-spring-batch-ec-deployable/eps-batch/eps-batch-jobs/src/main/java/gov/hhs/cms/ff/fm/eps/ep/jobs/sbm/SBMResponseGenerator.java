@@ -45,6 +45,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmResponseCompositeDao;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmUpdateStatusDataService;
 
+/**
+ * Generate SMBR.
+ *
+ */
 public class SBMResponseGenerator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SBMResponseGenerator.class);
@@ -57,6 +61,9 @@ public class SBMResponseGenerator {
 	private String environmentCodeSuffix;
 	private SbmUpdateStatusDataService updateStatusDataService;
 	
+	/**
+	 * Constructor.
+	 */
 	public SBMResponseGenerator() {
 		try {
 			//create marshaller for SBMR
@@ -75,10 +82,18 @@ public class SBMResponseGenerator {
 		}
 	}
 	
-	public void generateSBMRWithPolicyErrors(Long smbFileProcSummaryId, Long jobExecId) throws SQLException, IOException, JAXBException {
-		LOG.info("Genrating SBMR for smbFileProcSummaryId:{}", smbFileProcSummaryId);
+	/**
+	 * Generate SBMR. 
+	 * @param sbmFileProcSumId
+	 * @param jobId
+	 * @throws SQLException
+	 * @throws IOException
+	 * @throws JAXBException
+	 */
+	public void generateSBMRWithPolicyErrors(Long sbmFileProcSumId, Long jobId) throws SQLException, IOException, JAXBException {
+		LOG.info("Genrating SBMR for sbmFileProcSumId:{}", sbmFileProcSumId);
 		
-		SbmResponseDTO sbmrDto = sbmResponseDao.generateSBMR(smbFileProcSummaryId);
+		SbmResponseDTO sbmrDto = sbmResponseDao.generateSBMR(sbmFileProcSumId);
 		BigDecimal errorThreshold = sbmrDto.getSbmSummaryAndFileInfo().getErrorThresholdPercent();
 		if(errorThreshold == null) {
 			errorThreshold = BigDecimal.ZERO;
@@ -104,47 +119,54 @@ public class SBMResponseGenerator {
 			fileStatus = SBMFileStatus.ACCEPTED_WITH_WARNINGS;
 		}
 		
-		//For states that doesn't require approval, approve them directly
+		//For states that don't require approval, approve them directly
 		if(N.equalsIgnoreCase(sbmrDto.getSbmSummaryAndFileInfo().getCmsApprovalRequiredInd())) {
-			LOG.info("CmsApprovalRequiredInd is 'N'");
+			String logMsg = "CmsApprovalRequiredInd is 'N', Performing approval for sbmFileProcSumId=" + sbmFileProcSumId + 
+					".  Updating file status from " + fileStatus.getValue()  + " to ";
 			if(SBMFileStatus.ACCEPTED.equals(fileStatus)) {
 				fileStatus = SBMFileStatus.APPROVED;
-				LOG.info("Performing approval");
-				updateStatusDataService.executeApproval(jobExecId, smbFileProcSummaryId);
+				updateStatusDataService.executeApproval(jobId, sbmFileProcSumId);
 			}
 			else if(SBMFileStatus.ACCEPTED_WITH_ERRORS.equals(fileStatus)) {
 				fileStatus = SBMFileStatus.APPROVED_WITH_ERRORS;
-				LOG.info("Performing approval");
-				updateStatusDataService.executeApproval(jobExecId, smbFileProcSummaryId);
+				updateStatusDataService.executeApproval(jobId, sbmFileProcSumId);
 			}
 			else if(SBMFileStatus.ACCEPTED_WITH_WARNINGS.equals(fileStatus)) {
 				fileStatus = SBMFileStatus.APPROVED_WITH_WARNINGS;
-				LOG.info("Performing approval");
-				updateStatusDataService.executeApproval(jobExecId, smbFileProcSummaryId);
+				updateStatusDataService.executeApproval(jobId, sbmFileProcSumId);
 			}
+			logMsg += fileStatus.getValue() + ".";
+			LOG.info(logMsg);
 		}
 		
-		LOG.info("Setting file status smbFileProcSummaryId:{} FileStatus:{}", smbFileProcSummaryId, fileStatus);		
+		LOG.info("Setting file status sbmFileProcSumId:{} FileStatus:{}", sbmFileProcSumId, fileStatus);		
 		setFileSatus(sbmrDto, fileStatus);
-		fileCompositeDao.updateFileStatus(smbFileProcSummaryId, fileStatus);
+		fileCompositeDao.updateFileStatus(sbmFileProcSumId, fileStatus, jobId);
 		
 		String sbmrXMLString = marshallSBMR(sbmrDto.getSbmr());
 		//TODO perform schema check on generated xml
-		String filename = eftDispatcher.getFileID(SBMConstants.FUNCTION_CODE_SBMR);
+		String filename = EFTDispatchDriver.getFileID(SBMConstants.FUNCTION_CODE_SBMR);
 		Long physicalDocId = eftDispatcher.saveDispatchContent(sbmrXMLString.getBytes(), filename, SBMConstants.FUNCTION_CODE_SBMR, environmentCodeSuffix, tradingPartnerId, 0, null, TARGET_EFT_APPLICATION_TYPE); 
-		LOG.info("SBMR PhysicalDocumentId: {} for smbFileProcSummaryId: {}", physicalDocId, smbFileProcSummaryId);	
+		LOG.info("SBMR PhysicalDocumentId: {} for sbmFileProcSumId: {}", physicalDocId, sbmFileProcSumId);	
 		
 		//create entries in SBMResponse	table		
-		sbmResponseDao.createSBMResponseRecord(smbFileProcSummaryId, null, physicalDocId, INITIAL);
+		sbmResponseDao.createSBMResponseRecord(sbmFileProcSumId, null, physicalDocId, INITIAL);
 	}
 	
-	public void generateSBMRForUpdateStatus(SBMUpdateStatusRecordDTO dto) throws SQLException, IOException, JAXBException {
+	/**
+	 * @param dto
+	 * @param jobId
+	 * @throws SQLException
+	 * @throws IOException
+	 * @throws JAXBException
+	 */
+	public void generateSBMRForUpdateStatus(SBMUpdateStatusRecordDTO dto, Long jobId) throws SQLException, IOException, JAXBException {
 		
-		Long  smbFileProcSummaryId = dto.getSbmFileProcSumId();
+		Long  sbmFileProcSumId = dto.getSbmFileProcSumId();
 		
-		LOG.info("Genrating UpdateStatus SBMR for smbFileProcSummaryId:{}", smbFileProcSummaryId);
+		LOG.info("Genrating UpdateStatus SBMR for sbmFileProcSumId:{}", sbmFileProcSumId);
 		
-		SbmResponseDTO sbmrDto = sbmResponseDao.generateUpdateStatusSBMR(smbFileProcSummaryId);
+		SbmResponseDTO sbmrDto = sbmResponseDao.generateUpdateStatusSBMR(sbmFileProcSumId);
 		
 		String tradingPartnerId = SbmHelper.getTradingPartnerId(sbmrDto.getSbmSummaryAndFileInfo().getSbmFileInfoList());
 		
@@ -155,21 +177,27 @@ public class SBMResponseGenerator {
 			sbmrDto.getSbmr().setSBMIPROCSUM(null);
 		}
 		
-		LOG.info("Setting file status smbFileProcSummaryId:{} FileStatus:{}", smbFileProcSummaryId, fileStatus);		
+		LOG.info("Setting file status sbmFileProcSumId:{} FileStatus:{}", sbmFileProcSumId, fileStatus);		
 		setFileSatus(sbmrDto, fileStatus);
-		fileCompositeDao.updateFileStatus(smbFileProcSummaryId, fileStatus);
+		fileCompositeDao.updateFileStatus(sbmFileProcSumId, fileStatus, jobId);
 		
 		String sbmrXMLString = marshallSBMR(sbmrDto.getSbmr());
 		
 		String filename = EFTDispatchDriver.getFileID(SBMConstants.FUNCTION_CODE_SBMR);
 		Long physicalDocId = eftDispatcher.saveDispatchContent(sbmrXMLString.getBytes(), filename, SBMConstants.FUNCTION_CODE_SBMR, environmentCodeSuffix, tradingPartnerId, 0, null, TARGET_EFT_APPLICATION_TYPE); 
-		LOG.info("SBMR PhysicalDocumentId: {} for smbFileProcSummaryId: {}", physicalDocId, smbFileProcSummaryId);	
+		LOG.info("SBMR PhysicalDocumentId: {} for sbmFileProcSumId: {}", physicalDocId, sbmFileProcSumId);	
 		
 		//create entries in SBMResponse	table		
-		sbmResponseDao.createSBMResponseRecord(smbFileProcSummaryId, null, physicalDocId, FINAL);
+		sbmResponseDao.createSBMResponseRecord(sbmFileProcSumId, null, physicalDocId, FINAL);
 		
 	}
 	
+	/**
+	 * @param fileProcDto
+	 * @throws JAXBException
+	 * @throws SQLException
+	 * @throws IOException
+	 */
 	public void generateSBMS(SBMFileProcessingDTO fileProcDto) throws JAXBException, SQLException, IOException {
 
 		LOG.info("Genrating SBMS for sbmFileInfoId:{}", fileProcDto.getSbmFileInfo().getSbmFileInfoId());
@@ -177,7 +205,7 @@ public class SBMResponseGenerator {
 		String sbmsXML = createSbmsXml(fileProcDto.getSbmFileInfo(), fileProcDto.getErrorList(), fileProcDto.getSbmFileStatusType());
 
 		//dispatch sbms to eft
-		String filename = eftDispatcher.getFileID(SBMConstants.FUNCTION_CODE_SBMS);
+		String filename = EFTDispatchDriver.getFileID(SBMConstants.FUNCTION_CODE_SBMS);
 		Long physicalDocId = eftDispatcher.saveDispatchContent(sbmsXML.getBytes(), filename, SBMConstants.FUNCTION_CODE_SBMS, environmentCodeSuffix, fileProcDto.getSbmFileInfo().getTradingPartnerId(), 0, null, TARGET_EFT_APPLICATION_TYPE);
 		LOG.info("SBMS PhysicalDocumentId: {} for sbmFileInfoId: {}", physicalDocId, fileProcDto.getSbmFileInfo().getSbmFileInfoId());	
 
@@ -186,6 +214,13 @@ public class SBMResponseGenerator {
 
 	}
 	
+	/**
+	 * @param summaryDto
+	 * @param errorList
+	 * @throws JAXBException
+	 * @throws SQLException
+	 * @throws IOException
+	 */
 	public void generateSBMSForAllSBMInfos(SBMSummaryAndFileInfoDTO summaryDto, List<SBMErrorDTO> errorList) throws JAXBException, SQLException, IOException {
 
 		LOG.info("Genrating SBMS for all SBMFileInfos for SbmFileProcSumId: {}", summaryDto.getSbmFileProcSumId());
@@ -202,7 +237,7 @@ public class SBMResponseGenerator {
 			String sbmsXML = createSbmsXml(fileInfo, errorList, summaryDto.getSbmFileStatusType());
 
 			//dispatch sbms to eft
-			String filename = eftDispatcher.getFileID(SBMConstants.FUNCTION_CODE_SBMS);
+			String filename = EFTDispatchDriver.getFileID(SBMConstants.FUNCTION_CODE_SBMS);
 			Long physicalDocId = eftDispatcher.saveDispatchContent(sbmsXML.getBytes(), filename, SBMConstants.FUNCTION_CODE_SBMS, environmentCodeSuffix, fileInfo.getTradingPartnerId(), 0, null, TARGET_EFT_APPLICATION_TYPE);
 			LOG.info("SBMS PhysicalDocumentId: {} for sbmFileInfoId: {}", physicalDocId, fileInfo.getSbmFileInfoId());	
 
@@ -224,13 +259,20 @@ public class SBMResponseGenerator {
 		
 		if(CollectionUtils.isNotEmpty(errorList)) {
 			
-			SBMErrorDTO error = errorList.get(0);
-			
-			sbms.setErrorCode(error.getSbmErrorWarningTypeCd());
-			sbms.setElementInError(error.getElementInErrorNm());
-			sbms.setErrorDescription(SBMCache.getErrorDescription(error.getSbmErrorWarningTypeCd()));
-			if(CollectionUtils.isNotEmpty(error.getAdditionalErrorInfoList())) {
-				sbms.setAdditionalErrorInfo(error.getAdditionalErrorInfoList().get(0));
+			for(SBMErrorDTO error: errorList) {
+
+				gov.cms.dsh.sbms.ErrorType errorType = new gov.cms.dsh.sbms.ErrorType();
+				errorType.setErrorCode(error.getSbmErrorWarningTypeCd());
+				errorType.setElementInError(error.getElementInErrorNm());
+				errorType.setErrorDescription(SBMCache.getErrorDescription(error.getSbmErrorWarningTypeCd()));
+				
+				if(CollectionUtils.isNotEmpty(error.getAdditionalErrorInfoList())) {
+					
+					for(String additionalInfo: error.getAdditionalErrorInfoList()) {
+						errorType.getAdditionalErrorInfo().add(additionalInfo);
+					}
+				}
+				sbms.getError().add(errorType);
 			}
 		}
 		

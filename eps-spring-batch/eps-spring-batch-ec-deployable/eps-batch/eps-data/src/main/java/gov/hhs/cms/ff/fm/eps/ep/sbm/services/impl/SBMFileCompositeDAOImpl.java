@@ -31,7 +31,6 @@ import gov.hhs.cms.ff.fm.eps.ep.po.StagingSbmFilePO;
 import gov.hhs.cms.ff.fm.eps.ep.po.StagingSbmGroupLockPO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
-import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProccessingSummary;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmDataUtil;
@@ -44,8 +43,12 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.StagingSbmFileMapper;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SBMFileCompositeDAOImpl implements SBMFileCompositeDAO {
-	
+
 	private final static Logger LOG = LoggerFactory.getLogger(SBMFileCompositeDAOImpl.class);
 
 	private SbmFileProcessingSummaryDao sbmFileProcSumDao;
@@ -109,37 +112,37 @@ public class SBMFileCompositeDAOImpl implements SBMFileCompositeDAO {
 	public void extractXprToStagingPolicy(SBMFileProcessingDTO inboundFileDTO) {
 
 		Long batchId = inboundFileDTO.getBatchId();
-		
+
 		if(batchId != null) {
 			userVO.setUserId(batchId.toString());
 		}
-		
+
 		String stateCd = SbmDataUtil.getStateCd(inboundFileDTO.getFileInfoType());
-		
+
 		int cntRows = stagingSbmPolicyDao.extractXprFromStagingSbmFile(inboundFileDTO.getXprProcGroupSize(), stateCd, userVO);
-		
+
 		LOG.info("Xprs extracted to StagingSbmPolicy: "  + cntRows);
-		
+
 		List<StagingSbmGroupLockPO> poList = stagingSbmGroupLockDao.selectSbmFileProcessingSummaryIdList();
-		
+
 		// Insert records with GroupingId set to zero "O".
 		for (StagingSbmGroupLockPO po : poList) {
 			po.setProcessingGroupId(Long.valueOf(0));
 		}
-		
+
 		stagingSbmGroupLockDao.insertStagingSbmGroupLock(poList);
 	}
 
 	@Override
 	public void insertStagingSbmGroupLockForExtract(Long sbmFileProcSumId) {
-		
+
 		StagingSbmGroupLockPO po = new StagingSbmGroupLockPO();
 		po.setSbmFileProcSumId(sbmFileProcSumId);
 		po.setProcessingGroupId(GROUP_ID_EXTRACT);
-		
+
 		List<StagingSbmGroupLockPO> poList = new ArrayList<>();
 		poList.add(po);
-		
+
 		stagingSbmGroupLockDao.insertStagingSbmGroupLock(poList);
 	}
 
@@ -150,7 +153,7 @@ public class SBMFileCompositeDAOImpl implements SBMFileCompositeDAO {
 		List<SBMSummaryAndFileInfoDTO> sbmSummaryDTOList = getSbmFileInfoList(summaryPOList);
 		return sbmSummaryDTOList;
 	}
-	
+
 	@Override
 	public List<SBMSummaryAndFileInfoDTO> getSBMFileProcessingSummary(String issuerId, String fileSetId, String tenantId) {
 
@@ -248,9 +251,15 @@ public class SBMFileCompositeDAOImpl implements SBMFileCompositeDAO {
 
 
 	@Override
-	public Long saveSbmFileProcessingSummary(SBMFileProccessingSummary sbmFileProcessingSummary) {
+	public Long saveSbmFileProcessingSummary(SBMFileProcessingDTO inboundFileDTO) {
 
-		SbmFileProcessingSummaryPO po = sbmFileProcSumMapper.mapSbmToEps(sbmFileProcessingSummary);
+		Long batchId = inboundFileDTO.getBatchId();
+
+		if (batchId != null) {
+			userVO.setUserId(batchId.toString());
+		}
+
+		SbmFileProcessingSummaryPO po = sbmFileProcSumMapper.mapSbmToEps(inboundFileDTO);
 
 		Long sbmFileProcSumId = sbmFileProcSumDao.insertSbmFileProcessingSummary(po);
 
@@ -276,7 +285,7 @@ public class SBMFileCompositeDAOImpl implements SBMFileCompositeDAO {
 	}
 
 	@Override
-	public void updateFileStatus(Long sbmFileProcSumId, SBMFileStatus fileStatus) {
+	public void updateFileStatus(Long sbmFileProcSumId, SBMFileStatus fileStatus, Long batchId) {
 
 		// TODO add batchId to LASTMODIFIEDBY
 		sbmFileProcSumDao.updateStatus(sbmFileProcSumId, fileStatus);

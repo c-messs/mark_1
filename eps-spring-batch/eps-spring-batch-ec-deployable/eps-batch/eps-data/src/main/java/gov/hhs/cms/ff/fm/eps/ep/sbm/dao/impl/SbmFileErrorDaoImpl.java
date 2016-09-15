@@ -10,6 +10,11 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.GenericEpsDao;
 import gov.hhs.cms.ff.fm.eps.ep.dao.SbmFileErrorDao;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileErrorPO;
 
+/**
+ * 
+ * Implementation of SbmFileErrorDao 
+ *
+ */
 public class SbmFileErrorDaoImpl extends GenericEpsDao<SbmFileErrorPO> implements SbmFileErrorDao {
 	
 	

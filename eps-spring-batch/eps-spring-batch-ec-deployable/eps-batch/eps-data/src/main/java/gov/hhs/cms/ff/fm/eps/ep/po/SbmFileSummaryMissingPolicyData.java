@@ -4,6 +4,13 @@ import java.time.LocalDate;
 
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
 
+/**
+ * @author j.radziewski
+ * 
+ * Data side domain object for processing outbound SBMFILESUMMARYMISSINGPOLICY data joined
+ * from POLICYVERSION and POLICYSTATUS.
+ *
+ */
 public class SbmFileSummaryMissingPolicyData extends SbmFileSummaryMissingPolicyPO {
 	
 	private String exchangePolicyId;

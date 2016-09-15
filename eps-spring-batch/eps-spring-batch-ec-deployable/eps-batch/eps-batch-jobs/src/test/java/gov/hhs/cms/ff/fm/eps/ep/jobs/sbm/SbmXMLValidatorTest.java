@@ -16,10 +16,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import gov.cms.dsh.sbmi.FileInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMPolicyEnum;
+import gov.hhs.cms.ff.fm.eps.ep.enums.SBMSchemaValidationRuleEnum;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 
 public class SbmXMLValidatorTest {
@@ -545,7 +547,65 @@ public class SbmXMLValidatorTest {
 	}
 	
 
+	@Test
+	public void test_UnsupportedZipFormat() throws SAXException, IOException, ParserConfigurationException {
+
+		File xmlFile = new File("./src/test/resources/sbm/schemaErrors/SBMI.VT0.D160809.T120000002.T");
+		String xmlString = readFile(xmlFile);
+		LOG.info("xmlString:\n{}", xmlString);
+
+		boolean errorExist = sbmXMLValidator.isValidXML(xmlFile);
+		LOG.info("errorExist: {}", errorExist);
+
+		Assert.assertFalse("One error should exists", errorExist);
+	}
 	
+	@Test
+	public void test_UnsupportedFormat() throws SAXException, IOException, ParserConfigurationException {
+
+		File xmlFile = new File("./src/test/resources/sbm/schemaErrors/SBMI_FileLevelErrors_InvalidSchema.xml");
+		String xmlString = readFile(xmlFile);
+		LOG.info("xmlString:\n{}", xmlString);
+
+		boolean errorExist = sbmXMLValidator.isValidXML(xmlFile);
+		LOG.info("errorExist: {}", errorExist);
+
+		Assert.assertFalse("One error should exists", errorExist);
+	}
 	
+	@Test
+	public void test_fatalError() {
+		SAXParseException saxException = new SAXParseException(
+				"errorMsg", "publicId", "systemId", 100, 25);
+		
+		SBMCustomHandler handler = new SBMCustomHandler();
+		LOG.info(handler.getCurrentElement());
+		
+		handler.fatalError(saxException);
+		
+		Assert.assertFalse("Schema errors list not empty", handler.getSchemaErrorList().isEmpty());
+		
+	}
+	
+	@Test
+	public void test_warning() {
+		SAXParseException saxException = new SAXParseException(
+				"errorMsg", "publicId", "systemId", 100, 25);
+		
+		SBMCustomHandler handler = new SBMCustomHandler();
+		LOG.info(handler.getCurrentElement());
+		
+		handler.warning(saxException);
+		
+		Assert.assertTrue("Schema errors list empty in case of warnings", handler.getSchemaErrorList().isEmpty());
+		
+	}
+	
+	@Test
+	public void test_SBMSchemaValidationRuleEnum() {
+		
+		SBMSchemaValidationRuleEnum schemaValidationRuleEnum = SBMSchemaValidationRuleEnum.findRule("cvc-length-valid");
+		Assert.assertEquals("SBMSchemaValidationRuleEnum", "cvc-length-valid", schemaValidationRuleEnum.getValue());
+	}
 	
 }

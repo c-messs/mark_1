@@ -14,7 +14,7 @@ import java.util.List;
 public interface PolicyVersionDao {
 
 	/**
-	 * @param PolicyVersionId
+	 * @param policyVersionId
 	 * @param subscriberStateCd
 	 * @return
 	 */

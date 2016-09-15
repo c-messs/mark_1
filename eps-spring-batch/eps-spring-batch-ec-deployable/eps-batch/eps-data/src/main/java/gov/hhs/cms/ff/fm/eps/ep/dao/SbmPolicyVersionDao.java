@@ -27,14 +27,6 @@ public interface SbmPolicyVersionDao extends PolicyVersionDao {
 	
 	
 	/**
-	 * @param stateCd
-	 * @param issuerId
-	 * @return
-	 */
-	public BigInteger selectPolicyCount(String stateCd, String issuerId);
-	
-	
-	/**
 	 * @param sbmFileProcSumId
 	 * @param stateCd
 	 * @param policyStatus
@@ -48,4 +40,13 @@ public interface SbmPolicyVersionDao extends PolicyVersionDao {
 	 * @return
 	 */
 	public int deleteStaging(Long sbmFileProcSumId);
+	
+	
+	/**
+	 * Select count of inbound SBM policies with CANCEL status that have an EPS status of EFFECTUATED.
+	 * @param sbmFileProcSumId
+	 * @param stateCd
+	 * @return
+	 */
+	public BigInteger selectCountEffectuatedPoliciesCancelled(final Long sbmFileProcSumId, final String stateCd);
 }

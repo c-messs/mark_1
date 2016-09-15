@@ -16,6 +16,11 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileArchivePO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * 
+ * Implementation of SbmFileArchiveDao 
+ *
+ */
 public class SbmFileArchiveDaoImpl extends GenericEpsDao<SbmFileArchivePO> implements SbmFileArchiveDao {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SbmFileArchiveDaoImpl.class);

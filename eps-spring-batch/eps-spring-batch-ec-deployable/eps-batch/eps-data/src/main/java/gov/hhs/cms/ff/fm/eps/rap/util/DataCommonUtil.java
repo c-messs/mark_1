@@ -62,7 +62,7 @@ public class DataCommonUtil {
 	
 	/**
 	 * Converts java.util.Date to org.joda.time.DateTime
-	 * @param date
+	 * @param dateTime
 	 * @return DateTime or null(if given date is null)
 	 */
 	public static Timestamp convertToSqlTimestamp(LocalDateTime dateTime) {

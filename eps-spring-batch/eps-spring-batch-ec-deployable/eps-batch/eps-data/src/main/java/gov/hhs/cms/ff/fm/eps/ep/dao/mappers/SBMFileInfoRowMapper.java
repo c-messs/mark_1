@@ -8,6 +8,10 @@ import org.springframework.jdbc.core.RowMapper;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileInfoPO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SBMFileInfoRowMapper implements RowMapper<SbmFileInfoPO> {
 
 	@Override

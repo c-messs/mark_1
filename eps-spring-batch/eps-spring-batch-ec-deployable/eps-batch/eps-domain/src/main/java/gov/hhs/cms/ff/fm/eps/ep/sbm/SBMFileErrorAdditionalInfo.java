@@ -1,5 +1,9 @@
 package gov.hhs.cms.ff.fm.eps.ep.sbm;
 
+/**
+ * @author rajesh.talanki
+ *
+ */
 public class SBMFileErrorAdditionalInfo {
 
 	private Long sbmFileInfoId;

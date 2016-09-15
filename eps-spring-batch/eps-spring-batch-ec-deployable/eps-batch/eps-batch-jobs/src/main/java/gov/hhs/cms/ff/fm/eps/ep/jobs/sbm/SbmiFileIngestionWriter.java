@@ -13,6 +13,10 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
 
+/**
+ * @author rajesh.talanki
+ *
+ */
 public class SbmiFileIngestionWriter {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmiFileIngestionWriter.class);
@@ -22,7 +26,12 @@ public class SbmiFileIngestionWriter {
 	private File invalidFolder;
 	private SBMResponseGenerator responseGenerator;
 
-	
+	/**
+	 * The write method to update data
+	 * 
+	 * @param dto
+	 * @throws Exception
+	 */
 	public void write(SBMFileProcessingDTO dto) throws Exception {
 
 		if(dto == null) {
@@ -44,7 +53,7 @@ public class SbmiFileIngestionWriter {
 			//update fileStatus only if file is not rejected and new status is set for the summary record
 			if( ! (dto.getSbmFileInfo().isRejectedInd() 
 					|| dto.getSbmFileStatusType().equals(dto.getFileProcSummaryFromDB().getSbmFileStatusType()))) {
-				fileCompositeDao.updateFileStatus(dto.getFileProcSummaryFromDB().getSbmFileProcSumId(), dto.getSbmFileStatusType());
+				fileCompositeDao.updateFileStatus(dto.getFileProcSummaryFromDB().getSbmFileProcSumId(), dto.getSbmFileStatusType(), dto.getBatchId());
 				LOG.info("SbmFileProcSumId: {}, status updated to {}", dto.getFileProcSummaryFromDB().getSbmFileProcSumId(), dto.getSbmFileStatusType().getValue());
 				dto.getFileProcSummaryFromDB().setSbmFileStatusType(dto.getSbmFileStatusType());
 			}

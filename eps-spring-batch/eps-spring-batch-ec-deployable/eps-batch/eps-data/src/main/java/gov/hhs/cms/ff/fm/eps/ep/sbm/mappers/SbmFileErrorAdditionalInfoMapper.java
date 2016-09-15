@@ -7,9 +7,17 @@ import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileErrorAdditionalInfoPO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmFileErrorAdditionalInfoMapper {
 
-
+	/**
+	 * 
+	 * @param inboundDTO
+	 * @return poList
+	 */
 	public List<SbmFileErrorAdditionalInfoPO> mapSbmToEps(SBMFileProcessingDTO inboundDTO) {
 
 		List<SbmFileErrorAdditionalInfoPO> poList = new ArrayList<SbmFileErrorAdditionalInfoPO>();

@@ -2,6 +2,12 @@ package gov.hhs.cms.ff.fm.eps.ep.po;
 
 import java.math.BigDecimal;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity class for table SBMFILEPROCESSINGSUMMARY
+ *
+ */
 public class SbmFileProcessingSummaryPO {
 	
 	private Long sbmFileProcSumId;

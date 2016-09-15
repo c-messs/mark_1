@@ -1,5 +1,8 @@
 package gov.hhs.cms.ff.fm.eps.ep.enums;
 
+/**
+ * The Enum SBMTobaccoUseCodeEnum.
+ */
 public enum SBMTobaccoUseCodeEnum {
 	
 	T ("Use"),	
@@ -14,7 +17,7 @@ public enum SBMTobaccoUseCodeEnum {
 	}
 	
 	/**
-	 * @param value
+	 * @param code
 	 * @return
 	 */
 	public static SBMTobaccoUseCodeEnum getEnum(String code) {

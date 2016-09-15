@@ -28,7 +28,7 @@ public class PolicyMemberVersionDaoImpl extends GenericEpsDao<PolicyMemberVersio
 	private String selectPolicyMemberVersionsByPolVerIdAndState;
 
 	/**
-	 * 
+	 * Constructor, set rowMapper once.
 	 */
 	public PolicyMemberVersionDaoImpl() {
 

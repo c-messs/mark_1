@@ -10,16 +10,23 @@ import gov.cms.dsh.sbmr.SBMIPROCSUMType.FinalRecordsProcessedSummary;
 import gov.cms.dsh.sbmr.SBMIPROCSUMType.FinalRecordsProcessedSummary.TotalApproved;
 import gov.cms.dsh.sbmr.SBMRHeaderType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
-import gov.hhs.cms.ff.fm.eps.ep.enums.SbmTransMsgStatus;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileProcessingSummaryPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileSummaryMissingPolicyData;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProccessingSummary;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmFileProcessingSummaryMapper {
 
-
+	/**
+	 * 
+	 * @param sbmFileProcSum
+	 * @return SbmFileProcessingSummaryPO
+	 */
 	public SbmFileProcessingSummaryPO mapSbmToEps(SBMFileProccessingSummary sbmFileProcSum) {
 
 		SbmFileProcessingSummaryPO po = new SbmFileProcessingSummaryPO();
@@ -53,6 +60,11 @@ public class SbmFileProcessingSummaryMapper {
 		return po;
 	}
 
+	/**
+	 * 
+	 * @param po
+	 * @return SBMSummaryAndFileInfoDTO
+	 */
 	public SBMSummaryAndFileInfoDTO mapEpsToSbm(SbmFileProcessingSummaryPO po) {
 
 		SBMSummaryAndFileInfoDTO summaryDTO = null;
@@ -92,7 +104,7 @@ public class SbmFileProcessingSummaryMapper {
 
 	/**
 	 * @param poList
-	 * @return
+	 * @return summaryDTOList
 	 */
 	public List<SBMSummaryAndFileInfoDTO> mapEpsToSbm(List<SbmFileProcessingSummaryPO> poList) {
 
@@ -109,24 +121,14 @@ public class SbmFileProcessingSummaryMapper {
 	}
 
 
-
 	/**
 	 * @param po
-	 * @param isAccepted
-	 * @return
-	 */
-	public FileAcceptanceRejection mapEpsToSbmr(SbmFileProcessingSummaryPO po) {
-
-		return mapEpsToSbmr(po, false, null);
-	}
-
-	/**
-	 * @param po
-	 * @param isAccepted
+	 * @param isApproved
 	 * @param missingPolicyDataList
-	 * @return
+	 * @param cntEffPoliciesCancelled
+	 * @return FileAcceptanceRejection
 	 */
-	public FileAcceptanceRejection mapEpsToSbmr(SbmFileProcessingSummaryPO po, boolean isAccepted, List<SbmFileSummaryMissingPolicyData> missingPolicyDataList) {
+	public FileAcceptanceRejection mapEpsToSbmr(SbmFileProcessingSummaryPO po, boolean isApproved, List<SbmFileSummaryMissingPolicyData> missingPolicyDataList, int cntEffPoliciesCancelled) {
 
 		FileAcceptanceRejection fileAR = new FileAcceptanceRejection();
 
@@ -152,14 +154,14 @@ public class SbmFileProcessingSummaryMapper {
 		summary.setNotSubmittedEffectuated(po.getNotSubmittedEffectuatedCnt());
 		summary.setNotSubmittedTerminated(po.getNotSubmittedTerminatedCnt());
 		summary.setNotSubmittedCancelled(po.getNotSubmittedCancelledCnt());
+		
+		FinalRecordsProcessedSummary finalSummary = new FinalRecordsProcessedSummary();
 
-		if (isAccepted) {
+		finalSummary.setTotalRecordsProcessed(po.getTotalRecordProcessedCnt());
+		finalSummary.setTotalRecordsRejected(po.getTotalRecordRejectedCnt());
+		finalSummary.setCountOfEffectuatedPoliciesCancelled(cntEffPoliciesCancelled);
 
-			
-			FinalRecordsProcessedSummary finalSummary = new FinalRecordsProcessedSummary();
-
-			finalSummary.setTotalRecordsProcessed(po.getTotalRecordProcessedCnt());
-			finalSummary.setTotalRecordsRejected(po.getTotalRecordRejectedCnt());
+		if (isApproved) {
 
 			TotalApproved totAppr = new TotalApproved();
 
@@ -177,19 +179,9 @@ public class SbmFileProcessingSummaryMapper {
 			totAppr.setNewPoliciesCreatedWithCorrectionApplied(po.getNewPlcCreatedCorrectionApplCnt());
 
 			finalSummary.setTotalApproved(totAppr);
-
-			// Number of policies cancelled by the SBM.
-			int countCancelled = po.getTotalRecordProcessedCnt() - po.getTotalRecordRejectedCnt() - po.getEffectuatedPolicyCount() - matchPolicyNoChangeCnt;
-			// TODO The above calculation needs more verification across many cycles
-			if (countCancelled > 0) {
-				finalSummary.setCountOfEffectuatedPoliciesCancelled(countCancelled);
-			} else {
-				finalSummary.setCountOfEffectuatedPoliciesCancelled(0);
-			}
-
-			summary.setFinalRecordsProcessedSummary(finalSummary);
-
 		}
+		
+		summary.setFinalRecordsProcessedSummary(finalSummary);
 
 		fileAR.setSBMIPROCSUM(summary);
 		

@@ -1,27 +1,26 @@
 package gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl;
 
-
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.accenture.foundation.common.exception.ApplicationException;
-
 import gov.hhs.cms.ff.fm.eps.ep.dao.SbmPolicyVersionDao;
-import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.po.PolicyVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMPolicyDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmPolicyMatchService;
 import gov.hhs.cms.ff.fm.eps.ep.vo.PolicyVersionSearchCriteriaVO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmPolicyMatchServiceImpl implements SbmPolicyMatchService {
 
 	private final static Logger LOG = LoggerFactory.getLogger(SbmPolicyMatchServiceImpl.class);
 
 	private SbmPolicyVersionDao sbmPolicyVersionDao;
-
 
 	@Override
 	public PolicyVersionPO findLatestPolicy(SBMPolicyDTO inboundDTO) {
@@ -35,13 +34,11 @@ public class SbmPolicyMatchServiceImpl implements SbmPolicyMatchService {
 		List<PolicyVersionPO> poList = sbmPolicyVersionDao.findLatestPolicyVersion(criteria);
 
 		// can never return null.
+		// and never return more than 1, since unique constraint XAK1POLICYVERSION.
 		if (poList.size() == 1) {
 			po = poList.get(0);
 
-		} else if (poList.size() > 1) {
-			String errMsg = EProdEnum.EPROD_13.getLogMsg() + ". "  + poList.size() + " policies found for " + criteria.getLogMessage();
-			throw new ApplicationException(errMsg);
-		}
+		} 
 
 		if (LOG.isDebugEnabled()) {
 			if (po != null) {
@@ -56,7 +53,6 @@ public class SbmPolicyMatchServiceImpl implements SbmPolicyMatchService {
 		return po;
 	}
 
-
 	/**
 	 * Extracts ExchangePolicyID and StateCd search criteria from the inbound DTO.
 	 * @param inboundDTO
@@ -70,15 +66,11 @@ public class SbmPolicyMatchServiceImpl implements SbmPolicyMatchService {
 		return criteria;
 	}
 
-
 	/**
 	 * @param sbmPolicyVersionDao the sbmPolicyVersionDao to set
 	 */
 	public void setSbmPolicyVersionDao(SbmPolicyVersionDao sbmPolicyVersionDao) {
 		this.sbmPolicyVersionDao = sbmPolicyVersionDao;
 	}
-
-
-
 
 }

@@ -1,5 +1,12 @@
 package gov.hhs.cms.ff.fm.eps.ep.po;
 
+/**
+ * @author j.radziewski
+ * 
+ * Generic class for entities with same attributes to extend.
+ * 
+ * @param <T>
+ */
 public class GenericSbmFilePO<T> {
 	
 	private Long sbmFileInfoId;

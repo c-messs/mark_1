@@ -21,6 +21,11 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SbmTransMsgStatus;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgPO;
 
+/**
+ * 
+ * SbmTransMsgDao implementation
+ *
+ */
 public class SbmTransMsgDaoImpl extends GenericEpsDao<SbmTransMsgPO> implements SbmTransMsgDao {
 
 	private final static Logger LOG = LoggerFactory.getLogger(SbmTransMsgDaoImpl.class);
@@ -32,8 +37,10 @@ public class SbmTransMsgDaoImpl extends GenericEpsDao<SbmTransMsgPO> implements 
 	private String selectMatchCountCorrectedSql;
 	private String selectNoMatchCountSql;
 
+	/**
+	 * Constructor
+	 */
 	public SbmTransMsgDaoImpl() {
-
 		this.rowMapper = new SbmTransMsgRowMapper();
 	}
 

@@ -19,7 +19,7 @@ public class PolicyMemberAddressDaoImpl extends GenericEpsDao<PolicyMemberAddres
 	private String selectPolicyMemberAddressByPolVerId;
 
 	/**
-	 * 
+	 * Constructor, set rowMapper once.
 	 */
 	public PolicyMemberAddressDaoImpl() {
 
