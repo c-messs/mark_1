@@ -128,7 +128,21 @@ public class POEqualsTest extends TestCase {
 		assertFalse("policy member po is not policy version po", po1.equals(po3));
 	}
 	
-	// TODO elimate non-SBM attributes
+	@Test
+	public void testSbmPolicyMemberVersionPO_Equals() throws Exception {
+
+		SbmPolicyMemberVersionPO po1 = new SbmPolicyMemberVersionPO();
+		assertTrue("po1, po1", po1.equals(po1));
+		SbmPolicyMemberVersionPO po2 = null;
+		assertFalse("po1 empty, po2 null", po1.equals(po2));
+		po2 = new SbmPolicyMemberVersionPO();
+		assertEqualsMethod(po1, po2);
+		PolicyVersionPO po3 = new PolicyVersionPO();
+		assertFalse("policy member po is not policy version po", po1.equals(po3));
+	}
+	
+	
+
 	@Test
 	public void testSbmPolicyVersionPO_Equals() throws Exception {
 
@@ -195,8 +209,9 @@ public class POEqualsTest extends TestCase {
 
 		Class<?> po1Clz = po1.getClass();
 		Class<?> po2Clz = po2.getClass();
-		Method[] methods1 = po1Clz.getMethods();
-		Method[] methods2 = po2Clz.getMethods();
+		Method[] methods1 = po1Clz.getDeclaredMethods();
+		Method[] methods2 = po2Clz.getDeclaredMethods();
+	
 
 		assertTrue("po1 empty, po2 empty", po1.equals(po2));
 
@@ -212,7 +227,9 @@ public class POEqualsTest extends TestCase {
 						&& methNm.indexOf("setPolicyMemberVersionId") == -1 && methNm.indexOf("setPolicyMemberChanged") == -1 
 						&& methNm.indexOf("setMaintenance") == -1 && methNm.indexOf("setTransMsgID") == -1
 						&& methNm.indexOf("setOtherRelationshipSequence") == -1 && methNm.indexOf("setExchangePolicyId") == -1
-						&& methNm.indexOf("setSubscriberStateCd") == -1) { 
+						&& methNm.indexOf("setSubscriberStateCd") == -1 && methNm.indexOf("setSbmTransMsgID") == -1
+						&& methNm.indexOf("setPriorPolicyMemberVersionId") == -1 && methNm.indexOf("setNonCoveredSubscriberInd") == -1
+						) {
 					
 					
 					if (argType.equals(LOCAL_DATE_TIME)) {

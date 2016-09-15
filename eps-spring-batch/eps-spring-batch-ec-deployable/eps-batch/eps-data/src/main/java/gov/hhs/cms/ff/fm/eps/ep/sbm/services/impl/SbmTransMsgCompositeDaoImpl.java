@@ -19,6 +19,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmTransMsgValidationMapper;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmTransMsgCompositeDao;
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmTransMsgCompositeDaoImpl implements SbmTransMsgCompositeDao {
 
 	private final static Logger LOG = LoggerFactory.getLogger(SbmTransMsgCompositeDaoImpl.class);
@@ -61,7 +65,6 @@ public class SbmTransMsgCompositeDaoImpl implements SbmTransMsgCompositeDao {
 
 		return sbmTransMsgId;
 	}
-	
 
 
 	private void saveSbmErrorsAndWarnings(SBMPolicyDTO inboundPolicyDTO) {

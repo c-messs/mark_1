@@ -20,8 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import gov.cms.dsh.sbmi.Enrollment;
 import gov.hhs.cms.ff.fm.eps.ep.dao.StagingSbmFileDao;
+import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.po.StagingSbmFilePO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.util.sbm.TestDataSBMUtility;
+import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:/sbmi-data-config.xml", "classpath:/test-context-data.xml" })
@@ -31,7 +34,10 @@ public class StagingSbmFileDaoImplTest extends BaseSBMDaoTest {
 
 
 	@Autowired
-	StagingSbmFileDao stagingSbmFileDao;
+	private StagingSbmFileDao stagingSbmFileDao;
+	
+	@Autowired
+	private UserVO userVO;
 
 	private static Unmarshaller unmarshaller;
 
@@ -55,7 +61,7 @@ public class StagingSbmFileDaoImplTest extends BaseSBMDaoTest {
 		int covYr = YEAR;
 		String issuerId = TestDataSBMUtility.getRandomNumberAsString(5);
 		Enrollment enrollment = TestDataSBMUtility.makeEnrollment(fileId, tenantId, covYr, issuerId, TestDataSBMUtility.FILES_ONE_PER_ISSUER);
-		
+
 		String exchangePolicyId = TestDataSBMUtility.getRandomNumberAsString(9);
 		for (int i = 1; i < 5; ++i) {
 			String qhpId = issuerId + tenantId + String.format("%04d", i) + "01";
@@ -67,13 +73,14 @@ public class StagingSbmFileDaoImplTest extends BaseSBMDaoTest {
 		expected.setSbmXML(expectedSbmXML);
 		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(8);
 		expected.setBatchId(batchId);
+		userVO.setUserId(batchId.toString());
 
 		Long sbmFileProcSumId = insertSBMFileProcessingSummary(tenantId);
 		expected.setSbmFileProcessingSummaryId(sbmFileProcSumId);
 		Long sbmFileInfoId = insertSBMFileInfo(sbmFileProcSumId, "FILEID-" + fileId.toString());
 		expected.setSbmFileInfoId(sbmFileInfoId);
-		
-		
+
+
 		stagingSbmFileDao.insertFileToStaging(expected);
 
 		// Go and get what was just put in.
@@ -95,11 +102,79 @@ public class StagingSbmFileDaoImplTest extends BaseSBMDaoTest {
 		assertEquals("TenantId from SBMXML", tenantId, actualEnrollment.getFileInformation().getTenantId());
 		assertEquals("CoverageYear from SBMXML", covYr, actualEnrollment.getFileInformation().getCoverageYear());
 		assertEquals("IssuerId from SBMXML", issuerId, actualEnrollment.getFileInformation().getIssuerFileInformation().getIssuerId());
-		
+
 		assertEquals("CreateBy", batchId.toString(), (String) row.get("CREATEBY"));
 		assertEquals("LastModifiedBy", batchId.toString(), (String) row.get("LASTMODIFIEDBY"));
 
 	}
 
+
+	@Test
+	public void test_deleteStagingSbmFile_Exception() { 
+
+		Class<?> expectedEx = com.accenture.foundation.common.exception.ApplicationException.class;
+		String expectedCd = EProdEnum.EPROD_10.getCode();
+		Long sbmFileProcSumId = null;
+		try {
+			stagingSbmFileDao.deleteStagingSbmFile(sbmFileProcSumId);
+		} catch (Exception ex) {
+			assertEquals("Exception thrown", expectedEx, ex.getClass());
+			assertEquals("EPROD", expectedCd, ex.getMessage());
+		}
+	}
+
+
+	@Test
+	public void test_insertFileToStaging_Exception() { 
+
+		Class<?> expectedEx = com.accenture.foundation.common.exception.ApplicationException.class;
+		String expectedCd = EProdEnum.EPROD_10.getCode();
+		StagingSbmFilePO po = null;
+		try {
+			stagingSbmFileDao.insertFileToStaging(po);
+		} catch (Exception ex) {
+			assertEquals("Exception thrown", expectedEx, ex.getClass());
+			assertEquals("EPROD", expectedCd, ex.getMessage());
+		}
+	}
+
+
+
+	@Test
+	public void test_getStagingPolicies() {
+
+		int expectedListSize = 3;
+
+		String tenantId = TestDataSBMUtility.getRandomSbmState() + "0";		
+		Long fileId = TestDataSBMUtility.getRandomNumberAsLong(8);
+		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(4);
+		
+		SBMFileProcessingDTO fileDTO = insertParentFileRecords(tenantId, fileId.toString());
+		Long sbmFileProcSumId = fileDTO.getSbmFileProcSumId();
+
+		Enrollment enrollment = new Enrollment();
+
+		enrollment.getPolicy().add(TestDataSBMUtility.makePolicyType(tenantId, "EXPOLID-1111"));
+		enrollment.getPolicy().add(TestDataSBMUtility.makePolicyType(tenantId, "EXPOLID-2222"));
+		enrollment.getPolicy().add(TestDataSBMUtility.makePolicyType(tenantId, "EXPOLID-3333"));
+
+		String sbmFileXML = TestDataSBMUtility.getEnrollmentAsXmlString(enrollment);
+
+		// set up some data, insert the Enrollment XML into staging		
+		String sql = "INSERT INTO STAGINGSBMFILE (SBMXML, BATCHID, SBMFILEPROCESSINGSUMMARYID, SBMFILEINFOID) " +
+				"VALUES (XMLTYPE('" + sbmFileXML + "'), " + batchId + ", " + sbmFileProcSumId + 
+				", " + fileDTO.getSbmFileInfo().getSbmFileInfoId() + ")";
+		jdbc.execute(sql);
+		
+		sql = "INSERT INTO STAGINGSBMGROUPLOCK (SBMFILEPROCESSINGSUMMARYID, PROCESSINGGROUPID, BATCHID) " +
+				"VALUES ('" + sbmFileProcSumId + "', " + 101 + ", " + batchId + ")";
+		jdbc.execute(sql);
+
+		List<String> actualList = stagingSbmFileDao.getStagingPolicies(batchId);
+		
+		assertEquals("count POLICIES extracted STAGINGSBMFILE record", expectedListSize, actualList.size());
+
+
+	}
 
 }

@@ -12,23 +12,21 @@ import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyMemberPO;
 public interface SbmPolicyMemberDao extends PolicyMemberDao {
 	
 	/**
-	 * @param po
+	 * @param poList
 	 * @return
 	 */
 	public void insertStagingPolicyMember(final List<SbmPolicyMemberPO> poList);
 	
 	
+
 	/**
-	 * @param sbmFileProcSumId
-	 */
-	public BigInteger mergePolicyMember(final Long sbmFileProcSumId);
-	
-	
-	/**
+	 * Merge from Staging to EPS.
+	 * Returns count of rows affected.
 	 * @param sbmFileProcSumId
 	 * @return
 	 */
-	public List<SbmPolicyMemberPO> findMissingPolicyAndMember(final Long sbmFileProcSumId);
+	public BigInteger mergePolicyMember(final Long sbmFileProcSumId);
+	
 	
 	
 	/**

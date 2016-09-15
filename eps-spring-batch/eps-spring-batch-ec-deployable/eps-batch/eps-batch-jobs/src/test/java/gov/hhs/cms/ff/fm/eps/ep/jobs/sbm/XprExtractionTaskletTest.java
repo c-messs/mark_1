@@ -7,7 +7,6 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

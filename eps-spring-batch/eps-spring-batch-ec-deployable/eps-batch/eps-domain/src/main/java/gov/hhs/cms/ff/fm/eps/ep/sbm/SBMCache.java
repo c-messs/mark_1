@@ -61,7 +61,8 @@ public class SBMCache {
 	/**
 	 * 
 	 * @param qhpId
-	 * @return
+	 * @param planYear
+	 * @return boolean
 	 */
 	public static boolean doesQhpExistForPlanYear(String qhpId, String planYear) {
 		

@@ -14,6 +14,7 @@ import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import gov.hhs.cms.ff.fm.eps.ep.dao.StagingSbmGroupLockDao;
+import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.po.StagingSbmGroupLockPO;
 import gov.hhs.cms.ff.fm.eps.ep.util.sbm.TestDataSBMUtility;
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
@@ -375,6 +376,35 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 		
 		List<StagingSbmGroupLockPO> locksList = stagingSbmGroupLockDao.selectSbmFileProcessingSummaryIdList();
 		assertEquals("STAGING Group Lock list size", 1, locksList.size());
+	}
+	
+	@Test
+	public void test_deleteStaging_Exception() { 
+				
+		Class<?> expectedEx = com.accenture.foundation.common.exception.ApplicationException.class;
+		String expectedCd = EProdEnum.EPROD_10.getCode();
+		Long sbmFileProcSumId = null;
+		Long batchId = null;
+		try {
+			stagingSbmGroupLockDao.deleteStagingGroupLock(sbmFileProcSumId, batchId);
+		} catch (Exception ex) {
+			assertEquals("Exception thrown", expectedEx, ex.getClass());
+			assertEquals("EPROD", expectedCd, ex.getMessage());
+		}
+	}
+	
+	@Test
+	public void test_deleteStagingExtract_Exception() { 
+				
+		Class<?> expectedEx = com.accenture.foundation.common.exception.ApplicationException.class;
+		String expectedCd = EProdEnum.EPROD_10.getCode();
+		Long batchId = null;
+		try {
+			stagingSbmGroupLockDao.deleteStagingGroupLockForExtract(batchId);
+		} catch (Exception ex) {
+			assertEquals("Exception thrown", expectedEx, ex.getClass());
+			assertEquals("EPROD", expectedCd, ex.getMessage());
+		}
 	}
 	
 }

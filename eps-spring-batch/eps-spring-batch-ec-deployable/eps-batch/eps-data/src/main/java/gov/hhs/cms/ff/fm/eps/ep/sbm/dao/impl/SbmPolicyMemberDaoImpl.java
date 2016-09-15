@@ -30,7 +30,6 @@ public class SbmPolicyMemberDaoImpl extends GenericEpsDao<SbmPolicyMemberPO> imp
 	
 	private String insertPMListSql;
 	private String mergePMSql;
-	private String findPMMissingSql;
 	private String deleteStagingPMSql;
 	
 	/**
@@ -44,7 +43,7 @@ public class SbmPolicyMemberDaoImpl extends GenericEpsDao<SbmPolicyMemberPO> imp
 	@Override
 	public void insertStagingPolicyMember(List<SbmPolicyMemberPO> pmList) {
 		
-		int[] rowsAffected = jdbcTemplate.batchUpdate(insertPMListSql, new BatchPreparedStatementSetter() {
+		jdbcTemplate.batchUpdate(insertPMListSql, new BatchPreparedStatementSetter() {
 
 			@Override
 			public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -62,11 +61,6 @@ public class SbmPolicyMemberDaoImpl extends GenericEpsDao<SbmPolicyMemberPO> imp
 				return pmList.size();
 			}
 		});	
-		
-		if (rowsAffected.length < pmList.size()) {
-			throw new ApplicationException(EProdEnum.EPROD_10.getCode() + 
-					"Only " + rowsAffected.length + " of " + pmList.size() + " joined in StagingPolicyMember.");
-		}
 		
 	}
 	
@@ -107,12 +101,6 @@ public class SbmPolicyMemberDaoImpl extends GenericEpsDao<SbmPolicyMemberPO> imp
 		
 	}
 	
-	
-	@Override
-	public List<SbmPolicyMemberPO> findMissingPolicyAndMember(Long sbmFileProcSumId) {
-		
-		return (List<SbmPolicyMemberPO>) jdbcTemplate.query(findPMMissingSql, rowMapper, sbmFileProcSumId);
-	}
 	
 	@Override
 	public int deleteStaging(Long sbmFileProcSumId) {
@@ -168,13 +156,6 @@ public class SbmPolicyMemberDaoImpl extends GenericEpsDao<SbmPolicyMemberPO> imp
 	 */
 	public void setMergePMSql(String mergePMSql) {
 		this.mergePMSql = mergePMSql;
-	}
-
-	/**
-	 * @param findPMMissingSql the findPMMissingSql to set
-	 */
-	public void setFindPMMissingSql(String findPMMissingSql) {
-		this.findPMMissingSql = findPMMissingSql;
 	}
 
 	/**

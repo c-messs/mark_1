@@ -32,7 +32,6 @@
 		<property name="insertSbmFileProcSumSql" value="${INSERT_FILE_PROC_SUM}"></property>
 		<property name="selectSbmFileProcSumSql" value="${SELECT_FILE_PROC_SUM}"></property>
 		<property name="findSbmFileProcSumSql" value="${FIND_FILE_PROC_SUM}"></property>
-		<property name="findSbmFileProcSumFileNumSql" value="${FIND_FILE_PROC_SUM_FILENUM}"></property>
 		<property name="findSbmFileProcSumFileNameSql" value="${FIND_FILE_PROC_SUM_FILENAME}"></property>
 		<property name="findSbmFileProcSumFileStatusSql" value="${FIND_FILE_PROC_SUM_STATUS}"></property>
 		<property name="findSbmFileProcSumFileStatusStateCdSql" value="${FIND_FILE_PROC_SUM_STATUS_STATECD}"></property>		
@@ -140,9 +139,8 @@
 		<property name="selectPVSql" value="${SELECT_PV}"></property>
 		<property name="insertStagingPVSql" value="${INSERT_STAGING_PV}"></property>	
 		<property name="mergePVSql" value="${MERGE_PV}"></property>
-		<property name="selectPolicyCountStateSql" value="${SELECT_POLICY_COUNT_STATE}"></property>
-		<property name="selectPolicyCountIssuerSql" value="${SELECT_POLICY_COUNT_ISSUER}"></property>
 		<property name="selectPolicyCountByStatusSql" value="${SELECT_POLICY_COUNT_BY_STATUS}"></property>
+		<property name="selectPolicyCountCancelledSql" value="${SELECT_POLICY_COUNT_CANCELLED}"></property>
 		<property name="deleteStagingPVSql" value="${DELETE_STAGING_PV}"></property>
 		<property name="userVO" ref="userVO" />
 	</bean>
@@ -153,7 +151,6 @@
 		<property name="selectStatusListSql" value="${SELECT_PV_STATUS}"></property>
 		<property name="insertStatusListSql" value="${INSERT_STAGING_PV_STATUS}"></property>
 		<property name="mergeStatusSql" value="${MERGE_STATUS}"></property>	
-		<property name="selectStatusLatestSql" value="${SELECT_PV_LATEST}"></property>
 		<property name="deleteStagingStatusSql" value="${DELETE_STAGING_STATUS}"></property>	
 		<property name="userVO" ref="userVO" />
 	</bean>	
@@ -173,7 +170,6 @@
 		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
 		<property name="insertPMListSql" value="${INSERT_PM}"></property>
 		<property name="mergePMSql" value="${MERGE_PM}"></property>
-		<property name="findPMMissingSql" value="${FIND_PM_MISSING}"></property>
 		<property name="deleteStagingPMSql" value="${DELETE_STAGING_PM}"></property>
 		<property name="userVO" ref="userVO" />
 	</bean>
@@ -366,14 +362,16 @@
 	
 
 	<bean id="sbmFileReversalDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl.SbmFileReversalDaoImpl">
-		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
-		<property name="voidPolicyStatusSql" value="${VOID_POLICY_STATUS}"></property>
-		<property name="copyPrecedingPolicyVersionSql" value="${COPY_PRECEDING_POLICYVERSION}"></property>
-		<property name="copyPolicyVersionSql" value="${COPY_POLICYVERSION}"></property>
+		<property name="jdbcTemplate" ref="jdbcTemplate"/>
+		<property name="voidPolicyStatusSql" value="${VOID_POLICY_STATUS}"/>
+		<property name="copyPrecedingPolicyVersionSql" value="${COPY_PRECEDING_POLICYVERSION}"/>
+		<property name="copyPolicyVersionSql" value="${COPY_POLICYVERSION}"/>
 		<property name="copyPrecedingStatusSql" value="${COPY_PRECEDING_POLICYSTATUS}"/>
-		<property name="copyPolicyPremiumsSql" value="${COPY_POLICYPREMIUM}"></property>
-		<property name="copyPolicyMembersSql" value="${COPY_POLICYMEMBER}"></property>
-		<property name="updateMaintDateTimesSql" value="${UPDATE_MAINT_DATETIMES}"></property>
+		<property name="copyStatusHistorySql" value="${COPY_POLICY_STATUS_HISTORY}"/>
+		<property name="updateMaintDateTimeForVoidSql" value="${UPDATE_MAINTDATETIME_VOID}"/>
+		<property name="updateMaintDateTimeForPrecedingSql" value="${UPDATE_MAINTDATETIME_PRECEDING}"/>		
+		<property name="copyPolicyPremiumsSql" value="${COPY_POLICYPREMIUM}"/>
+		<property name="copyPolicyMembersSql" value="${COPY_POLICYMEMBER}"/>
 		<property name="userVO" ref="userVO" />
 	</bean>
 	

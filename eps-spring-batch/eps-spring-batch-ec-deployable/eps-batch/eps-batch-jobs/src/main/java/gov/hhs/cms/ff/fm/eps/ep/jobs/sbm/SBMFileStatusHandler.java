@@ -17,6 +17,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
 
+/**
+ * @author rajesh.talanki
+ *
+ */
 public class SBMFileStatusHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SBMFileStatusHandler.class);
@@ -25,6 +29,11 @@ public class SBMFileStatusHandler {
 	private int freezePeriodEndDay;
 	private SBMFileCompositeDAO fileCompositeDao;
 	
+	/**
+	 * Determine and Set the SBMI File Status
+	 * 
+	 * @param fileProcDto
+	 */
 	public void determineAndSetFileStatus(SBMFileProcessingDTO fileProcDto) {
 				
 		FileInformationType fileInfoType = fileProcDto.getFileInfoType();

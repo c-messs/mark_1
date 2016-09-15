@@ -168,8 +168,10 @@ public class SbmFileProcessingSummaryMapperTest extends SBMBaseMapperTest {
 
 		SbmFileProcessingSummaryPO expected = makeSbmFileProcessingSummaryPO(tenantId, issuerId, issuerFileSetId);
 		expected.setSbmFileProcSumId(TestDataSBMUtility.getRandomNumberAsLong(3));
+		
+		List<SbmFileSummaryMissingPolicyData> missingPolicyDataList = new ArrayList<SbmFileSummaryMissingPolicyData>();
 
-		FileAcceptanceRejection actual = mapper.mapEpsToSbmr(expected);
+		FileAcceptanceRejection actual = mapper.mapEpsToSbmr(expected, false, missingPolicyDataList, 0);
 
 		assertNotNull("FileAcceptanceRejection", actual);
 
@@ -217,9 +219,9 @@ public class SbmFileProcessingSummaryMapperTest extends SBMBaseMapperTest {
 		expected.setTotalRecordRejectedCnt(expectedTotalRecordRejectedCnt);
 		expected.setEffectuatedPolicyCount(expectedEffectuatedPolicyCount);
 		
-		int expectedCountOfEffectuatedPoliciesCancelled = expectedTotalRecordProcessedCnt - expectedTotalRecordRejectedCnt - expectedEffectuatedPolicyCount - expectedMatchSame;
+		int expectedCountOfEffectuatedPoliciesCancelled = 0;
 		
-		FileAcceptanceRejection actual = mapper.mapEpsToSbmr(expected, isAccepted, missingPolicyDataList);
+		FileAcceptanceRejection actual = mapper.mapEpsToSbmr(expected, isAccepted, missingPolicyDataList, expectedCountOfEffectuatedPoliciesCancelled);
 		
 		assertNotNull("FileAcceptanceRejection", actual);
 

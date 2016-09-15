@@ -24,8 +24,7 @@ public class SbmFileProcessingSummaryDaoImpl extends GenericEpsDao<SbmFileProces
 	private String matchSbmFileProcSumSql;
 	private String selectSbmFileProcSumSql;
 	private String findSbmFileProcSumSql;
-	private String findSbmFileProcSumFileNumSql;
-	private String findSbmFileProcSumFileNameSql;
+    private String findSbmFileProcSumFileNameSql;
 	private String findSbmFileProcSumFileStatusSql;
 	private String findSbmFileProcSumFileStatusStateCdSql;
 	private String insertSbmFileProcSumSql;
@@ -89,13 +88,6 @@ public class SbmFileProcessingSummaryDaoImpl extends GenericEpsDao<SbmFileProces
 	public List<SbmFileProcessingSummaryPO> findSbmFileProcessingSummary(String issuerId, String fileSetId, String tenantId) {
 
 		return (List<SbmFileProcessingSummaryPO>) jdbcTemplate.query(findSbmFileProcSumSql, rowMapper, issuerId, fileSetId, tenantId);
-	}
-
-
-	@Override
-	public List<SbmFileProcessingSummaryPO> findSbmFileProcessingSummary(String fileSetId, int fileNumber) {
-
-		return (List<SbmFileProcessingSummaryPO>) jdbcTemplate.query(findSbmFileProcSumFileNumSql, rowMapper, fileSetId, fileNumber);
 	}
 
 	@Override
@@ -309,14 +301,6 @@ public class SbmFileProcessingSummaryDaoImpl extends GenericEpsDao<SbmFileProces
 	 */
 	public void setFindSbmFileProcSumSql(String findSbmFileProcSumSql) {
 		this.findSbmFileProcSumSql = findSbmFileProcSumSql;
-	}
-
-
-	/**
-	 * @param findSbmFileProcSumFileNumSql the findSbmFileProcSumFileNumSql to set
-	 */
-	public void setFindSbmFileProcSumFileNumSql(String findSbmFileProcSumFileNumSql) {
-		this.findSbmFileProcSumFileNumSql = findSbmFileProcSumFileNumSql;
 	}
 
 

@@ -7,6 +7,10 @@ import org.springframework.jdbc.core.RowMapper;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgValidationPO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmTransMsgValidationRowMapper implements RowMapper<SbmTransMsgValidationPO> {
 
 	@Override

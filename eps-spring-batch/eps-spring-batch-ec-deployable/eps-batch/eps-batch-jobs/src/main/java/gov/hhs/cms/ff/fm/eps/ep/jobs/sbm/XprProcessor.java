@@ -4,6 +4,7 @@ import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.ERROR_DESC_INCORRECT_VAL
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
@@ -176,7 +177,7 @@ public class XprProcessor implements ItemProcessor<SBMPolicyDTO, SBMPolicyDTO> {
     		
     		return sbmXMLValidator.validateSchemaForXPR(xmlToValidate);
     	}
-    	return null;
+    	return Collections.emptyList();
 	}
     
 

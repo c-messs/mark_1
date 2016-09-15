@@ -13,7 +13,6 @@ public interface SbmResponseCompositeDao {
 	
 	/**
 	 * @param sbmFileProcSumId
-	 * @param fileStatus
 	 * @return
 	 */
 	public SbmResponseDTO generateSBMR(Long sbmFileProcSumId);
@@ -54,7 +53,7 @@ public interface SbmResponseCompositeDao {
 	
 	/**
 	 * Returns list of sbmFileProcSumIds from StagingSBMGroupLock with groupId = 0 for the given batchId
-	 * @param bactchId
+	 * @param batchId
 	 * @return
 	 */
 	public List<Long> getSummaryIdsForSBMRFromStagingSBMGroupLock(Long batchId);

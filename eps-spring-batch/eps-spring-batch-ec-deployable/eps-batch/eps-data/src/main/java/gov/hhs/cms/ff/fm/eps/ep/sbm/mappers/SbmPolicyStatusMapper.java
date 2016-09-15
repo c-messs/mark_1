@@ -22,7 +22,7 @@ public class SbmPolicyStatusMapper {
 	 * per version and appended to the list of statuses in EPS.  
 	 * An inbound status is added to EPS list of statuses.
 	 * If inbound status does not change from EPS latest, do not add.
-	 * @param policy
+	 * @param inboundPolicyDTO
 	 * @param epsList
 	 * @return List<PolicyStatusPO>
 	 */
@@ -31,7 +31,7 @@ public class SbmPolicyStatusMapper {
 		List<SbmPolicyStatusPO> poList = new ArrayList<SbmPolicyStatusPO>();
 
 		if (epsList != null) {
-			
+
 			for(SbmPolicyStatusPO epsPO : epsList) {
 
 				epsPO.setPolicyChanged(false);
@@ -45,28 +45,25 @@ public class SbmPolicyStatusMapper {
 
 			PolicyStatus inboundPolicyStatus = determinePolicyStatus(policy);
 
-			if (inboundPolicyStatus != null) {
+			SbmPolicyStatusPO po = new SbmPolicyStatusPO();
 
-				SbmPolicyStatusPO po = new SbmPolicyStatusPO();
+			po.setInsuranacePolicyStatusTypeCd(inboundPolicyStatus.getValue());
+			po.setTransDateTime(inboundPolicyDTO.getFileProcessDateTime());
 
-				po.setInsuranacePolicyStatusTypeCd(inboundPolicyStatus.getValue());
-				po.setTransDateTime(inboundPolicyDTO.getFileProcessDateTime());
+			// if new inbound status is NOT the same as the latest existing EPS status, then add.
+			// Since "order by TRANSDATETIME desc", grab the first one.
+			// ie: status list could become: 2, 3, 2  but not 2, 2, 2
+			if (CollectionUtils.isEmpty(epsList)) {
+				// If no EPS status, add inbound
+				poList.add(po);
 
-				// if new inbound status is NOT the same as the latest existing EPS status, then add.
-				// Since "order by TRANSDATETIME desc", grab the first one.
-				// ie: status list could become: 2, 3, 2  but not 2, 2, 2
-				if (CollectionUtils.isEmpty(epsList)) {
-					// If no EPS status, add inbound
+			} else {
+
+				PolicyStatusPO epsPOLatest = epsList.get(0);
+				// If inbound status is different then EPS status, add to the list.
+				if(!po.equals(epsPOLatest)) {
+
 					poList.add(po);
-
-				} else {
-
-					PolicyStatusPO epsPOLatest = epsList.get(0);
-					// If inbound status is different then EPS status, add to the list.
-					if(!po.equals(epsPOLatest)) {
-
-						poList.add(po);
-					}
 				}
 			}
 		}

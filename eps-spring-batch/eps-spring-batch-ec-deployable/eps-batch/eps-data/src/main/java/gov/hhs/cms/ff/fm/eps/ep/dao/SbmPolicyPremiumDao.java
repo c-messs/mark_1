@@ -5,10 +5,15 @@ import java.util.List;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyPremiumPO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public interface SbmPolicyPremiumDao extends PolicyPremiumDao {
 	
 	
 	/**
+	 * Select EPS POLICYPREMIUM records.
 	 * @param policyVersionId
 	 * @return
 	 */
@@ -20,15 +25,16 @@ public interface SbmPolicyPremiumDao extends PolicyPremiumDao {
 	public void insertStagingPolicyPremiumList(final List<SbmPolicyPremiumPO> premiumList);
 	
 	/**
+	 *  Merge from Staging to EPS.
 	 * @param sbmFileProcSumId
-	 * @return
+	 * @return count rows affected.
 	 */
 	public BigInteger mergePolicyPremium(final Long sbmFileProcSumId);
 	
 	
 	/**
 	 * @param sbmFileProcSumId
-	 * @return
+	 * @return count rows affected.
 	 */
 	public int deleteStaging(Long sbmFileProcSumId);
 

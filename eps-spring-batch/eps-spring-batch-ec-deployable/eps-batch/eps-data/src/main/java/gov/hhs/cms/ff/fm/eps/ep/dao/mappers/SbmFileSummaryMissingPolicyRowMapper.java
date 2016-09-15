@@ -7,6 +7,10 @@ import org.springframework.jdbc.core.RowMapper;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileSummaryMissingPolicyPO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmFileSummaryMissingPolicyRowMapper implements RowMapper<SbmFileSummaryMissingPolicyPO>{
 
 	@Override

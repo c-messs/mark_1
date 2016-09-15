@@ -8,9 +8,17 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMPolicyDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmErrWarningLogDTO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmTransMsgAdditionalErrorInfoMapper {
 
-
+	/**
+	 * 
+	 * @param inboundPolicyDTO
+	 * @return poList
+	 */
 	public List<SbmTransMsgAdditionalErrorInfoPO> mapSbmToEps(SBMPolicyDTO inboundPolicyDTO) {
 
 		List<SbmTransMsgAdditionalErrorInfoPO> poList = new ArrayList<SbmTransMsgAdditionalErrorInfoPO>();
@@ -47,6 +55,11 @@ public class SbmTransMsgAdditionalErrorInfoMapper {
 		return poList;
 	}
 	
+	/**
+	 * 
+	 * @param poList
+	 * @return errList
+	 */
 	public List<String> mapEpsToSbmr(List<SbmTransMsgAdditionalErrorInfoPO> poList) {
 		
 		List<String> errList = new ArrayList<String>();
@@ -55,7 +68,6 @@ public class SbmTransMsgAdditionalErrorInfoMapper {
 			
 			errList.add(po.getAdditionalErrorInfoText());
 		}
-		
 		return errList;
 	}
 

@@ -266,7 +266,7 @@ public abstract class BaseSBMDaoTest  extends TestCase {
 		Long pvId = insertPolicyVersion(pvPO, isStaging, priorPvId, lastModBy);
 		policyDTO.setPolicyVersionId(pvId);
 	
-		insertPolicyStatus(pvId, LocalDateTime.now(), PolicyStatus.EFFECTUATED_2, isStaging);
+		insertPolicyStatus(pvId, msd, PolicyStatus.EFFECTUATED_2, isStaging);
 		
 		SBMPremium premium = TestDataSBMUtility.makeSBMPremium(pvPO.getExchangePolicyId());
 		insertPolicyPremium(pvId, premium, isStaging);
@@ -410,8 +410,8 @@ public abstract class BaseSBMDaoTest  extends TestCase {
 		String tableNm = isStaging ? "STAGINGPOLICYSTATUS" : "POLICYSTATUS";
 
 		String sql = "INSERT INTO " + tableNm + " (POLICYVERSIONID, TRANSDATETIME, " +
-				"INSURANACEPOLICYSTATUSTYPECD) VALUES (" + policyVersionId + ", " + 
-				toTimestampValue(transDt) + ", '" + status.getValue() + "')";
+				"INSURANACEPOLICYSTATUSTYPECD, CREATEBY, LASTMODIFIEDBY) VALUES (" + policyVersionId + ", " + 
+				toTimestampValue(transDt) + ", '" + status.getValue() + "', " + getSysData() + ")";
 		jdbc.execute(sql);
 	}
 
@@ -531,11 +531,9 @@ public abstract class BaseSBMDaoTest  extends TestCase {
 	    	assertEquals("CREATEDATETIME and LASTMODIFIEDDATETIME should be the same", row.get("CREATEDATETIME"), row.get("LASTMODIFIEDDATETIME"));
 	 	   
 	    } else {
-	    	assertEquals("CREATEDATETIME and LASTMODIFIEDDATETIME should NOT be the same", row.get("CREATEDATETIME"), row.get("LASTMODIFIEDDATETIME"));
-	    	assertTrue("LASTMODIFIEDDATETIME should be greater thanCREATEDATETIME", lmDt.compareTo(crDt) > 0 );
+	    	assertNotSame("CREATEDATETIME and LASTMODIFIEDDATETIME should NOT be the same", row.get("CREATEDATETIME"), row.get("LASTMODIFIEDDATETIME"));
+	    	assertTrue("LASTMODIFIEDDATETIME should be greater than CREATEDATETIME", lmDt.compareTo(crDt) > 0 );
 	    }
-		
-		
 	}
 
 

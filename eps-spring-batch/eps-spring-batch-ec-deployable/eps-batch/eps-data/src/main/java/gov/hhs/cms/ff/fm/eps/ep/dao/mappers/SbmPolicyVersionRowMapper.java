@@ -6,10 +6,13 @@ import java.sql.SQLException;
 
 import org.springframework.jdbc.core.RowMapper;
 
-import gov.hhs.cms.ff.fm.eps.ep.po.PolicyVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmPolicyVersionRowMapper implements RowMapper<SbmPolicyVersionPO> {
 
 	@Override

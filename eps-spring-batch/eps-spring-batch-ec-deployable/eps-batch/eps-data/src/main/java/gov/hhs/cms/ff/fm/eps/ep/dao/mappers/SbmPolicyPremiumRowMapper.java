@@ -8,6 +8,10 @@ import org.springframework.jdbc.core.RowMapper;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyPremiumPO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmPolicyPremiumRowMapper implements RowMapper<SbmPolicyPremiumPO> {
 
 	@Override

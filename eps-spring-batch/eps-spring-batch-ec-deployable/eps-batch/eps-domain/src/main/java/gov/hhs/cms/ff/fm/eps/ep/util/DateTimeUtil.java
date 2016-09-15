@@ -16,8 +16,12 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.commons.lang.StringUtils;
 
+/**
+ * 
+ * Utility Class for Date and Time operations
+ *
+ */
 public class DateTimeUtil {
-
 
 	/**
 	 *  9999-12-31 23:59:59.000
@@ -90,8 +94,8 @@ public class DateTimeUtil {
 	 * Marshalled output format is determined by XSD type:
 	 * - xsd:dateTime  YYYY-MM-DDTHH:MM:SS.ssssss (with no timezone) 
 	 * - xsd:date      YYYY-MM-DD (with no time and no timezone)
-	 * @param date
-	 * @return
+	 * @param localDateTime
+	 * @return XMLGregorianCalendar
 	 */
 	public static XMLGregorianCalendar getXMLGregorianCalendar(LocalDateTime localDateTime) {
 
@@ -116,8 +120,8 @@ public class DateTimeUtil {
 	 * 
 	 * Marshalled output format is determined by XSD type:
 	 * - xsd:date      YYYY-MM-DD (with no time and no timezone)
-	 * @param date
-	 * @return
+	 * @param localDate
+	 * @return XMLGregorianCalendar
 	 */
 	public static XMLGregorianCalendar getXMLGregorianCalendar(LocalDate localDate) {
 		XMLGregorianCalendar xmlGC = null;
@@ -137,8 +141,8 @@ public class DateTimeUtil {
 	 * Marshalled output format is determined by XSD type:
 	 * - xsd:dateTime  YYYY-MM-DDTHH:MM:SS (with no timezone) 
 	 * - xsd:date      YYYY-MM-DD (with no time and no timezone)
-	 * @param strDate
-	 * @return
+	 * @param strDateTime
+	 * @return XMLGregorianCalendar
 	 */
 	public static XMLGregorianCalendar getXMLGregorianCalendar(String strDateTime) {
 
@@ -212,7 +216,11 @@ public class DateTimeUtil {
 		return dateTime1;
 	}
 
-
+	/**
+	 * 
+	 * @param localDateTime
+	 * @return java.sql.Timestamp
+	 */
 	public static Timestamp getSqlTimestamp(LocalDateTime localDateTime) {
 
 		Timestamp ts = null;
@@ -223,6 +231,11 @@ public class DateTimeUtil {
 		return ts;
 	}
 
+	/**
+	 * 
+	 * @param localDate
+	 * @return java.sql.Date
+	 */
 	public static Date getSqlDate(LocalDate localDate) {
 
 		Date dt = null;

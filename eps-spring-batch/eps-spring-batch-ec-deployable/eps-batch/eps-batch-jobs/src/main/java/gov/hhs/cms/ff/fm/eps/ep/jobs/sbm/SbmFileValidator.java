@@ -31,6 +31,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
 
+/**
+ * @author rajesh.talanki
+ *
+ */
 public class SbmFileValidator {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmFileValidator.class);
@@ -38,6 +42,11 @@ public class SbmFileValidator {
 	private Integer coverageYear;
 	private SBMFileCompositeDAO fileCompositeDao;
 
+	/**
+	 * Validate the inbound file
+	 * 
+	 * @param dto
+	 */
 	public void validate(SBMFileProcessingDTO dto) {
 		
 		LOG.info("Performing file level validations on file:{}", dto.getSbmFileInfo().getSbmFileNm());

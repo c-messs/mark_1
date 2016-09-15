@@ -4,6 +4,10 @@ import org.apache.commons.csv.CSVRecord;
 
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 
+/**
+ * Holds SBM Update Status Record data
+ *
+ */
 public class SBMUpdateStatusRecordDTO {
 
 	private String linenumber;

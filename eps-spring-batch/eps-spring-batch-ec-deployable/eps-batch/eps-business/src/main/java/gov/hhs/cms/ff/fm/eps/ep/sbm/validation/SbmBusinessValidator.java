@@ -36,6 +36,7 @@ public interface SbmBusinessValidator {
 	 * 
 	 * @param dbSBMPolicyDTO
 	 * @param policyDTO
+	 * @return List<SbmErrWarningLogDTO>
 	 */
 	public List<SbmErrWarningLogDTO> validateEpsPolicy(SBMPolicyDTO dbSBMPolicyDTO, SBMPolicyDTO policyDTO);
 

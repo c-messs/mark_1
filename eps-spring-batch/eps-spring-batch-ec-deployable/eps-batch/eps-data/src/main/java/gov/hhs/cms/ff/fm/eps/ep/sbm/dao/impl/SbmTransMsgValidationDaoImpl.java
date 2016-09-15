@@ -12,6 +12,11 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.SbmTransMsgValidationDao;
 import gov.hhs.cms.ff.fm.eps.ep.dao.mappers.SbmTransMsgValidationRowMapper;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgValidationPO;
 
+/**
+ * 
+ * SbmTransMsgValidationDao implementation
+ *
+ */
 public class SbmTransMsgValidationDaoImpl extends GenericEpsDao<SbmTransMsgValidationPO> implements SbmTransMsgValidationDao {
 
 	private String insertErrorListSql;
@@ -19,10 +24,10 @@ public class SbmTransMsgValidationDaoImpl extends GenericEpsDao<SbmTransMsgValid
 	private String verifyXprWarningSql;
 	private String selectValidationSql;
 	
-	
-
+	/**
+	 * Constructor
+	 */
 	public SbmTransMsgValidationDaoImpl() {
-
 		this.rowMapper = new SbmTransMsgValidationRowMapper();
 	}
 

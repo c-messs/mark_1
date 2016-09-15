@@ -33,7 +33,6 @@ public class SbmDataServiceImplTest extends BaseSbmServicesTest {
 		assertNotNull("sbmDataService should not be null", sbmDataService);
 	}
 
-	//TODO update by adding parentFileInfo and StagingSBMPOlicy, SbmTransMsg since now new check constraint added TRANSMSGVALIDATION_197308900
 	@Test
 	public void test_performPolicyMatch() {
 

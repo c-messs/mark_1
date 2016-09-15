@@ -21,6 +21,11 @@ import gov.hhs.cms.ff.fm.eps.ep.po.PolicyPremiumPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyPremiumPO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * 
+ * Implementation of SbmPolicyPremiumDao 
+ *
+ */
 public class SbmPolicyPremiumDaoImpl extends GenericEpsDao<SbmPolicyPremiumPO> implements SbmPolicyPremiumDao {
 
 	private final static Logger LOG = LoggerFactory.getLogger(SbmPolicyPremiumDaoImpl.class);
@@ -29,7 +34,6 @@ public class SbmPolicyPremiumDaoImpl extends GenericEpsDao<SbmPolicyPremiumPO> i
 	private String insertPremiumListSql;
 	private String mergePremiumSql;
 	private String deleteStagingPremiumSql;
-	private String selectCsrVariantIdSql;
 
 
 	/**
@@ -153,13 +157,10 @@ public class SbmPolicyPremiumDaoImpl extends GenericEpsDao<SbmPolicyPremiumPO> i
 		});
 		return count;
 	}
-
-
-
-	public List<String> selectCsrVariant(Long policyVersionId) {
-
-		List<String> statusList = (List<String>) jdbcTemplate.queryForList(selectCsrVariantIdSql, String.class, policyVersionId);
-		return statusList;
+	
+	@Override
+	public void insertPolicyPremiumList(List<PolicyPremiumPO> premiums) {
+		// Unimplemented for SBM
 	}
 
 	/**
@@ -174,20 +175,6 @@ public class SbmPolicyPremiumDaoImpl extends GenericEpsDao<SbmPolicyPremiumPO> i
 	 */
 	public void setInsertPremiumListSql(String insertPremiumListSql) {
 		this.insertPremiumListSql = insertPremiumListSql;
-	}
-
-
-	/**
-	 * @param selectCsrVariantIdSql the selectCsrVariantIdSql to set
-	 */
-	public void setSelectCsrVariantIdSql(String selectCsrVariantIdSql) {
-		this.selectCsrVariantIdSql = selectCsrVariantIdSql;
-	}
-
-	@Override
-	public void insertPolicyPremiumList(List<PolicyPremiumPO> premiums) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	/**

@@ -30,6 +30,7 @@ public class SbmValidationUtil {
 	/**
 	 * Method to get Issuer Id from QHP id. 
 	 * @param qhpId
+	 * @return issuerId
 	 */
 	public static String getIssuerIdFromQhpId(String qhpId) {
 		String issuerId = StringUtils.EMPTY;
@@ -47,6 +48,7 @@ public class SbmValidationUtil {
 	/**
 	 * Method to get State code from QHP id. 
 	 * @param qhpId
+	 * @return stateCd
 	 */
 	public static String getStateCdFromQhpId(String qhpId) {
 		String stateCd = StringUtils.EMPTY;
@@ -130,8 +132,13 @@ public class SbmValidationUtil {
 		}
 	}	
 
-	/*
+	/**
 	 * Method to create ErrorWarningLogDTO object for given error
+	 * @param elementInError
+	 * @param errorCode
+	 * @param exchangeMemberId
+	 * @param args
+	 * @return SbmErrWarningLogDTO
 	 */
 	public static SbmErrWarningLogDTO createErrorWarningLogDTO(
 			String elementInError, String errorCode, String... args) {
@@ -144,8 +151,13 @@ public class SbmValidationUtil {
 		return errorWarningDTO;
 	}
 	
-	/*
+	/**
 	 * Method to create ErrorWarningLogDTO object for given Member level error
+	 * @param elementInError
+	 * @param errorCode
+	 * @param exchangeMemberId
+	 * @param args
+	 * @return SbmErrWarningLogDTO
 	 */
 	public static SbmErrWarningLogDTO createMemberErrorWarningLogDTO(
 			String elementInError, String errorCode, String exchangeMemberId, String... args) {
@@ -158,8 +170,8 @@ public class SbmValidationUtil {
 
 	/**
 	 * Determines if errorList contains at least one Error.
-	 * @param errorList
-	 * @return 
+	 * @param errorWarningList
+	 * @return boolean
 	 */
 	public static boolean hasValidationError(List<SbmErrWarningLogDTO> errorWarningList) {
 
@@ -178,8 +190,8 @@ public class SbmValidationUtil {
 	/**
 	 * Determine whether a policy is duplicate
 	 * 
-	 * @param premiumRecs
-	 * @return
+	 * @param inboundPolicyId
+	 * @return boolean
 	 */
 	public static boolean isDuplicatePolicy(String inboundPolicyId) {
 

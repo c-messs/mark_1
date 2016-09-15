@@ -8,6 +8,10 @@ import org.springframework.jdbc.core.RowMapper;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyMemberVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmPolicyMemberVersionRowMapper implements RowMapper<SbmPolicyMemberVersionPO> {
 
 	@Override
@@ -34,8 +38,8 @@ public class SbmPolicyMemberVersionRowMapper implements RowMapper<SbmPolicyMembe
 		po.setPolicyMemberBirthDate(DateTimeUtil.getLocalDateFromSqlDate(rs.getDate("POLICYMEMBERBIRTHDATE")));
 		po.setX12GenderTypeCd(rs.getString("X12GENDERTYPECD"));
 		po.setIncorrectGenderTypeCode(rs.getString("INCORRECTGENDERTYPECD"));
-		// TODO need to determine EPS to SBM mapping and vise versa.
-		//po.setNonCoveredSubscriberInd(rs.getString("SUBSCRIBERIND"));
+		// TODO need to determine EPS to SBM mapping and vice versa for NonCoveredSubscriberInd.
+		// Hard coded to 'N'.
 		po.setNonCoveredSubscriberInd("N");
 		po.setX12LanguageCode(rs.getString("X12LANGUAGETYPECD"));
 		po.setX12LanguageQualifierTypeCd(rs.getString("X12LANGUAGEQUALIFIERTYPECD"));

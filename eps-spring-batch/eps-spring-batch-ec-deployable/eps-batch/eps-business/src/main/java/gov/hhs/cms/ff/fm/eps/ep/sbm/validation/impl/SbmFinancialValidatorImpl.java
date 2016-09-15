@@ -13,6 +13,7 @@ import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.Y;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -572,7 +573,6 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 			LocalDate partialMonthEndDt = DateTimeUtil.getLocalDateFromXmlGC(endPartialMonthAmt.getPartialMonthEffectiveEndDate());
 			
 			financialInfoList.forEach(financialInformation -> {
-			//for(FinancialInformation financialInformation: financialInfoList) {
 				
 				LocalDate financialStart = DateTimeUtil.getLocalDateFromXmlGC(financialInformation.getFinancialEffectiveStartDate());
 				
@@ -637,7 +637,6 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 			LocalDate partialMonthStartDt = DateTimeUtil.getLocalDateFromXmlGC(beginPartialMonthAmt.getPartialMonthEffectiveStartDate());
 			
 			financialInfoList.forEach(financialInformation -> {
-			//for(FinancialInformation financialInformation: financialInfoList) {
 				
 				LocalDate financialEnd = DateTimeUtil.getLocalDateFromXmlGC(financialInformation.getFinancialEffectiveEndDate());
 				
@@ -1125,7 +1124,7 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 	private void validateFinStartMonth(LocalDate finStartDt, LocalDate policyStartDt,
 			List<SbmErrWarningLogDTO> financialValidationErrors) {
 
-		if(finStartDt.getMonth().getValue() > policyStartDt.getMonth().plus(1).getValue()) {
+		if(finStartDt.isAfter(policyStartDt.plusMonths(1).with(TemporalAdjusters.lastDayOfMonth()))) {
 			//create Error ER-058: incorrect value provided
 			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO("FinancialEffectiveStartDate",
 					SBMErrorWarningCode.ER_058.getCode(),

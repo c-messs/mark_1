@@ -19,7 +19,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import gov.hhs.cms.ff.fm.eps.dispatcher.EFTDispatchDriver;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
-import gov.hhs.cms.ff.fm.eps.ep.enums.SBMPolicyEnum;
 import gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SBMResponseGenerator;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
@@ -52,7 +51,7 @@ public class SbmUpdateStatusProcessorTest {
 		updateStatusProcessor.setResponseGenerator(responseGeneratorMock);
 		updateStatusProcessor.setEftDispatcher(eftDispatcherMock);
 		updateStatusProcessor.setUpdateStatusDataService(updateStatusDataServicMock);
-		
+		updateStatusProcessor.setEnvironmentCodeSuffix("D");
 	}
 	
 	@Test
@@ -360,6 +359,26 @@ public class SbmUpdateStatusProcessorTest {
 		LOG.info("results:{}",results);
 		Assert.assertTrue("No Error expected", results.isEmpty());
 		
+	}
+	
+	@Test
+	public void test_isSBMIJobRunning() {
+		
+		Mockito.when(fileCompositeDaoMock.isSBMIJobRunning()).thenReturn(true);
+		
+		boolean result = updateStatusProcessor.isSBMIJobRunning();
+		
+		Assert.assertTrue("SBMIJobRunning", result);
+	}
+	
+	@Test
+	public void test_isSBMIJobNotRunning() {
+		
+		Mockito.when(fileCompositeDaoMock.isSBMIJobRunning()).thenReturn(false);
+		
+		boolean result = updateStatusProcessor.isSBMIJobRunning();
+		
+		Assert.assertFalse("SBMIJobRunning", result);
 	}
 	
 	private boolean isErrorExists(Object results, SBMErrorWarningCode errorCode) {

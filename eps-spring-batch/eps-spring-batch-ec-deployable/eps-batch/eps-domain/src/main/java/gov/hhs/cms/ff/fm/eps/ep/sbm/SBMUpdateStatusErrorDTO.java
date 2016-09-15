@@ -1,5 +1,9 @@
 package gov.hhs.cms.ff.fm.eps.ep.sbm;
 
+/**
+ * Holds SBM Update Status Errors
+ *
+ */
 public class SBMUpdateStatusErrorDTO {
 
 	private String lineNumber;

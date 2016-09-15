@@ -18,6 +18,11 @@ import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileSummaryMissingPolicyPO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * 
+ * Implementation of SbmFileSummaryMissingPolicyDao 
+ *
+ */
 public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSummaryMissingPolicyPO> implements SbmFileSummaryMissingPolicyDao {
 
 	private String findInsertMissingPolicyByIssuerSql;
@@ -178,9 +183,14 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 	}
 
 
-
 	static private class SbmMissingPolicyRowMapper implements RowMapper<SbmFileSummaryMissingPolicyData> {
-
+		
+		/**
+		 * Creates SbmFileSummaryMissingPolicyData
+		 * @param rs
+		 * @param rowNum
+		 * @return missingPolicyData
+		 */
 		public SbmFileSummaryMissingPolicyData mapRow(ResultSet rs, int rowNum) throws SQLException {
 
 			SbmFileSummaryMissingPolicyData missingPolicyData = new SbmFileSummaryMissingPolicyData();

@@ -1,5 +1,11 @@
 package gov.hhs.cms.ff.fm.eps.ep.po;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity class for table SBMFILESUMMARYMISSINGPOLICY.
+ *
+ */
 public class SbmFileSummaryMissingPolicyPO {
 	
 	private Long sbmFileProcSumId;

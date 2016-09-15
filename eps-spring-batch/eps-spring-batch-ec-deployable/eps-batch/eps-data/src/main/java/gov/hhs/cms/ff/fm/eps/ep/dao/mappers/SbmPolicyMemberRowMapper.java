@@ -7,6 +7,10 @@ import org.springframework.jdbc.core.RowMapper;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyMemberPO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmPolicyMemberRowMapper implements RowMapper<SbmPolicyMemberPO> {
 
 	@Override

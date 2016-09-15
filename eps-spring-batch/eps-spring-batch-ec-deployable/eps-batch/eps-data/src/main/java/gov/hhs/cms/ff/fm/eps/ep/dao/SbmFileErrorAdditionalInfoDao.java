@@ -4,6 +4,12 @@ import java.util.List;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileErrorAdditionalInfoPO;
 
+/**
+ * @author j.radziewski
+ * 
+ *  Entity DAO for table SBMFILEERRORADDITIONALINFO.
+ *
+ */
 public interface SbmFileErrorAdditionalInfoDao {
 	
 	/**

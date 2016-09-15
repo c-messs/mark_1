@@ -17,6 +17,10 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.StagingSbmFileDao;
 import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.po.StagingSbmFilePO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class StagingSbmFileDaoImpl extends GenericEpsDao<StagingSbmFilePO> implements StagingSbmFileDao {
 
 	private static final Logger LOG = LoggerFactory.getLogger(StagingSbmFileDaoImpl.class);
@@ -28,8 +32,6 @@ public class StagingSbmFileDaoImpl extends GenericEpsDao<StagingSbmFilePO> imple
 
 	@Override
 	public boolean insertFileToStaging(final StagingSbmFilePO po) {
-
-		final String userId = po.getBatchId() != null ? po.getBatchId().toString() : null;
 
 		int result = jdbcTemplate.update(new PreparedStatementCreator() {
 			/** 
@@ -49,8 +51,8 @@ public class StagingSbmFileDaoImpl extends GenericEpsDao<StagingSbmFilePO> imple
 					ps.setLong(2, po.getBatchId());
 					ps.setLong(3, po.getSbmFileProcessingSummaryId());
 					ps.setLong(4, po.getSbmFileInfoId());
-					ps.setString(5, userId);
-					ps.setString(6, userId);
+					ps.setString(5, userVO.getUserId());
+					ps.setString(6, userVO.getUserId());
 
 					return ps;
 

@@ -20,6 +20,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.mappers.SbmPolicyVersionMapper;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMDataService;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmPolicyMatchService;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SBMDataServiceImpl implements SBMDataService {
 
 	private final static Logger LOG = LoggerFactory.getLogger(SBMDataServiceImpl.class);

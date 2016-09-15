@@ -14,6 +14,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -110,7 +111,19 @@ public class SbmiFileIngestionTaskletTest {
 		
 		tasklet.setFileIngestionReader(fileIngestionReader);
 		tasklet.setFileIngestionWriter(writer);
-
+		
+		SBMEvaluatePendingFiles sbmEvaluatePendingFiles = new SBMEvaluatePendingFiles();
+		sbmEvaluatePendingFiles.setFileCompositeDao(fileCompositeDaoMock);
+		tasklet.setSbmEvaluatePendingFiles(sbmEvaluatePendingFiles);
+	}
+	
+	@After
+	public void tearDown() throws IOException {
+		FileUtils.cleanDirectory(eftFolder);
+		FileUtils.cleanDirectory(privateFolder);
+		FileUtils.cleanDirectory(zipFilesFolder);
+		FileUtils.cleanDirectory(processedFolder);
+		FileUtils.cleanDirectory(invalidFolder);
 	}
 	
 	@Test
@@ -218,7 +231,7 @@ public class SbmiFileIngestionTaskletTest {
 		});
 		
 		ChunkContext chkContext = new ChunkContext(new StepContext(new StepExecution("fileIngestionStep", new JobExecution(21001L))));		
-		RepeatStatus status = tasklet.execute(Mockito.any(), chkContext);
+		tasklet.execute(Mockito.any(), chkContext);
 		
 		Assert.assertTrue("Errors should exists", CollectionUtils.isNotEmpty(errorList));	
 		Assert.assertTrue("Error ER-063 should exist", isErrorExists(errorList, null, SBMErrorWarningCode.ER_063.getCode()));
@@ -248,11 +261,37 @@ public class SbmiFileIngestionTaskletTest {
 		});
 		
 		ChunkContext chkContext = new ChunkContext(new StepContext(new StepExecution("fileIngestionStep", new JobExecution(21001L))));		
-		RepeatStatus status = tasklet.execute(Mockito.any(), chkContext);
+		tasklet.execute(Mockito.any(), chkContext);
 		
 		Assert.assertTrue("Errors should exists", CollectionUtils.isNotEmpty(errorList));	
 		Assert.assertTrue("Error ER-011 should exist", isErrorExists(errorList, null, SBMErrorWarningCode.ER_063.getCode()));
 		
+	}
+	
+	@Test
+	public void test_NoFiles() throws Exception {
+		
+		expect(mockEFTDispatchDriver.saveDispatchContent((byte[])EasyMock.anyObject(), 
+				EasyMock.anyString(), EasyMock.anyString(), EasyMock.anyString(), 
+				EasyMock.anyString(), EasyMock.anyInt(), EasyMock.anyString(), EasyMock.anyString())).andReturn(1L);
+		replay(mockEFTDispatchDriver);
+				 
+		List<SBMErrorDTO> errorList = new ArrayList<>();
+		
+		Mockito.when(fileCompositeDaoMock.saveFileInfoAndErrors(Mockito.any())).thenAnswer(new Answer<Long>() {
+
+			@Override
+			public Long answer(InvocationOnMock invocation) throws Throwable {
+				SBMFileProcessingDTO dto = (SBMFileProcessingDTO)invocation.getArguments()[0];
+				errorList.addAll(dto.getErrorList()); //retrieve errors
+				return 1L;
+			}
+		});
+		
+		ChunkContext chkContext = new ChunkContext(new StepContext(new StepExecution("fileIngestionStep", new JobExecution(21001L))));		
+		tasklet.execute(Mockito.any(), chkContext);
+		
+		Assert.assertTrue("Errors should not exists", CollectionUtils.isEmpty(errorList));	
 	}
 	
 	public static boolean isErrorExists(List<SBMErrorDTO> errorList, String elementInError, String errorCode) {

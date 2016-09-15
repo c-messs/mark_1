@@ -13,6 +13,11 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.SbmFileErrorAdditionalInfoDao;
 import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileErrorAdditionalInfoPO;
 
+/**
+ * 
+ * Implementation of SbmFileErrorAdditionalInfoDao 
+ *
+ */
 public class SbmFileErrorAdditionalInfoDaoImpl extends GenericEpsDao<SbmFileErrorAdditionalInfoPO> 
 	implements SbmFileErrorAdditionalInfoDao {
 

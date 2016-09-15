@@ -20,14 +20,14 @@ public interface SbmFinancialValidator {
 	 * Validate Policy Financial Information
 	 * 
 	 * @param policy
-	 * @return
+	 * @return List<SbmErrWarningLogDTO>
 	 */
 	public List<SbmErrWarningLogDTO> validateFinancialInfo(PolicyType policy);
 
 	/**
 	 * Processes inbound premiums for transactions where no current policy (and premiums) exist.
-	 * @param inboundSubscriber
-	 * @return inboundPremiums
+	 * @param policy
+	 * @return inboundPremiums - Map<LocalDate, SBMPremium>
 	 */
 	public Map<LocalDate, SBMPremium> processInboundPremiums(PolicyType policy);
 	

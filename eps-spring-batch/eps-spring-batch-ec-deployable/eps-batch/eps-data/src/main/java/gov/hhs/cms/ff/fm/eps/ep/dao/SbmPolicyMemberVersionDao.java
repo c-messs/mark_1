@@ -5,6 +5,10 @@ import java.util.List;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyMemberVersionPO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public interface SbmPolicyMemberVersionDao extends PolicyMemberVersionDao {
 	
 
@@ -28,24 +32,30 @@ public interface SbmPolicyMemberVersionDao extends PolicyMemberVersionDao {
 	 */
 	public Long insertStagingPolicyMemberVersion(final SbmPolicyMemberVersionPO po);
 	
+	
 	/**
+	 * Merge from Staging to EPS.
 	 * @param sbmFileProcSumId
+	 * @return
 	 */
 	public BigInteger mergePolicyMemberVersion(final Long sbmFileProcSumId);
 	
 	/**
+	 * Merge from STAGINGPOLICYMEMBERVERSION to EPS POLICYMEMBERLANGUAGEABILITY.
 	 * @param sbmFileProcSumId
 	 * @return
 	 */
 	public BigInteger mergeLang(final Long sbmFileProcSumId);
 	
 	/**
+	 * Merge from STAGINGPOLICYMEMBERVERSION to EPS MEMBERPOLICYRACEETHNICITY.
 	 * @param sbmFileProcSumId
 	 * @return
 	 */
 	public BigInteger mergeRace(final Long sbmFileProcSumId);
 	
 	/**
+	 * Merge from STAGINGPOLICYMEMBERVERSION to EPS POLICYMEMBERADDRESS.
 	 * @param sbmFileProcSumId
 	 * @return
 	 */

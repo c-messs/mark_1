@@ -32,6 +32,11 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
  *
  */
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMUpdateStatusErrorDTO;
+
+/**
+ * @author rajesh.talanki
+ *
+ */
 public class SbmHelper {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmHelper.class);
@@ -39,10 +44,9 @@ public class SbmHelper {
 	/**
 	 * Create SBMFileError
 	 * 
-	 * @param sbmFileInfoId
 	 * @param elementInErrorNm
 	 * @param sbmErrorWarningTypeCd
-	 * @return
+	 * @return errorLog
 	 */
 	public static SBMErrorDTO createErrorLog(String elementInErrorNm, String sbmErrorWarningTypeCd) {
 		SBMErrorDTO errorLog = new SBMErrorDTO();
@@ -55,10 +59,10 @@ public class SbmHelper {
 	/**
 	 * Create SBMFileError
 	 * 
-	 * @param sbmFileInfoId
 	 * @param elementInErrorNm
 	 * @param sbmErrorWarningTypeCd
-	 * @return
+	 * @param additionalErrorInfos
+	 * @return errorLog
 	 */
 	public static SBMErrorDTO createErrorLog(String elementInErrorNm, String sbmErrorWarningTypeCd, String... additionalErrorInfos) {
 		
@@ -74,10 +78,11 @@ public class SbmHelper {
 	/**
 	 * Create SBMFileError
 	 * 
-	 * @param sbmFileInfoId
 	 * @param elementInErrorNm
 	 * @param sbmErrorWarningTypeCd
-	 * @return
+	 * @param exchangeAssignedMemberId
+	 * @param additionalErrorInfos
+	 * @return errorLog
 	 */
 	public static SBMErrorDTO createErrorWithMemId(String elementInErrorNm, String sbmErrorWarningTypeCd, String exchangeAssignedMemberId, String... additionalErrorInfos) {
 		
@@ -156,12 +161,11 @@ public class SbmHelper {
 	}
 	
 	/**
-	 * Extract Trading Partner Id from ZipF ile filename
+	 * Extract Trading Partner Id from Zip filename
 	 * @param filename
 	 * @return
 	 */
 	public static String getZipFileTradingPartnerId(String filename) {
-		//extract TradingPartnerId from filename
 		//File Name = TradingPartnerID.AppId.FuncCode.Date.Time.EnvCode.Direction
 		String[] tokens = StringUtils.split(filename, ".");
 
@@ -172,16 +176,23 @@ public class SbmHelper {
 		return "";
 	}
 	
-		
+	/**
+	 * Extract Trading Partner Id from filename
+	 * @param sbmFileInfoList
+	 * @return
+	 */
 	public static String getTradingPartnerId(List<SBMFileInfo> sbmFileInfoList) {
 		for(SBMFileInfo fileInfo: sbmFileInfoList) {
 			return fileInfo.getTradingPartnerId();
 		}
-
 		return null;
 	}
 	
-		
+	/**
+	 * Determine Rejected and Not Disapproved
+	 * @param summaryDtoList
+	 * @return boolean
+	 */
 	public static boolean isNotRejectedNotDisapproved(List<SBMSummaryAndFileInfoDTO> summaryDtoList) {
 		
 		for(SBMSummaryAndFileInfoDTO summaryDto: summaryDtoList) {
@@ -193,11 +204,16 @@ public class SbmHelper {
 				}
 			}			
 		}
-		
 		return false;
 	}
 	
-		
+	/**
+	 * Parse the CSV File
+	 * 
+	 * @param inputFile
+	 * @return rows
+	 * @throws IOException
+	 */
 	public static List<CSVRecord> readCSVFile(File inputFile) throws IOException {
 
 		LOG.info("Reading file: {}", inputFile);
@@ -208,7 +224,16 @@ public class SbmHelper {
 		return rows;
 	}
 	
-	
+	/**
+	 * Create Error DTO
+	 * 
+	 * @param linenumber
+	 * @param errorCode
+	 * @param errorDescription
+	 * @param fileId
+	 * @param fileSetId
+	 * @return error
+	 */
 	public static SBMUpdateStatusErrorDTO createError(String linenumber, String errorCode, String errorDescription, String fileId, String fileSetId) {
 		
 		SBMUpdateStatusErrorDTO error = new  SBMUpdateStatusErrorDTO();
@@ -221,12 +246,25 @@ public class SbmHelper {
 		return error;
 	}
 	
+	/**
+	 * Create UpdateStatusError DTO
+	 * 
+	 * @param linenumber
+	 * @param error
+	 * @return SBMUpdateStatusErrorDTO
+	 */
 	public static SBMUpdateStatusErrorDTO createError(String linenumber, SBMErrorWarningCode error) {		
 		
 		return createError(linenumber, error.getCode(), SBMCache.getErrorDescription(error.getCode()), null, null);
 	}
 	
-	
+	/**
+	 * Determine FileStatusMatched
+	 * 
+	 * @param originalStatus
+	 * @param fileStatus
+	 * @return boolean
+	 */
 	public static boolean isFileStatusMatched(SBMFileStatus originalStatus, SBMFileStatus...fileStatus) {
 		
 		if(originalStatus == null) {
@@ -242,6 +280,13 @@ public class SbmHelper {
 		return false;
 	}
 	
+	/**
+	 * Determine if file is a valid zip file
+	 * 
+	 * @param file
+	 * @return boolean
+	 * @throws IOException
+	 */
 	public static boolean isValidZip(final File file) throws IOException {
 		ZipFile zipfile = null;
 		
@@ -262,11 +307,17 @@ public class SbmHelper {
 			}
 		}
 	}
-	 
-	public static boolean isGZipped(File f) {
+	
+	/**
+	 * Determine if file is a valid gzip file
+	 * 
+	 * @param file
+	 * @return boolean
+	 */
+	public static boolean isGZipped(File file) {
 		int magic = 0;
 		try {
-			RandomAccessFile raf = new RandomAccessFile(f, "r");
+			RandomAccessFile raf = new RandomAccessFile(file, "r");
 			magic = raf.read() & 0xff | ((raf.read() << 8) & 0xff00);
 			raf.close();
 		} catch (IOException e) {

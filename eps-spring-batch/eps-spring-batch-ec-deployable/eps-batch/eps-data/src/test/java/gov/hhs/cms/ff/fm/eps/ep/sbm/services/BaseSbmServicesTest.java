@@ -59,11 +59,21 @@ public abstract class BaseSbmServicesTest extends TestCase {
 	}
 
 
+	protected Long insertSBMFileProcessingSummary(String tenantId) {
+
+		Long sbmFileProcSumId = jdbc.queryForObject("SELECT SBMFILEPROCESSINGSUMMARYSEQ.NEXTVAL FROM DUAL", Long.class);
+		jdbc.execute("INSERT INTO SBMFILEPROCESSINGSUMMARY(SBMFILEPROCESSINGSUMMARYID, TENANTID, SBMFILESTATUSTYPECD) " +
+				"VALUES (" + sbmFileProcSumId + ", '" + tenantId + "', '" + SBMFileStatus.IN_PROCESS.getValue() + "')");
+
+		return sbmFileProcSumId;
+	}
+
+
 	protected Long insertSBMFileProcessingSummary(String tenantId, String fileSetId, SBMFileStatus fileStatus, BigDecimal errPct ) {
 
 		Long sbmFileProcSumId = jdbc.queryForObject("SELECT SBMFILEPROCESSINGSUMMARYSEQ.NEXTVAL FROM DUAL", Long.class);
 		jdbc.execute("INSERT INTO SBMFILEPROCESSINGSUMMARY(SBMFILEPROCESSINGSUMMARYID, TENANTID, ISSUERFILESETID, SBMFILESTATUSTYPECD, " +
-		"ERRORTHRESHOLDPERCENT) " +
+				"ERRORTHRESHOLDPERCENT) " +
 				"VALUES (" + sbmFileProcSumId + ", '" + tenantId + "', '" + fileSetId + "', '" + fileStatus.getValue() + "', " + errPct + ")");
 		return sbmFileProcSumId;
 	}
@@ -104,7 +114,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 		dto.getSbmFileInfo().setSbmFileInfoId(sbmFileInfoId);
 		dto.setSbmFileProcSumId(sbmFileProcSumId);
 		dto.setErrorThresholdPercent(errPct);
-		
+
 		return dto;
 	}
 
@@ -119,7 +129,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 		dto.getSbmFileInfo().setSbmFileInfoId(sbmFileInfoId);
 		dto.setSbmFileProcSumId(sbmFileProcSumId);
 		dto.setErrorThresholdPercent(errPct);
-		
+
 		return dto;
 	}
 
@@ -145,6 +155,17 @@ public abstract class BaseSbmServicesTest extends TestCase {
 
 	}
 
+	protected void insertStagingSbmGroupLock (Long sbmFileProcSumId, Long procGroupId) {
+
+		insertStagingSbmGroupLock(sbmFileProcSumId, procGroupId, null);
+	}
+
+	protected void insertStagingSbmGroupLock (Long sbmFileProcSumId, Long procGroupId, Long batchId) {
+
+		String sql = "INSERT INTO STAGINGSBMGROUPLOCK (SBMFILEPROCESSINGSUMMARYID, PROCESSINGGROUPID, BATCHID) " +
+				"VALUES (" + sbmFileProcSumId + ", " + procGroupId + ", " + batchId + ")";
+		jdbc.execute(sql);
+	}
 
 	protected Long insertSbmTransMsg(Long sbmFileInfoId, String state, String exchangePolicyId, SbmTransMsgStatus status) {
 
@@ -163,6 +184,14 @@ public abstract class BaseSbmServicesTest extends TestCase {
 				"SBMERRORWARNINGTYPECD, CREATEBY, LASTMODIFIEDBY, EXCHANGEASSIGNEDMEMBERID) " +
 				"VALUES (" + sbmTransMsgId + ", '" + errorDTO.getElementInErrorNm() + "'," + seq + ", " +
 				"'" + errorDTO.getSbmErrorWarningTypeCd() + "'" + getSysData() + ", '" + errorDTO.getExchangeAssignedMemberId() + "')");
+
+		for ( String addErrInfoTxt : errorDTO.getAdditionalErrorInfoList()) {
+
+			String sql = "INSERT INTO SBMTRANSMSGADDITIONALERRORINFO (SBMTRANSMSGADDLERRORINFOID, SBMTRANSMSGID, " +
+					"VALIDATIONSEQUENCENUM, ADDITIONALERRORINFOTEXT, CREATEBY, LASTMODIFIEDBY) " + 
+					"VALUES (SBMTRANSMSGADDTLERRORINFOSEQ.NEXTVAL, "  + sbmTransMsgId + ", " + seq + ", '" +addErrInfoTxt + "'" + getSysData() + " )";
+			jdbc.execute(sql);
+		}
 	}
 
 	/**
@@ -173,7 +202,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 
 		Long policyVersionId = jdbc.queryForObject("SELECT POLICYVERSIONSEQ.NEXTVAL FROM DUAL", Long.class);
 		String tableNm = isStaging ? "STAGINGPOLICYVERSION" : "POLICYVERSION";
-		
+
 		String sql = "INSERT INTO " + tableNm + " (POLICYVERSIONID, MAINTENANCESTARTDATETIME, MAINTENANCEENDDATETIME, " +
 				"SUBSCRIBERSTATECD, ISSUERHIOSID, EXCHANGEPOLICYID, POLICYSTARTDATE, POLICYENDDATE, X12INSRNCLINETYPECD, PLANID, SBMTRANSMSGID, " +
 				"PRIORPOLICYVERSIONID) " + 
@@ -184,7 +213,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 		jdbc.execute(sql);
 		return policyVersionId;
 	}
-	
+
 	/**
 	 * Inserts a minimal record into POLICYVERSION
 	 * @return policyVersionId
@@ -196,7 +225,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 		Long priorPvId = null;
 		return insertPolicyVersion(maintStart, psd, ped, stateCd, exchangePolicyId, issuerId, qhpId, sbmTransMsgId, priorPvId, isStaging);
 	}
-	
+
 	/**
 	 * Inserts a minimal record into POLICYVERSION
 	 * @return policyVersionId
@@ -207,7 +236,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 		String issuerId = qhpId.substring(0, 5);
 		return insertPolicyVersion(maintStart, psd, ped, stateCd, exchangePolicyId, issuerId, qhpId, sbmTransMsgId, priorPvId, isStaging);
 	}
-	
+
 	/**
 	 * Inserts a complete SBM record into POLICYVERSION
 	 * @return policyVersionId
@@ -218,7 +247,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 		Long priorPvId = null;
 		return insertPolicyVersion(maintStart, qhpId, dto, priorPvId, isStaging);
 	}
-	
+
 	protected Long insertPolicyVersion(LocalDateTime maintStart, String qhpId, SBMPolicyDTO dto, boolean isStaging) {
 
 		Long priorPvId = null;
@@ -269,9 +298,9 @@ public abstract class BaseSbmServicesTest extends TestCase {
 		Long priorPmvId = null;
 		return insertPolicyMemberVersion(stateCd, msd, exchangePolicyId, member, priorPmvId, isStaging);
 	}
-	
+
 	protected Long insertPolicyMemberVersion(String stateCd, LocalDateTime msd, String exchangePolicyId, PolicyMemberType member, boolean isStaging) {
-		
+
 		Long priorPmvId = null;
 		return insertPolicyMemberVersion(stateCd, msd, exchangePolicyId, member, priorPmvId, isStaging);
 	}
@@ -289,7 +318,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 		String lastNm = member.getMemberLastName();
 		String firstNm = member.getMemberFirstName();
 		String midNm = member.getMemberMiddleName();
-		
+
 
 		if (member.getSubscriberIndicator().equals("Y")) {
 			lastNm = lastNm.length() > 60 ? lastNm.substring(0, 60) : lastNm;
@@ -310,7 +339,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 				"'" + userVO.getUserId() + "', '" + userVO.getUserId() + "'";
 		if (isStaging) { 
 			sql+= ", " + priorPmvId + ", '" + member.getLanguageCode() + "', '" + member.getLanguageQualifierCode() +
-					 "', '" + member.getRaceEthnicityCode() + "', '" + member.getPostalCode() + "'";
+					"', '" + member.getRaceEthnicityCode() + "', '" + member.getPostalCode() + "'";
 		}
 		sql += ")";
 		//POLICYMEMBERDEATHDATE, INCORRECTGENDERTYPECD left out because not in inbound member.
@@ -362,7 +391,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 				+ pmvId + ", '"  + langCd + "', '"  + langQualCd + "', '" + userVO.getUserId() + "', '" + userVO.getUserId() + "')";
 		jdbc.execute(sql);
 	}
-	
+
 	/**
 	 * Inserts a minimal record into PHYSICALDOCUMENT.
 	 *
@@ -371,7 +400,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 	protected Long insertPhysicalDocument()  {
 
 		Long pdId = jdbc.queryForObject("SELECT PHYSICALDOCUMENT_SEQ.NEXTVAL FROM DUAL", Long.class);
-		
+
 		String sql = "insert into physicaldocument (PHYSICALDOCUMENTIDENTIFIER, PHYSICALDOCUMENTDATETIME) " +
 				" VALUES(" + pdId + ", SYSTIMESTAMP)";
 		jdbc.execute(sql);	
@@ -473,7 +502,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 	private String getSysData() {
 		return  ",'" + userVO.getUserId() + "', '" + userVO.getUserId() + "'";
 	}
-	
+
 	private String getSysArgs() {
 
 		return ", CREATEBY, LASTMODIFIEDBY";
@@ -484,7 +513,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 		String which = "";
 		assertSysData(which, row, batchId);
 	}
-	
+
 	protected void assertSysData(String which, Map<String, Object> row, Long batchId) {
 
 		String expectedUser = batchId.toString();
@@ -495,7 +524,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 		assertNotNull(msg + "LASTMODIFIEDDATETIME", row.get("LASTMODIFIEDDATETIME"));
 		assertEquals(msg + "CREATEDATETIME and LASTMODIFIEDDATETIME", row.get("CREATEDATETIME"), row.get("LASTMODIFIEDDATETIME"));
 	}
-	
+
 	protected void assertSysDataAfterUpdate(String which, Map<String, Object> row, Long createdBatchId, Long lastModbatchId) {
 
 		String expectedCreateUser = createdBatchId.toString();

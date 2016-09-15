@@ -1,5 +1,13 @@
 package gov.hhs.cms.ff.fm.eps.ep.po;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity class for SBM specific attributes of STAGINGPOLICYVERSION and POLICYVERSION table.
+ * 
+ * Note: Comparisions use both this method's hashCode and equals and parent PO.
+ *
+ */
 public class SbmPolicyVersionPO extends PolicyVersionPO {
 	
 	// Excluded from Hashcode and Equals (policy compare)

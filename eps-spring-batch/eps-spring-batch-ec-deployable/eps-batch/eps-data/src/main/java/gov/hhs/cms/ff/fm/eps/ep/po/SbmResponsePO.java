@@ -1,5 +1,12 @@
 package gov.hhs.cms.ff.fm.eps.ep.po;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity class for SBM specific attributes of SBMRESPONSE table.
+ * 
+ *
+ */
 public class SbmResponsePO {
 	
 	private Long sbmFileProcSumId;

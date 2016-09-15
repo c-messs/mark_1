@@ -5,6 +5,10 @@ import java.util.List;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyStatusPO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public interface SbmPolicyStatusDao extends PolicyStatusDao {
 	
 	
@@ -15,6 +19,7 @@ public interface SbmPolicyStatusDao extends PolicyStatusDao {
 	
 	
 	/**
+	 * Select EPS POLICYSTATUS records.
 	 * @param policyVersionId
 	 * @return
 	 */
@@ -22,17 +27,12 @@ public interface SbmPolicyStatusDao extends PolicyStatusDao {
 	
 	
 	/**
+	 * Merge from Staging to EPS.
 	 * @param sbmFileProcSumId
 	 * @return
 	 */
 	public BigInteger mergePolicyStatus(final Long sbmFileProcSumId);
 	
-	
-	/**
-	 * @param policyVersionId
-	 * @return
-	 */
-	public SbmPolicyStatusPO getPolicyStatusLatest(Long policyVersionId);
 	
 	
 	/**

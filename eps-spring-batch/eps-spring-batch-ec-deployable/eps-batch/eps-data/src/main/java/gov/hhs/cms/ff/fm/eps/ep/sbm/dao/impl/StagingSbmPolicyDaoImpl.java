@@ -10,6 +10,10 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.SequenceHelper;
 import gov.hhs.cms.ff.fm.eps.ep.dao.StagingSbmPolicyDao;
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class StagingSbmPolicyDaoImpl implements StagingSbmPolicyDao {
 
 	private String extractXprtoStagingPolicySql;

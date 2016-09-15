@@ -3,6 +3,10 @@ package gov.hhs.cms.ff.fm.eps.ep.sbm;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author rajesh.talanki
+ *
+ */
 public class SBMFileErrorDTO extends SBMErrorDTO {
 	
 	private List<SBMFileErrorAdditionalInfo> additionalInfoList = new ArrayList<>();
@@ -14,5 +18,4 @@ public class SBMFileErrorDTO extends SBMErrorDTO {
 		return additionalInfoList;
 	}
 		
-	
 }

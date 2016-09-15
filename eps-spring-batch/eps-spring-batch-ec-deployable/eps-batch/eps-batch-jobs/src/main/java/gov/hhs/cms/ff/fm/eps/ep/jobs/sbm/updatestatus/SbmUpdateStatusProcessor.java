@@ -60,6 +60,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmUpdateStatusDataService;
 
+/**
+ * @author rajesh.talanki
+ *
+ */
 public class SbmUpdateStatusProcessor {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SbmUpdateStatusProcessor.class);
@@ -84,7 +88,15 @@ public class SbmUpdateStatusProcessor {
 		return fileCompositeDao.isSBMIJobRunning();
 	}
 	
-	public void processUpdateStatus(File inputFile, Long jobExecId) throws IOException, SQLException, JAXBException {
+	/**
+	 * Perform Update Status
+	 * @param inputFile
+	 * @param jobId
+	 * @throws IOException
+	 * @throws SQLException
+	 * @throws JAXBException
+	 */
+	public void processUpdateStatus(File inputFile, Long jobId) throws IOException, SQLException, JAXBException {
 				
 		List<CSVRecord> lineItems = SbmHelper.readCSVFile(inputFile);
 		
@@ -156,7 +168,7 @@ public class SbmUpdateStatusProcessor {
 		for(SBMUpdateStatusRecordDTO dto: fileRecords) {
 			if(STATUS_APPROVE.equalsIgnoreCase(dto.getStatus())) {
 				//perform approval 
-				updateStatusDataService.executeApproval(jobExecId, dto.getSbmFileProcSumId());
+				updateStatusDataService.executeApproval(jobId, dto.getSbmFileProcSumId());
 				fileCompositeDao.updateCMSApprovedInd(dto.getSbmFileProcSumId(), SBMConstants.Y);
 				if(ACCEPTED.equals(dto.getCurrentFileStatus())) {
 					dto.setNewFileSatus(SBMFileStatus.APPROVED);
@@ -169,25 +181,25 @@ public class SbmUpdateStatusProcessor {
 				}
 				
 				//geneate SBMR
-				responseGenerator.generateSBMRForUpdateStatus(dto);
+				responseGenerator.generateSBMRForUpdateStatus(dto, jobId);
 			}
 			else if(SBMConstants.STATUS_DISAPPROVED.equalsIgnoreCase(dto.getStatus())) {
 				//perform disapproval
-				updateStatusDataService.executeDisapproval(jobExecId, dto.getSbmFileProcSumId());
+				updateStatusDataService.executeDisapproval(jobId, dto.getSbmFileProcSumId());
 				dto.setNewFileSatus(SBMFileStatus.DISAPPROVED);
-				responseGenerator.generateSBMRForUpdateStatus(dto);
+				responseGenerator.generateSBMRForUpdateStatus(dto, jobId);
 			}
 			else if(SBMConstants.STATUS_BYPASS_FREEZE.equalsIgnoreCase(dto.getStatus())) {
 				//perform bypass freeze: update file status and NO SBMR required
-				fileCompositeDao.updateFileStatus( dto.getSbmFileProcSumId(), SBMFileStatus.BYPASS_FREEZE);
+				fileCompositeDao.updateFileStatus( dto.getSbmFileProcSumId(), SBMFileStatus.BYPASS_FREEZE, jobId);
 				dto.setNewFileSatus(SBMFileStatus.BYPASS_FREEZE);			
 			}
 			else if(SBMConstants.STATUS_BACKOUT.equalsIgnoreCase(dto.getStatus())) {
 				//perform file reversal
-				updateStatusDataService.executeFileReversal(jobExecId, dto.getSbmFileProcSumId());
+				updateStatusDataService.executeFileReversal(jobId, dto.getSbmFileProcSumId());
 				dto.setNewFileSatus(SBMFileStatus.BACKOUT);
 				//no SBMR is required
-				fileCompositeDao.updateFileStatus( dto.getSbmFileProcSumId(), SBMFileStatus.BACKOUT);
+				fileCompositeDao.updateFileStatus( dto.getSbmFileProcSumId(), SBMFileStatus.BACKOUT, jobId);
 			}
 			
 			LOG.info("SBMUpdateStatusRecordDTO : {}", dto);			
@@ -226,7 +238,6 @@ public class SbmUpdateStatusProcessor {
 		else if( ! CommonUtil.isStringMatched(recordDto.getStatus(), STATUS_APPROVE, STATUS_DISAPPROVED, STATUS_BYPASS_FREEZE, STATUS_BACKOUT)) {
 			errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_518)); 
 		}
-		
 		
 		if( ! errorList.isEmpty()) {			
 			return errorList;
@@ -351,9 +362,7 @@ public class SbmUpdateStatusProcessor {
 			}
 		}
 		
-		
 		return errorList;
-
 	}
 	
 	private List<SBMUpdateStatusErrorDTO> validateHeaders(SBMUpdateStatusRecordDTO recordDto) {
@@ -429,27 +438,12 @@ public class SbmUpdateStatusProcessor {
 			return StringUtils.EMPTY;
 		}		
 	}
-	
-	
-	/**
-	 * @return the fileCompositeDao
-	 */
-	public SBMFileCompositeDAO getFileCompositeDao() {
-		return fileCompositeDao;
-	}
 
 	/**
 	 * @param fileCompositeDao the fileCompositeDao to set
 	 */
 	public void setFileCompositeDao(SBMFileCompositeDAO fileCompositeDao) {
 		this.fileCompositeDao = fileCompositeDao;
-	}
-
-	/**
-	 * @return the responseGenerator
-	 */
-	public SBMResponseGenerator getResponseGenerator() {
-		return responseGenerator;
 	}
 
 	/**
@@ -460,31 +454,11 @@ public class SbmUpdateStatusProcessor {
 	}
 
 	/**
-	 * @return the eftDispatcher
-	 */
-	public EFTDispatchDriver getEftDispatcher() {
-		return eftDispatcher;
-	}
-
-	/**
 	 * @param eftDispatcher the eftDispatcher to set
 	 */
 	public void setEftDispatcher(EFTDispatchDriver eftDispatcher) {
 		this.eftDispatcher = eftDispatcher;
 	}
-
-
-
-
-	/**
-	 * @return the updateStatusDataService
-	 */
-	public SbmUpdateStatusDataService getUpdateStatusDataService() {
-		return updateStatusDataService;
-	}
-
-
-
 
 	/**
 	 * @param updateStatusDataService the updateStatusDataService to set

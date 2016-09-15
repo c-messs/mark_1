@@ -1,5 +1,9 @@
 package gov.hhs.cms.ff.fm.eps.ep.enums;
 
+/**
+ * SBM Gender Codes.
+ *
+ */
 public enum SBMGenderCodeEnum {
 	
 	F ("Female"),	
@@ -13,8 +17,9 @@ public enum SBMGenderCodeEnum {
 		this.code = code;		
 	}
 	
+
 	/**
-	 * @param value
+	 * @param code
 	 * @return
 	 */
 	public static SBMGenderCodeEnum getEnum(String code) {

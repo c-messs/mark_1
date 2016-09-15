@@ -2,6 +2,12 @@ package gov.hhs.cms.ff.fm.eps.ep.po;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity class for table SBMFILEINFO.
+ *
+ */
 public class SbmFileInfoPO extends GenericSbmFilePO<SbmFileInfoPO> {
 
 	private String sbmFileNm;

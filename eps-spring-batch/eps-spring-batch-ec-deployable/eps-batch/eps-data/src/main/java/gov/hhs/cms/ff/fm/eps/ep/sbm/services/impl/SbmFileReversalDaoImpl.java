@@ -16,6 +16,10 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.GenericEpsDao;
 import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmFileReversalDao;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReversalDao {
 
 	private final static Logger LOG = LoggerFactory.getLogger(SbmFileReversalDaoImpl.class);
@@ -25,13 +29,16 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 	private String copyPrecedingPolicyVersionSql;
 	private String copyPolicyVersionSql;
 	private String copyPrecedingStatusSql;
+	private String copyStatusHistorySql;
+	private String updateMaintDateTimeForVoidSql;
+	private String updateMaintDateTimeForPrecedingSql;
 	private String copyPolicyPremiumsSql;
 	private String copyPolicyMembersSql;
-	private String updateMaintDateTimesSql;
 
 	@Override
 	public void backOutFile(Long fileProcSummaryId) {
 
+		//Insert Policy Status '6' to void the policy being backed out - J81, J82
 		int cntStatus = updatePolicyStatus(fileProcSummaryId);
 
 		//Multiple Policy Versions J83
@@ -42,25 +49,31 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 		
 		//Policy Status update for J83 (Multiple prior versions)
 		int cntPrecedingStatus = copyPrecedingStatus(fileProcSummaryId);
+		
+		//Policy Status history carryover for J86 (Only one version existed)
+		int cntStatusHistory = copyStatusHistory(fileProcSummaryId);
 
-		//Update maintenance timestamps for J83 and J86
-		int cntMEDUpdates = updateMaintDateTime(fileProcSummaryId);
+		//Update maintenance end timestamps for J83 and J86
+		int cntMEDUpdatesVoid = updateMaintDateTimeForVoid(fileProcSummaryId);
+		int cntMEDUpdatePreceding = updateMaintDateTimeForPreceding(fileProcSummaryId);
 
 		int cntPremium = copyPolicyPremiums(fileProcSummaryId);
 		int cntJoin = copyPolicyMembers(fileProcSummaryId);
 
 		//TODO Remove or change to DEBUG after testing.
 		LOG.info("\n\nTotal policy records effected by Reversal (BKO) from EPS.  sbmFileProcSumId: " + fileProcSummaryId +
+				"\n     Statuses                     : " + cntStatus +
 				"\n     PrecedingPolicies (J83)      : " + cntPrecedingPolicy + 
 				"\n     Policies (modified, J86)     : " + cntPolicy +
-				"\n     Copied Preceding Status (J86): " + cntPrecedingStatus +	
-				"\n     MED Updates                  : " + cntMEDUpdates +
+				"\n     Copied Preceding Status (J83): " + cntPrecedingStatus +	
+				"\n     Copied Status History (J86)  : " + cntStatusHistory +	
+				"\n     MED Updates Void             : " + cntMEDUpdatesVoid +
+				"\n     MED Updates Preceding        : " + cntMEDUpdatePreceding +
 				"\n     Premiums                     : " + cntPremium +
-				"\n     Statuses                     : " + cntStatus +
 				"\n     Joins                        : " + cntJoin + "\n");
-
 	}
 
+	
 	private int updatePolicyStatus(Long fileProcSummaryId) {
 
 		int cntRecord = jdbcTemplate.update(new PreparedStatementCreator() {
@@ -75,9 +88,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 				try {
 					ps = con.prepareStatement(voidPolicyStatusSql);
 
-					ps.setString(1, userVO.getUserId());
-					ps.setString(2, userVO.getUserId());
-					ps.setLong(3, fileProcSummaryId);
+					ps.setLong(1, fileProcSummaryId);
 
 					return ps;
 
@@ -110,9 +121,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 				try {
 					ps = con.prepareStatement(copyPrecedingPolicyVersionSql);
 
-					ps.setString(1, userVO.getUserId());
-					ps.setString(2, userVO.getUserId());
-					ps.setLong(3, fileProcSummaryId);
+					ps.setLong(1, fileProcSummaryId);
 
 					return ps;
 
@@ -146,11 +155,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 				try {
 					ps = con.prepareStatement(copyPolicyVersionSql);
 
-					ps.setString(1, userVO.getUserId());
-					ps.setString(2, userVO.getUserId());
-					ps.setString(3, userVO.getUserId());
-					ps.setString(4, userVO.getUserId());
-					ps.setLong(5, fileProcSummaryId);
+					ps.setLong(1, fileProcSummaryId);
 
 					return ps;
 
@@ -183,9 +188,39 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 				try {
 					ps = con.prepareStatement(copyPrecedingStatusSql);
 
-					ps.setString(1, userVO.getUserId());
-					ps.setString(2, userVO.getUserId());
-					ps.setLong(3, fileProcSummaryId);
+					ps.setLong(1, fileProcSummaryId);
+
+					return ps;
+
+				} catch (Exception e) {
+					try {
+						if (ps != null) {
+							ps.close();
+						}
+					} catch (SQLException e1) {
+						LOG.error("Failed to close prepared statement caused by: " + e.toString());
+					}
+					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
+				}
+			}
+		});
+		return cntRecord;
+	}
+	
+	private int copyStatusHistory(Long fileProcSummaryId) {
+
+		int cntRecord = jdbcTemplate.update(new PreparedStatementCreator() {
+			/** 
+			 * Creating a preparedStatement
+			 * @param con
+			 * @return preparedstatement
+			 */
+			public PreparedStatement createPreparedStatement(Connection con)
+					throws ApplicationException {
+				PreparedStatement ps = null;
+				try {
+					ps = con.prepareStatement(copyStatusHistorySql);
+					ps.setLong(1, fileProcSummaryId);
 
 					return ps;
 
@@ -274,7 +309,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 		return cntRecord;
 	}
 
-	private int updateMaintDateTime(Long fileProcSummaryId) {
+	private int updateMaintDateTimeForVoid(Long fileProcSummaryId) {
 
 		int cntRecord = jdbcTemplate.update(new PreparedStatementCreator() {
 
@@ -287,7 +322,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 					throws ApplicationException {
 				PreparedStatement ps = null;
 				try {
-					ps = con.prepareStatement(updateMaintDateTimesSql);
+					ps = con.prepareStatement(updateMaintDateTimeForVoidSql);
 
 					ps.setLong(1, fileProcSummaryId);
 
@@ -306,7 +341,40 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 			}
 		});
 		return cntRecord;
+	}
+	
+	private int updateMaintDateTimeForPreceding(Long fileProcSummaryId) {
 
+		int cntRecord = jdbcTemplate.update(new PreparedStatementCreator() {
+
+			/** 
+			 * Creating a preparedStatement
+			 * @param con
+			 * @return preparedstatement
+			 */
+			public PreparedStatement createPreparedStatement(Connection con)
+					throws ApplicationException {
+				PreparedStatement ps = null;
+				try {
+					ps = con.prepareStatement(updateMaintDateTimeForPrecedingSql);
+
+					ps.setLong(1, fileProcSummaryId);
+
+					return ps;
+
+				} catch (Exception e) {
+					try {
+						if (ps != null) {
+							ps.close();
+						}
+					} catch (SQLException e1) {
+						LOG.error("Failed to close prepared statement caused by: " + e.toString());
+					}
+					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
+				}
+			}
+		});
+		return cntRecord;
 	}
 
 	/**
@@ -345,6 +413,30 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 	}
 
 	/**
+	 * @param copyStatusHistorySql the copyStatusHistorySql to set
+	 */
+	public void setCopyStatusHistorySql(String copyStatusHistorySql) {
+		this.copyStatusHistorySql = copyStatusHistorySql;
+	}
+
+
+	/**
+	 * @param updateMaintDateTimeForVoidSql the updateMaintDateTimeForVoidSql to set
+	 */
+	public void setUpdateMaintDateTimeForVoidSql(String updateMaintDateTimeForVoidSql) {
+		this.updateMaintDateTimeForVoidSql = updateMaintDateTimeForVoidSql;
+	}
+
+
+	/**
+	 * @param updateMaintDateTimeForPrecedingSql the updateMaintDateTimeForPrecedingSql to set
+	 */
+	public void setUpdateMaintDateTimeForPrecedingSql(String updateMaintDateTimeForPrecedingSql) {
+		this.updateMaintDateTimeForPrecedingSql = updateMaintDateTimeForPrecedingSql;
+	}
+
+
+	/**
 	 * @param copyPolicyPremiumSql the copyPolicyPremiumSql to set
 	 */
 	public void setCopyPolicyPremiumsSql(String copyPolicyPremiumsSql) {
@@ -356,13 +448,6 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 	 */
 	public void setCopyPolicyMembersSql(String copyPolicyMembersSql) {
 		this.copyPolicyMembersSql = copyPolicyMembersSql;
-	}
-
-	/**
-	 * @param updateMaintDateTimesSql the updateMaintDateTimesSql to set
-	 */
-	public void setUpdateMaintDateTimesSql(String updateMaintDateTimesSql) {
-		this.updateMaintDateTimesSql = updateMaintDateTimesSql;
 	}
 
 }

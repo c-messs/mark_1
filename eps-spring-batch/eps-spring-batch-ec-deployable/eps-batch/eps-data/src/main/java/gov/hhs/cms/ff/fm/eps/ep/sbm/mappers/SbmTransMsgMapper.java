@@ -12,9 +12,17 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMPolicyDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmTransMsgMapper {
 
-
+	/**
+	 * 
+	 * @param inboundPolicyDTO
+	 * @return SbmTransMsgPO
+	 */
 	public SbmTransMsgPO mapSBMToEPS(SBMPolicyDTO inboundPolicyDTO) {
 
 		SbmTransMsgPO po = new SbmTransMsgPO();
@@ -50,8 +58,10 @@ public class SbmTransMsgMapper {
 		po.setSbmTransMsgProcStatusTypeCd(status.getCode());
 		return po;
 	}
-
-
+	
+	/*
+	 * determine SbmTransMsg Status
+	 */
 	private SbmTransMsgStatus determineSbmTransMsgStatus(SBMPolicyDTO inboundPolicyDTO) {
 
 		SbmTransMsgStatus status = null;
@@ -68,6 +78,11 @@ public class SbmTransMsgMapper {
 		return status;
 	}
 	
+	/**
+	 * 
+	 * @param po
+	 * @return policyError
+	 */
 	public PolicyErrorType mapEpsToSbmr(SbmTransMsgPO po) {
 		
 		PolicyErrorType policyError = new PolicyErrorType();
@@ -79,6 +94,5 @@ public class SbmTransMsgMapper {
 		
 		return policyError;
 	}
-	
 
 }

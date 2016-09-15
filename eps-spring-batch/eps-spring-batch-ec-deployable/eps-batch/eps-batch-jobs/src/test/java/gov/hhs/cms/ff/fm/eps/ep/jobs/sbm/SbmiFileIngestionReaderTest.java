@@ -1,10 +1,12 @@
 package gov.hhs.cms.ff.fm.eps.ep.jobs.sbm;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -15,24 +17,17 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.NonTransientResourceException;
 import org.springframework.batch.item.ParseException;
 import org.springframework.batch.item.UnexpectedInputException;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.xml.sax.SAXException;
 
-import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
-import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMCache;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
-import gov.hhs.cms.ff.fm.eps.rap.util.RapProcessingHelper;
 
 public class SbmiFileIngestionReaderTest {
-	
-	private static final Logger LOG = LoggerFactory.getLogger(SbmiFileIngestionReaderTest.class);
 	
 	private static final String eftFolderPath = "./src/test/resources/sbm/readerTest/eftFolder";
 	private static final String privateFolderPath = "./src/test/resources/sbm/readerTest/privateFolder";
@@ -77,6 +72,14 @@ public class SbmiFileIngestionReaderTest {
 		zipFolder.mkdirs();
 		processedFolder.mkdirs();
 		
+		FileUtils.cleanDirectory(eftFolder);
+		FileUtils.cleanDirectory(privateFolder);
+		FileUtils.cleanDirectory(zipFolder);
+		FileUtils.cleanDirectory(processedFolder);
+	}
+	
+	@After
+	public void tearDown() throws IOException {
 		FileUtils.cleanDirectory(eftFolder);
 		FileUtils.cleanDirectory(privateFolder);
 		FileUtils.cleanDirectory(zipFolder);

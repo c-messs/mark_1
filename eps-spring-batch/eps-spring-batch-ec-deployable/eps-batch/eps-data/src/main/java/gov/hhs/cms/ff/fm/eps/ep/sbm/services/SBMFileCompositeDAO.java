@@ -5,12 +5,15 @@ import java.util.Map;
 
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
-import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProccessingSummary;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 
+/**
+ * 
+ * SBMFileCompositeDAO interface
+ *
+ */
 public interface SBMFileCompositeDAO {
-	
 	
 	/**
 	 * Save SBMFileInfo, SBMFileError and SBMFileErrorAdditionalInfo then returns SBMFileInfoId
@@ -25,7 +28,10 @@ public interface SBMFileCompositeDAO {
 	 */
 	public void saveFileToStagingSBMFile(SBMFileProcessingDTO inboundFileDTO);
 	
-	
+	/**
+	 * 
+	 * @param inboundFileDTO
+	 */
 	public void extractXprToStagingPolicy(SBMFileProcessingDTO inboundFileDTO);
 	
 	/**
@@ -44,7 +50,7 @@ public interface SBMFileCompositeDAO {
 		
 	/**
 	 * Return SBMFileInfo list that matches with given fileId and tenantId	
-	 * @param fileId
+	 * @param sbmFileId
 	 * @param tenantId
 	 * @return
 	 */
@@ -60,7 +66,9 @@ public interface SBMFileCompositeDAO {
 	
 	/**
 	 * Get SBMFileProcessingSummary for the given fileSetId
+	 * @param issuerId
 	 * @param fileSetId
+	 * @param tenantId
 	 * @return
 	 */
 	public List<SBMSummaryAndFileInfoDTO> getSBMFileProcessingSummary(String issuerId, String fileSetId, String tenantId);
@@ -95,10 +103,13 @@ public interface SBMFileCompositeDAO {
 	public SBMSummaryAndFileInfoDTO getLatestSBMFileProcessingSummaryByState(String stateCode);
 	
 	
+
 	/**
-	 * Save SBMFileProcessingSummary and return sbmFileProcSumId
+	 * Save SBMFileProcessingDTO (extends SBMFileProccessingSummary) and return sbmFileProcSumId
+	 * @param inboundFileDTO
+	 * @return
 	 */
-	public Long saveSbmFileProcessingSummary(SBMFileProccessingSummary sbmFileProccessingSummary);
+	public Long saveSbmFileProcessingSummary(SBMFileProcessingDTO inboundFileDTO);
 	
 	/**
 	 * Returns all SBMFileInfo for the given sbmFileProcSumId 
@@ -107,12 +118,14 @@ public interface SBMFileCompositeDAO {
 	 */
 	public List<SBMSummaryAndFileInfoDTO> getAllSBMFileInfos(Long sbmFileProcSumId);
 	
+	
 	/**
-	 * Update file status for the given sbmFileInfoIdList
+	 * Update file status for the given sbmFileProcSumId.
 	 * @param sbmFileProcSumId
 	 * @param fileStatus
+	 * @param batchId
 	 */
-	public void updateFileStatus(Long sbmFileProcSumId, SBMFileStatus fileStatus);
+	public void updateFileStatus(Long sbmFileProcSumId, SBMFileStatus fileStatus, Long batchId);
 	
 	/**
 	 * Update CMSApprovedInd
@@ -133,6 +146,11 @@ public interface SBMFileCompositeDAO {
 	 */
 	public Map<String, String> getAllErrorCodesAndDescription();
 	
+	/**
+	 * 
+	 * @param sbmFileInfoId
+	 * @return
+	 */
 	public String getFileInfoTypeXml(Long sbmFileInfoId);
 	
 	/**

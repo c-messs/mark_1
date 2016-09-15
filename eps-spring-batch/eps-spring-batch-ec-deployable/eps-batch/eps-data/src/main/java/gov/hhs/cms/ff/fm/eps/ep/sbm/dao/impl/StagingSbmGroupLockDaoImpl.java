@@ -21,6 +21,10 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.mappers.StagingSbmGroupLockRowMapper;
 import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.po.StagingSbmGroupLockPO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class StagingSbmGroupLockDaoImpl extends GenericEpsDao<StagingSbmGroupLockPO> implements StagingSbmGroupLockDao {
 	
 	private final static Logger LOG = LoggerFactory.getLogger(StagingSbmGroupLockDaoImpl.class);
@@ -37,9 +41,10 @@ public class StagingSbmGroupLockDaoImpl extends GenericEpsDao<StagingSbmGroupLoc
 
 	private JdbcTemplate jdbcTemplate;
 	
-	
+	/**
+	 * Constructor
+	 */
 	public StagingSbmGroupLockDaoImpl() {
-		
 		this.rowMapper = new StagingSbmGroupLockRowMapper();
 	}
 	

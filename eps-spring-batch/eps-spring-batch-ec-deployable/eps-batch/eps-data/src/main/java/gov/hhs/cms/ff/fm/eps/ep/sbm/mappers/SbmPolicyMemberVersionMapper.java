@@ -7,15 +7,18 @@ import gov.cms.dsh.sbmi.PolicyMemberType;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyMemberVersionPO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmPolicyMemberVersionMapper {
-
 
 	/**
 	 * Extract and translate inbound SBM XPR member to EPS entity.  Determines and flags if
 	 * inbound data is same as the corresponding EPS member.
 	 * @param member
-	 * @param epsPO
-	 * @return
+	 * @param epsPmvPO
+	 * @return SbmPolicyMemberVersionPO
 	 */
 	public SbmPolicyMemberVersionPO mapSbmToStaging(PolicyMemberType member, SbmPolicyMemberVersionPO epsPmvPO) {
 
@@ -58,7 +61,11 @@ public class SbmPolicyMemberVersionMapper {
 		return po;
 	}
 
-
+	/**
+	 * 
+	 * @param poList
+	 * @return memberList
+	 */
 	public List<PolicyMemberType> mapEpsToSbm(List<SbmPolicyMemberVersionPO> poList) {
 
 		List<PolicyMemberType> memberList = new ArrayList<PolicyMemberType>();
@@ -71,14 +78,5 @@ public class SbmPolicyMemberVersionMapper {
 		}
 		return memberList;
 	}
-
-
-
-
-
-
-
-
-
 
 }

@@ -1,5 +1,11 @@
 package gov.hhs.cms.ff.fm.eps.ep.po;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity class for table SBMFILEERROR.
+ *
+ */
 public class SbmFileErrorPO extends GenericSbmFilePO<SbmFileErrorPO> {
 	
 	private String sbmErrorWarningTypeCd;

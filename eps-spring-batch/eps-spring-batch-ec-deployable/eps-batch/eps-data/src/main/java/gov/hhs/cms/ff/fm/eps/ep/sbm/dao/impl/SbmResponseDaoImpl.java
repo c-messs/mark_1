@@ -9,6 +9,10 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.GenericEpsDao;
 import gov.hhs.cms.ff.fm.eps.ep.dao.SbmResponseDao;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmResponsePO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmResponseDaoImpl extends GenericEpsDao<SbmResponsePO> implements SbmResponseDao {
 	
 	private String insertResponseSql;

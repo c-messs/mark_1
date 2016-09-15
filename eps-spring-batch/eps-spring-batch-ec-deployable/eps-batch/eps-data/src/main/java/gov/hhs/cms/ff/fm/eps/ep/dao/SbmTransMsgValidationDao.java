@@ -4,6 +4,10 @@ import java.util.List;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgValidationPO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public interface SbmTransMsgValidationDao  {
 	
 	/**
@@ -25,7 +29,7 @@ public interface SbmTransMsgValidationDao  {
 	
 	
 	/**
-	 * @param sbmFileInfoId
+	 * @param sbmTransMsgId
 	 * @return
 	 */
 	public List<SbmTransMsgValidationPO> selectValidation(Long sbmTransMsgId);

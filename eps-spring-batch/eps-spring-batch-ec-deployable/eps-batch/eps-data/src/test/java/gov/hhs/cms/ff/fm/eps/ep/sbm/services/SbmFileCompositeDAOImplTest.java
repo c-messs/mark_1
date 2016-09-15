@@ -1,5 +1,7 @@
 package gov.hhs.cms.ff.fm.eps.ep.sbm.services;
 
+import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.GROUP_ID_EXTRACT;
+
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -29,6 +31,7 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 import gov.hhs.cms.ff.fm.eps.ep.util.sbm.TestDataSBMUtility;
+import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -39,7 +42,10 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 
 
 	@Autowired
-	SBMFileCompositeDAO sbmFileCompositeDao;
+	private SBMFileCompositeDAO sbmFileCompositeDao;
+	
+	@Autowired
+	private UserVO userVO;
 	
 	private static Unmarshaller unmarshaller;
 
@@ -132,12 +138,29 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 		String issuerId = "99999";
 		String issuerFileSetId = "123999";
 
-		SBMFileProccessingSummary sbmFileProcSum = TestDataSBMUtility.makeSbmFileProcessingSummary(tenantId, issuerId, issuerFileSetId);
+		SBMFileProcessingDTO inboundFileDTO = new SBMFileProcessingDTO(); 
+		inboundFileDTO.setIssuerId(issuerId);
+		inboundFileDTO.setTenantId(tenantId);
+		inboundFileDTO.setIssuerFileSetId(issuerFileSetId);
+		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(6);
+		inboundFileDTO.setBatchId(batchId);
 
-		Long sbmFileProcSumId = sbmFileCompositeDao.saveSbmFileProcessingSummary(sbmFileProcSum);
+		Long sbmFileProcSumId = sbmFileCompositeDao.saveSbmFileProcessingSummary(inboundFileDTO);
 		assertNotNull("sbmFileProcSumId", sbmFileProcSumId);
-		//TODO select by id and compare values
+		
+		String sql = "SELECT * FROM SBMFILEPROCESSINGSUMMARY WHERE SBMFILEPROCESSINGSUMMARYID = " + sbmFileProcSumId;
 
+		List<Map<String, Object>> actualList = jdbc.queryForList(sql);
+		
+		assertEquals("SBMFILEPROCESSINGSUMMARY record list size", 1, actualList.size());
+		
+		Map<String, Object> actual = actualList.get(0);
+		
+		assertEquals("TenantId", tenantId, (String) actual.get("TENANTID"));
+		assertEquals("IssuerId", issuerId, (String) actual.get("ISSUERID"));
+		assertEquals("IssuerFileSetId", issuerFileSetId, (String) actual.get("ISSUERFILESETID"));
+		
+		assertSysData(actual, batchId);
 	}
 
 	@Test
@@ -348,7 +371,6 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 	@Test
 	public void test_saveFileInfoAndErrors() {
 		 
-		String qhpId = TestDataSBMUtility.makeQhpId("12345", "CA0");
 		String state = "RI";
 		String tenantId = state + "0";
 		String issuerId = "88888";
@@ -372,13 +394,9 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 	
 	@Test
 	public void test_saveSBMFileErrors() {
-		 
-		assertNotNull("sbmFileCompositeDao", sbmFileCompositeDao);
 		
-		String qhpId = TestDataSBMUtility.makeQhpId("12345", "CA0");
 		String state = "RI";
 		String tenantId = state + "0";
-		String issuerId = "88888";
 		Long sbmFileId = TestDataSBMUtility.getRandomNumberAsLong(10);
 		
 		SBMFileProcessingDTO fileDTO = insertParentFileRecords(tenantId, sbmFileId.toString());
@@ -419,20 +437,147 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 		assertEquals("TransMsgDirectionTypeCd", expected, actual.get("CMSAPPROVEDIND"));
 	}
 	
-//	@Test
-//	public void test_extractXprToStagingPolicy() {
-//		
-//		String stateCd = TestDataSBMUtility.getRandomSbmState();
-//		String tenantId = stateCd + "0";
-//		String id =  TestDataSBMUtility.getRandomNumberAsString(5);
-//		String sbmFileId = "FID-" + id;
-//		Long batchId = Long.valueOf(id);
-//		
-//		SBMFileProcessingDTO inboundFileDTO = insertParentFileRecords(tenantId, sbmFileId, SBMFileStatus.IN_PROCESS);
-//		inboundFileDTO.setFileInfoType(TestDataSBMUtility.makeFileInformationType(tenantId));
-//		inboundFileDTO.setBatchId(batchId);
-//		
-//		
-//	}
+	/**
+	 * See StagingSbmPolicyDaoImplTest for happy path tests with data.
+	 */
+	@Test
+	public void test_extractXprToStagingPolicy_None() {
+		
+		String stateCd = TestDataSBMUtility.getRandomSbmState();
+		String tenantId = stateCd + "0";
+		String id =  TestDataSBMUtility.getRandomNumberAsString(5);
+		String sbmFileId = "FID-" + id;
+		userVO.setUserId(id.toString());
+		
+		SBMFileProcessingDTO inboundFileDTO = insertParentFileRecords(tenantId, sbmFileId, SBMFileStatus.IN_PROCESS);
+		inboundFileDTO.setFileInfoType(TestDataSBMUtility.makeFileInformationType(tenantId));
+		inboundFileDTO.setBatchId(Long.valueOf(id));
+		inboundFileDTO.setXprProcGroupSize(8);
+		
+		sbmFileCompositeDao.extractXprToStagingPolicy(inboundFileDTO);
+		
+		String sql = "SELECT STAGINGSBMPOLICYID FROM STAGINGSBMPOLICY WHERE SBMFILEPROCESSINGSUMMARYID = " + inboundFileDTO.getSbmFileProcSumId();
+
+		List<Map<String, Object>> actualList = jdbc.queryForList(sql);
+		assertEquals("STAGINGSBMPOLICY record list size", 0, actualList.size());
+		
+		sql = "SELECT SBMFILEPROCESSINGSUMMARYID FROM STAGINGSBMGROUPLOCK WHERE SBMFILEPROCESSINGSUMMARYID = " + inboundFileDTO.getSbmFileProcSumId();
+
+		actualList = jdbc.queryForList(sql);
+		assertEquals("STAGINGSBMGROUPLOCK record list size", 0, actualList.size());
+	}
+	
+	@Test
+	public void test_insertStagingSbmGroupLockForExtract() {
+		
+		String stateCd = TestDataSBMUtility.getRandomSbmState();
+		String tenantId = stateCd + "0";
+		String id =  TestDataSBMUtility.getRandomNumberAsString(5);
+		String sbmFileId = "FID-" + id;
+		userVO.setUserId(id.toString());
+		SBMFileProcessingDTO inboundFileDTO = insertParentFileRecords(tenantId, sbmFileId, SBMFileStatus.IN_PROCESS);
+		
+		sbmFileCompositeDao.insertStagingSbmGroupLockForExtract(inboundFileDTO.getSbmFileProcSumId());
+		
+		String sql = "SELECT * FROM STAGINGSBMGROUPLOCK WHERE SBMFILEPROCESSINGSUMMARYID = " + inboundFileDTO.getSbmFileProcSumId();
+
+		List<Map<String, Object>> actualList = jdbc.queryForList(sql);
+		assertEquals("STAGINGSBMGROUPLOCK record list size", 1, actualList.size());
+		Map<String, Object> actual = actualList.get(0);
+		assertEquals("PROCESSINGGROUPID", new BigDecimal(GROUP_ID_EXTRACT), (BigDecimal) actual.get("PROCESSINGGROUPID"));	
+	}
+	
+	
+	@Test
+	public void test_getSBMFileProcessingSummary() {
+		
+		String stateCd = TestDataSBMUtility.getRandomSbmState();
+		String tenantId = stateCd + "0";
+		String issuerId =  TestDataSBMUtility.getRandomNumberAsString(5);
+		String sbmFileId = "FID-" + issuerId;
+		int fileNum = 1;
+		String fileSetId = "FSID-" + issuerId;
+		userVO.setUserId(TestDataSBMUtility.getRandomNumberAsString(3));
+		
+		insertParentFileRecords(tenantId, sbmFileId, fileSetId, fileNum, issuerId);
+		
+		List<SBMSummaryAndFileInfoDTO> actualList = sbmFileCompositeDao.getSBMFileProcessingSummary(issuerId, fileSetId, tenantId);
+		
+		assertNotNull("SBMSummaryAndFileInfoDTO should not be null", actualList);
+		
+		assertEquals("SBMSummaryAndFileInfoDTO list size", 1, actualList.size());
+		
+		SBMSummaryAndFileInfoDTO actual = actualList.get(0);
+		
+		assertEquals("TenantId", tenantId, actual.getTenantId());
+		assertEquals("IssuerId", issuerId, actual.getIssuerId());
+		assertEquals("IssuerFileSetId", fileSetId , actual.getIssuerFileSetId());		
+	}
+	
+	/*
+	 * WHERE sfps.SBMFILESTATUSTYPECD IN ('ACC', 'ACE', 'ACW', 'IPC')
+	 */
+	@Test
+	public void test_getAllInProcessOrPendingApprovalForState() throws InterruptedException {
+		
+		String stateCd = TestDataSBMUtility.getRandomSbmState();
+		String tenantId = stateCd + "0";
+		userVO.setUserId(TestDataSBMUtility.getRandomNumberAsString(3));
+		
+		// method call returns "ORDER BY sfps.CREATEDATETIME ASC" give a little delay so we can match up when doing assertions.
+		Long sumId1 = insertSBMFileProcessingSummary(tenantId, "11111", "FSID-11111", SBMFileStatus.ACCEPTED);
+		Thread.sleep(100);
+		Long sumId2 = insertSBMFileProcessingSummary(tenantId, "22222", "FSID-22222", SBMFileStatus.ACCEPTED_WITH_ERRORS);
+		Thread.sleep(100);
+		// Throw in one we are not expecting
+		Long sumId3 = insertSBMFileProcessingSummary(tenantId, "33333", "FSID-33333", SBMFileStatus.BYPASS_FREEZE);
+		Thread.sleep(100);
+		Long sumId4 = insertSBMFileProcessingSummary(tenantId, "33333", "FSID-33333", SBMFileStatus.ACCEPTED_WITH_WARNINGS);
+		Thread.sleep(100);
+		Long sumId5 = insertSBMFileProcessingSummary(tenantId, "44444", "FSID-44444", SBMFileStatus.IN_PROCESS);
+		
+		List<SBMSummaryAndFileInfoDTO> actualList = sbmFileCompositeDao.getAllInProcessOrPendingApprovalForState(stateCd);
+		
+		assertNotNull("SBMSummaryAndFileInfoDTO should not be null", actualList);
+		
+		assertEquals("SBMSummaryAndFileInfoDTO list size", 4, actualList.size());
+		
+		// sumId3 is not the correct status, so it better not be returned.
+		SBMSummaryAndFileInfoDTO actual1 = actualList.get(0);
+		SBMSummaryAndFileInfoDTO actual2 = actualList.get(1);
+		SBMSummaryAndFileInfoDTO actual4 = actualList.get(2);
+		SBMSummaryAndFileInfoDTO actual5 = actualList.get(3);
+		
+		assertEquals("SbmFileProcSumId 1", sumId1, actual1.getSbmFileProcSumId());
+		assertEquals("SbmFileProcSumId 2", sumId2, actual2.getSbmFileProcSumId());
+		assertEquals("SbmFileProcSumId 4", sumId4, actual4.getSbmFileProcSumId());
+		assertEquals("SbmFileProcSumId 5", sumId5, actual5.getSbmFileProcSumId());
+	}
+	
+	
+	@Test
+	public void test_updateFileStatus() {
+		
+		SBMFileStatus expectedStatus = SBMFileStatus.APPROVED_WITH_WARNINGS;
+		String stateCd = TestDataSBMUtility.getRandomSbmState();
+		String tenantId = stateCd + "0";
+		String issuerId =  TestDataSBMUtility.getRandomNumberAsString(5);
+		String sbmFileId = "FID-" + issuerId;
+		int fileNum = 1;
+		String fileSetId = "FSID-" + issuerId;
+		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(3);
+		userVO.setUserId(batchId.toString());
+		
+		Long sbmFileProcSumId = insertSBMFileProcessingSummary(tenantId, issuerId, fileSetId, SBMFileStatus.FREEZE);
+		
+		sbmFileCompositeDao.updateFileStatus(sbmFileProcSumId, expectedStatus, batchId);
+		
+		String sql = "SELECT * FROM SBMFILEPROCESSINGSUMMARY WHERE SBMFILEPROCESSINGSUMMARYID = " + sbmFileProcSumId;
+
+		List<Map<String, Object>> actualList = jdbc.queryForList(sql);
+		assertEquals("SBMFILEPROCESSINGSUMMARY record list size", 1, actualList.size());
+		Map<String, Object> actual = actualList.get(0);
+		assertEquals("SBMFILESTATUSTYPECD", expectedStatus.getValue() , (String) actual.get("SBMFILESTATUSTYPECD"));		
+	}
 
 }

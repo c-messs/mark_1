@@ -4,6 +4,10 @@ import java.util.List;
 
 import gov.hhs.cms.ff.fm.eps.ep.po.StagingSbmGroupLockPO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public interface StagingSbmGroupLockDao {
 	
 	
@@ -11,6 +15,7 @@ public interface StagingSbmGroupLockDao {
 	 * @return
 	 */
 	public List<StagingSbmGroupLockPO> selectSbmFileProcessingSummaryIdList();
+	
 	
 	/**
 	 * @param poList
@@ -46,12 +51,14 @@ public interface StagingSbmGroupLockDao {
 	 */
 	public int deleteStagingGroupLock(Long sbmFileProcSumId, Long batchId);
 
+	
 	/**
 	 * @param batchId
 	 * @return
 	 */
 	public boolean updateStagingGroupLockForExtract(Long batchId);
 
+	
 	/**
 	 * @param batchId
 	 * @return

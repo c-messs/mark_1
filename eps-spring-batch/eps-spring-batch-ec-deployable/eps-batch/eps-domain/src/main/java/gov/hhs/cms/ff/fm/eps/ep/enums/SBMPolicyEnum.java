@@ -1,5 +1,9 @@
 package gov.hhs.cms.ff.fm.eps.ep.enums;
 
+/**
+ * Enrollment tag names for XML validation error translation.
+ *
+ */
 public enum SBMPolicyEnum {
 	
 	//High level tags

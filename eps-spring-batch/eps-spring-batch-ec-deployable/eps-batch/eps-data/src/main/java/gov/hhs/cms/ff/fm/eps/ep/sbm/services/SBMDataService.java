@@ -4,6 +4,10 @@ import java.math.BigDecimal;
 
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMPolicyDTO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public interface SBMDataService {
 	
 	

@@ -1,5 +1,12 @@
 package gov.hhs.cms.ff.fm.eps.ep.po;
 
+/**
+ * @author j.radziewski
+ * 
+ * Entity class for attributes of SBMTRANSMSGVALIDATION table.
+ * 
+ *
+ */
 public class SbmTransMsgValidationPO extends GenericSbmTransMsgPO<SbmTransMsgValidationPO> {
 	
 	private String sbmErrorWarningTypeCd;

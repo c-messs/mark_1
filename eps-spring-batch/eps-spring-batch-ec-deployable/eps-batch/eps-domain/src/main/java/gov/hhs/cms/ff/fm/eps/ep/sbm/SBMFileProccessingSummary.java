@@ -4,6 +4,10 @@ import java.math.BigDecimal;
 
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 
+/**
+ * Holds SBMFileProccessingSummary data
+ *
+ */
 public class SBMFileProccessingSummary {
 	
 	private Long sbmFileProcSumId;

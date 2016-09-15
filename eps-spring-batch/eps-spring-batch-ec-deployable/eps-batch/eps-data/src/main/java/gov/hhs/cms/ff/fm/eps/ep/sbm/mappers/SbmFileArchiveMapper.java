@@ -9,9 +9,17 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmFileArchiveMapper {
 	
-	
+	/**
+	 * 
+	 * @param inboundFileDTO
+	 * @return po
+	 */
 	public SbmFileArchivePO mapSbmToEps(SBMFileProcessingDTO inboundFileDTO) {
 		
 		SbmFileArchivePO po = new SbmFileArchivePO();

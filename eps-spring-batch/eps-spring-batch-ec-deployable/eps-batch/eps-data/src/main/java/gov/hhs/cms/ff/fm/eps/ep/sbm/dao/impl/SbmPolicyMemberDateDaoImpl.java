@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -21,6 +22,11 @@ import gov.hhs.cms.ff.fm.eps.ep.po.PolicyMemberDatePO;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmPolicyMemberDatePO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
+/**
+ * 
+ * Implementation of SbmPolicyMemberDateDao 
+ *
+ */
 public class SbmPolicyMemberDateDaoImpl extends GenericEpsDao<SbmPolicyMemberDatePO> implements SbmPolicyMemberDateDao {
 	
 	private final static Logger LOG = LoggerFactory.getLogger(SbmPolicyMemberDateDaoImpl.class);
@@ -30,7 +36,9 @@ public class SbmPolicyMemberDateDaoImpl extends GenericEpsDao<SbmPolicyMemberDat
 	private String mergeDateSql;
 	private String deleteStagingDateSql;
 	
-	
+	/**
+	 * Constructor
+	 */
 	public SbmPolicyMemberDateDaoImpl() {
 
 		this.rowMapper = new SbmPolicyMemberDateRowMapper();
@@ -163,13 +171,13 @@ public class SbmPolicyMemberDateDaoImpl extends GenericEpsDao<SbmPolicyMemberDat
 	
 	@Override
 	public void insertPolicyMemberDates(List<PolicyMemberDatePO> poList) {
-		// TODO Auto-generated method stub
+		// unimplemented method
 		
 	}
 	@Override
 	public List<PolicyMemberDatePO> getPolicyMemberDates(Long policyVersionId) {
-		// TODO Auto-generated method stub
-		return null;
+		// unimplemented method
+		return Collections.emptyList();
 	}
 
 	/**

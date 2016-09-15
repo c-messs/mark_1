@@ -17,6 +17,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmFileReversalDao;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmUpdateStatusDataService;
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
+/**
+ * @author j.radziewski
+ *
+ */
 public class SbmUpdateStatusDataServiceImpl implements SbmUpdateStatusDataService  {
 
 	private final static Logger LOG = LoggerFactory.getLogger(SbmUpdateStatusDataServiceImpl.class);

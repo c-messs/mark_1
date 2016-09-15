@@ -1,10 +1,12 @@
 package gov.hhs.cms.ff.fm.eps.ep.sbm;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+/**
+ * Holds SBM Schema Errors 
+ *
+ */
 public class SBMScemaErrorsDTO {
 
 	private List<SbmXMLSchemaError> schemaErrorsList = new ArrayList<>();

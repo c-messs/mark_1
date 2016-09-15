@@ -55,6 +55,9 @@ public class SBMPolicyMemberVersionMapperTest extends SBMBaseMapperTest {
 		assertEquals("PolicyMemberBirthDate", expectedMember.getBirthDate(), DateTimeUtil.getXMLGregorianCalendar(actual.getPolicyMemberBirthDate()));
 		assertEquals("x12GenderTypeCd", expectedMember.getGenderCode(), actual.getX12GenderTypeCd());
 		assertEquals("PolicyMember Changed", expectedIsChanged, actual.isPolicyMemberChanged());
+		
+		// set in SbmXprServiceImpl, so should still be null after mapping.
+		assertNull("SbmTransMsgId", actual.getSbmTransMsgID());
 	}	
 	
 	

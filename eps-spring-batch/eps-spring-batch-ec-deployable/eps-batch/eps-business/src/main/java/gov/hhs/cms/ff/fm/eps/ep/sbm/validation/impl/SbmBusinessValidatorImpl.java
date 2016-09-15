@@ -319,10 +319,6 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 		
 		List<SbmErrWarningLogDTO> fieldLengthWarnings = new ArrayList<SbmErrWarningLogDTO>();
 		
-		//List<PolicyMemberType> policyMembers = policy.getMemberInformation();
-		
-		//policyMembers.forEach(member -> { 
-		
 		//FR-FM-PP-SBMI-214: R048 - Issuer Assigned Member Id database character length truncation warning
 		if(sbmBusinessRules.contains("R048")) {
 			
@@ -372,7 +368,7 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 				member.setNameSuffix(truncatedNameSuffix);
 			}
 		}
-		//});
+
 		return fieldLengthWarnings;
 	}
 	
@@ -599,21 +595,17 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 		String effectuationInd = policy.getEffectuationIndicator();
 		String exchangeMemberId = member.getExchangeAssignedMemberId();
 		
-		//policyMembers.forEach(member -> { 
-			
 		List<MemberDates> memberDates = member.getMemberDates();
 		
 		if(CollectionUtils.isEmpty(memberDates)) {
 			
 			//memberDates.forEach(memberDate -> { 
-				
 				//if(memberDate.getMemberStartDate() == null) {
 					
 					//FR-FM-PP-SBMI-229, FR-FM-PP-SBMI-230, FR-FM-PP-SBMI-231
 					validateMemberStartDateMissing(member, memberDatesErrors);
 					
 				//} else {
-					
 				//}
 			//});
 		} else {
@@ -683,7 +675,7 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 				}
 			}
 		}
-		//});
+
 		return memberDatesErrors;
 	}
 
