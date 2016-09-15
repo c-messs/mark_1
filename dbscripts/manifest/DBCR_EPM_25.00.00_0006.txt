@@ -18,7 +18,6 @@ EPM_25.0.0/pp_1.01.03_ddl_clean.sql
 EPM_25.0.0/pp_1.01.04_ddl_patch.sql
 EPM_25.0.0/pp_1.01.05_ddl_patch.sql
 EPM_25.0.0/pp_1.01.06_ddl_patch.sql
-EPM_25.0.0/pp_1.01.07_ddl_patch.sql
 EPM_25.0.0/pp_1.01.14_ddl_patch.sql
 EPM_25.0.0/build0001_selectappgrants.sql
 EPM_25.0.0/build0003_appgrants.sql
