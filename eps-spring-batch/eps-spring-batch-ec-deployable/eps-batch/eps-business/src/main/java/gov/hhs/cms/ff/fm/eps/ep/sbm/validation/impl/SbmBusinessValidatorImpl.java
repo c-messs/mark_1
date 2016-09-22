@@ -588,8 +588,6 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 
 		List<SbmErrWarningLogDTO> memberDatesErrors = new ArrayList<SbmErrWarningLogDTO>();
 		
-		//List<PolicyMemberType> policyMembers = policy.getMemberInformation();
-		
 		LocalDate policyStartDate = DateTimeUtil.getLocalDateFromXmlGC(policy.getPolicyStartDate());
 		LocalDate policyEndDate = DateTimeUtil.getLocalDateFromXmlGC(policy.getPolicyEndDate());
 		String effectuationInd = policy.getEffectuationIndicator();
