@@ -422,6 +422,8 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 		List<SbmErrWarningLogDTO> prorationValidationErrors = new ArrayList<SbmErrWarningLogDTO>();
 		
 		LocalDate policyStartDate = DateTimeUtil.getLocalDateFromXmlGC(policy.getPolicyStartDate());
+		//LocalDate policyEndDt = DateTimeUtil.getLocalDateFromXmlGC(policy.getPolicyEndDate());
+		//String effectuationInd = policy.getEffectuationIndicator();
 		
 		String qhpId = policy.getQHPId();
 		String planYear = String.valueOf(policyStartDate.getYear());
