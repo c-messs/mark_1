@@ -16,7 +16,9 @@ import gov.cms.dsh.sbmi.PolicyMemberType.MemberDates;
 import gov.cms.dsh.sbmi.PolicyType.FinancialInformation;
 import gov.cms.dsh.sbmi.ProratedAmountType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode;
+import gov.hhs.cms.ff.fm.eps.ep.enums.SBMPolicyEnum;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMCache;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmErrWarningLogDTO;
 
 /**
@@ -206,6 +208,86 @@ public class SbmValidationUtil {
 			if(count > 1) {
 				return true;
 			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Check whether QHPIdError
+	 * @param xprSchemaErrors
+	 * @return
+	 */
+	public static boolean hasRecordControlNumError(List<SBMErrorDTO> xprSchemaErrors) {
+		
+		SBMErrorDTO errorTypeCd = 
+				xprSchemaErrors.stream()
+				.filter(xprSchemaError -> xprSchemaError.getElementInErrorNm()
+						.equalsIgnoreCase(SBMPolicyEnum.REC_CTRL_NUM.getElementNm()))
+				.findAny()
+				.orElse(null);
+		
+		if(errorTypeCd != null) {
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Check whether QHPIdError
+	 * @param xprSchemaErrors
+	 * @return
+	 */
+	public static boolean hasQhpIdError(List<SBMErrorDTO> xprSchemaErrors) {
+		
+		SBMErrorDTO errorTypeCd = 
+				xprSchemaErrors.stream()
+				.filter(xprSchemaError -> xprSchemaError.getElementInErrorNm()
+						.equalsIgnoreCase(SBMPolicyEnum.QHPID.getElementNm()))
+				.findAny()
+				.orElse(null);
+		
+		if(errorTypeCd != null) {
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Check whether exchange assigned Policy Id Error
+	 * @param xprSchemaErrors
+	 * @return
+	 */
+	public static boolean hasExchangePolicyIdError(List<SBMErrorDTO> xprSchemaErrors) {
+		
+		SBMErrorDTO errorTypeCd = 
+				xprSchemaErrors.stream()
+				.filter(xprSchemaError -> xprSchemaError.getElementInErrorNm()
+						.equalsIgnoreCase(SBMPolicyEnum.EX_ASSIGN_POL_ID.getElementNm()))
+				.findAny()
+				.orElse(null);
+		
+		if(errorTypeCd != null) {
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Check whether exchange assigned Subscriber Id Error
+	 * @param xprSchemaErrors
+	 * @return
+	 */
+	public static boolean hasExchangeSubscriberIdError(List<SBMErrorDTO> xprSchemaErrors) {
+		
+		SBMErrorDTO errorTypeCd = 
+				xprSchemaErrors.stream()
+				.filter(xprSchemaError -> xprSchemaError.getElementInErrorNm()
+						.equalsIgnoreCase(SBMPolicyEnum.EX_ASSIGN_SUB_ID.getElementNm()))
+				.findAny()
+				.orElse(null);
+		
+		if(errorTypeCd != null) {
+			return true;
 		}
 		return false;
 	}

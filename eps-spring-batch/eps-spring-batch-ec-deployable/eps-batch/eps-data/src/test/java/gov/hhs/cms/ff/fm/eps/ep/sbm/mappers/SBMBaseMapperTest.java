@@ -54,7 +54,13 @@ public abstract class SBMBaseMapperTest extends TestCase {
 		po.setIssuerFileSetId(issuerFileSetId);
 		po.setCmsApprovedInd("Y");
 		po.setCmsApprovalRequiredInd("N");
-		po.setTotalIssuerFileCount(TestDataSBMUtility.getRandomNumber(3));
+		// For Statewide and Issuer only files, issuerFileSetId will be null, hence
+		// Statewide and Issuer only files will have a count of 1 in EPS.
+		if (issuerFileSetId != null) {
+			po.setTotalIssuerFileCount(TestDataSBMUtility.getRandomNumber(2));
+		} else {
+			po.setTotalIssuerFileCount(1);
+		}
 		po.setTotalRecordProcessedCnt(TestDataSBMUtility.getRandomNumber(4));
 		po.setTotalRecordRejectedCnt(TestDataSBMUtility.getRandomNumber(4));
 		po.setErrorThresholdPercent(new BigDecimal(".1"));

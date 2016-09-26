@@ -160,7 +160,7 @@ public class SbmFileProcessingSummaryMapperTest extends SBMBaseMapperTest {
 
 
 	@Test
-	public void test_mapEpsToSbmr() {
+	public void test_mapEpsToSbmr_FileSet() {
 
 		String tenantId = "MN0";
 		String issuerId = "33333";
@@ -185,6 +185,34 @@ public class SbmFileProcessingSummaryMapperTest extends SBMBaseMapperTest {
 		assertEquals("TenantId", expected.getTenantId(), actualHdr.getTenantId());
 		assertEquals("CoverageYear", expected.getCoverageYear().intValue(), actualHdr.getCoverageYear());
 		assertEquals("TotalIssuerFiles", expected.getTotalIssuerFileCount(), actualHdr.getTotalIssuerFiles());
+	}
+	
+	@Test
+	public void test_mapEpsToSbmr_StateWide() {
+
+		String tenantId = "MN0";
+		String issuerId = "55555";
+		String issuerFileSetId = null;
+
+		SbmFileProcessingSummaryPO expected = makeSbmFileProcessingSummaryPO(tenantId, issuerId, issuerFileSetId);
+		expected.setSbmFileProcSumId(TestDataSBMUtility.getRandomNumberAsLong(3));
+		
+		List<SbmFileSummaryMissingPolicyData> missingPolicyDataList = new ArrayList<SbmFileSummaryMissingPolicyData>();
+
+		FileAcceptanceRejection actual = mapper.mapEpsToSbmr(expected, false, missingPolicyDataList, 0);
+
+		assertNotNull("FileAcceptanceRejection", actual);
+
+		SBMRHeaderType actualHdr = actual.getSBMRHeader();
+		assertNotNull("SBMRHeaderType", actualHdr);
+
+		assertEquals("FileControlNumber", expected.getSbmFileProcSumId().intValue(), actualHdr.getFileControlNumber());
+		assertNotNull("FileCreateDate", actualHdr.getFileCreateDate());
+		assertEquals("IssuerFileSetId", expected.getIssuerFileSetId(), actualHdr.getIssuerFileSetId());
+		assertEquals("IssuerId", expected.getIssuerId(), actualHdr.getIssuerId());
+		assertEquals("TenantId", expected.getTenantId(), actualHdr.getTenantId());
+		assertEquals("CoverageYear", expected.getCoverageYear().intValue(), actualHdr.getCoverageYear());
+		assertNull("TotalIssuerFiles should be null for StateWide and Issuer files", actualHdr.getTotalIssuerFiles());
 	}
 
 	@Test
@@ -212,9 +240,7 @@ public class SbmFileProcessingSummaryMapperTest extends SBMBaseMapperTest {
 		int expectedTotalRecordProcessedCnt = 10;
 		int expectedTotalRecordRejectedCnt = 4;
 		int expectedEffectuatedPolicyCount = 5;
-		int expectedMatchSame = expectedTotalRecordProcessedCnt - (expectedTotalRecordRejectedCnt + expected.getTotalPolicyApprovedCnt());
-				
-				
+							
 		expected.setTotalRecordProcessedCnt(expectedTotalRecordProcessedCnt);
 		expected.setTotalRecordRejectedCnt(expectedTotalRecordRejectedCnt);
 		expected.setEffectuatedPolicyCount(expectedEffectuatedPolicyCount);

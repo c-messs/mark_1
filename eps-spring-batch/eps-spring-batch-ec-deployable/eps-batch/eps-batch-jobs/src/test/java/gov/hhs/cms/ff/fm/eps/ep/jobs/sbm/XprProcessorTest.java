@@ -127,6 +127,36 @@ public class XprProcessorTest extends TestCase {
 		
 	}
 	
+	/**
+	 * @throws Exception
+	 */
+	@Test
+	public void testProcess_success_schemaErrors_KeyFields() throws Exception {
+		
+		mockSbmValidationService.validatePolicy(EasyMock.anyObject(SBMValidationRequest.class));
+		EasyMock.expectLastCall();
+		replay(mockSbmValidationService);
+		
+		File xmlFileInfo = new File("./src/test/resources/sbm/SBMI_FileInfo.xml");
+		String fileInfoXmlString = readFile(xmlFileInfo);
+		expect(mockSbmFileCompositeDao.getFileInfoTypeXml(EasyMock.anyLong())).andReturn(fileInfoXmlString);
+		replay(mockSbmFileCompositeDao);
+		
+		String fileInfoString = "testString";
+		ReflectionTestUtils.setField(xprProcessor, "fileInfoXml", fileInfoString);
+
+		File xmlPolicy = new File("./src/test/resources/sbm/SBMI_Policy_Errors.xml");
+		String xmlPolicyString = readFile(xmlPolicy);
+		
+		SBMPolicyDTO inputDto = new SBMPolicyDTO();
+		inputDto.setPolicyXml(xmlPolicyString);
+		
+		SBMPolicyDTO resultDto = xprProcessor.process(inputDto);
+
+		assertFalse("No Schema errors", CollectionUtils.isEmpty(resultDto.getSchemaErrorList()));
+		
+	}
+	
 	@Test
 	public void testProcess_success_duplicatePolicy() throws Exception {
 		
