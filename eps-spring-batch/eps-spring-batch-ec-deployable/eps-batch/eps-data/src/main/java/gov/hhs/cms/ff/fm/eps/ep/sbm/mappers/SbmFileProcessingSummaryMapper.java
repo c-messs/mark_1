@@ -139,11 +139,15 @@ public class SbmFileProcessingSummaryMapper {
 		hdr.setTenantId(po.getTenantId());
 		hdr.setCoverageYear(po.getCoverageYear());
 		hdr.setIssuerId(po.getIssuerId());
-		hdr.setIssuerFileSetId(po.getIssuerFileSetId());
-		hdr.setTotalIssuerFiles(po.getTotalIssuerFileCount());
+		
+		// Only show (outbound SBMR) TotalIssuerFiles if there is an IssuerFileSet.  Do not show for Issuer Only and StateWide files.
+		if(po.getIssuerFileSetId() != null) {
+			hdr.setIssuerFileSetId(po.getIssuerFileSetId());
+			hdr.setTotalIssuerFiles(po.getTotalIssuerFileCount());
+		}
 
 		fileAR.setSBMRHeader(hdr);
-		
+
 		SBMIPROCSUMType summary = new SBMIPROCSUMType();
 
 		if (missingPolicyDataList != null) {
@@ -154,7 +158,7 @@ public class SbmFileProcessingSummaryMapper {
 		summary.setNotSubmittedEffectuated(po.getNotSubmittedEffectuatedCnt());
 		summary.setNotSubmittedTerminated(po.getNotSubmittedTerminatedCnt());
 		summary.setNotSubmittedCancelled(po.getNotSubmittedCancelledCnt());
-		
+
 		FinalRecordsProcessedSummary finalSummary = new FinalRecordsProcessedSummary();
 
 		finalSummary.setTotalRecordsProcessed(po.getTotalRecordProcessedCnt());
@@ -180,11 +184,11 @@ public class SbmFileProcessingSummaryMapper {
 
 			finalSummary.setTotalApproved(totAppr);
 		}
-		
+
 		summary.setFinalRecordsProcessedSummary(finalSummary);
 
 		fileAR.setSBMIPROCSUM(summary);
-		
+
 		return fileAR;
 	}
 
