@@ -154,6 +154,36 @@ public class XprProcessor implements ItemProcessor<SBMPolicyDTO, SBMPolicyDTO> {
 			} else {
 				LOG.info("Schema errors found in Policy XPR");
 				
+				StringReader sbmPolicyStr = new StringReader(sbmPolicyDTO.getPolicyXml());
+				
+				try {
+					JAXBElement<PolicyType> root = (JAXBElement<PolicyType>) jaxbUnmarshaller.unmarshal(new StreamSource(sbmPolicyStr), PolicyType.class);
+					sbmPolicy = root.getValue();
+					
+					//Check for key fields
+					if(SbmValidationUtil.hasRecordControlNumError(xprSchemaErrors)) {
+						sbmPolicy.setRecordControlNumber(999999999);
+					}
+					
+					if(SbmValidationUtil.hasQhpIdError(xprSchemaErrors)) {
+						sbmPolicy.setQHPId("INVALID9999999");
+					}
+					
+					if(SbmValidationUtil.hasExchangePolicyIdError(xprSchemaErrors)) {
+						sbmPolicy.setExchangeAssignedPolicyId("INVALID9999999");
+					}
+					
+					if(SbmValidationUtil.hasExchangeSubscriberIdError(xprSchemaErrors)) {
+						sbmPolicy.setExchangeAssignedSubscriberId("INVALID9999999");
+					}
+					
+					sbmPolicyDTO.setPolicy(sbmPolicy);
+					
+				} catch (UnmarshalException ume) {
+					//XML File Invalid
+					LOG.info("Schema errors in Policy XPR");
+				}
+				
 				sbmPolicyDTO.setSchemaErrorList(xprSchemaErrors);
 			}
 			

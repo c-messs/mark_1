@@ -18,7 +18,9 @@ import org.junit.Test;
 
 import gov.cms.dsh.sbmi.PolicyType.FinancialInformation;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode;
+import gov.hhs.cms.ff.fm.eps.ep.enums.SBMPolicyEnum;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMCache;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmErrWarningLogDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.validation.impl.SbmValidationUtil;
 import junit.framework.TestCase;
@@ -203,6 +205,118 @@ public class SbmValidationUtilTest extends TestCase {
 				"ExchangeAssignedMemberID", SBMErrorWarningCode.WR_010.getCode(), "Mem123"));
 		
 		boolean hasErrors = SbmValidationUtil.hasValidationError(errorWarningList);
+		
+		assertFalse("hasErrors", hasErrors);	
+	}
+	
+	@Test
+	public void test_hasXprValidationErrors_True_RecordControlNumError() {
+		
+		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
+		SBMErrorDTO err = new SBMErrorDTO();
+		err.setElementInErrorNm(SBMPolicyEnum.REC_CTRL_NUM.getElementNm());
+		
+		errorList.add(err);
+		
+		boolean hasErrors = SbmValidationUtil.hasRecordControlNumError(errorList);
+		
+		assertTrue("hasErrors", hasErrors);	
+	}
+	
+	@Test
+	public void test_hasXprValidationErrors_False_RecordControlNumError() {
+		
+		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
+		SBMErrorDTO err = new SBMErrorDTO();
+		err.setElementInErrorNm(SBMPolicyEnum.QHPID.getElementNm());
+		
+		errorList.add(err);
+		
+		boolean hasErrors = SbmValidationUtil.hasRecordControlNumError(errorList);
+		
+		assertFalse("hasErrors", hasErrors);	
+	}
+	
+	@Test
+	public void test_hasXprValidationErrors_True_QhpIdError() {
+		
+		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
+		SBMErrorDTO err = new SBMErrorDTO();
+		err.setElementInErrorNm(SBMPolicyEnum.QHPID.getElementNm());
+		
+		errorList.add(err);
+		
+		boolean hasErrors = SbmValidationUtil.hasQhpIdError(errorList);
+		
+		assertTrue("hasErrors", hasErrors);	
+	}
+	
+	@Test
+	public void test_hasXprValidationErrors_False_PolicyIdError() {
+		
+		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
+		SBMErrorDTO err = new SBMErrorDTO();
+		err.setElementInErrorNm(SBMPolicyEnum.REC_CTRL_NUM.getElementNm());
+		
+		errorList.add(err);
+		
+		boolean hasErrors = SbmValidationUtil.hasExchangePolicyIdError(errorList);
+		
+		assertFalse("hasErrors", hasErrors);	
+	}
+	
+	@Test
+	public void test_hasXprValidationErrors_True_PolicyIdError() {
+		
+		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
+		SBMErrorDTO err = new SBMErrorDTO();
+		err.setElementInErrorNm(SBMPolicyEnum.EX_ASSIGN_POL_ID.getElementNm());
+		
+		errorList.add(err);
+		
+		boolean hasErrors = SbmValidationUtil.hasExchangePolicyIdError(errorList);
+		
+		assertTrue("hasErrors", hasErrors);	
+	}
+	
+	@Test
+	public void test_hasXprValidationErrors_False_SubscriberIdError() {
+		
+		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
+		SBMErrorDTO err = new SBMErrorDTO();
+		err.setElementInErrorNm(SBMPolicyEnum.REC_CTRL_NUM.getElementNm());
+		
+		errorList.add(err);
+		
+		boolean hasErrors = SbmValidationUtil.hasExchangeSubscriberIdError(errorList);
+		
+		assertFalse("hasErrors", hasErrors);	
+	}
+	
+	@Test
+	public void test_hasXprValidationErrors_True_SubscriberIdError() {
+		
+		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
+		SBMErrorDTO err = new SBMErrorDTO();
+		err.setElementInErrorNm(SBMPolicyEnum.EX_ASSIGN_SUB_ID.getElementNm());
+		
+		errorList.add(err);
+		
+		boolean hasErrors = SbmValidationUtil.hasExchangeSubscriberIdError(errorList);
+		
+		assertTrue("hasErrors", hasErrors);	
+	}
+	
+	@Test
+	public void test_hasXprValidationErrors_False_QhpIdError() {
+		
+		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
+		SBMErrorDTO err = new SBMErrorDTO();
+		err.setElementInErrorNm(SBMPolicyEnum.REC_CTRL_NUM.getElementNm());
+		
+		errorList.add(err);
+		
+		boolean hasErrors = SbmValidationUtil.hasQhpIdError(errorList);
 		
 		assertFalse("hasErrors", hasErrors);	
 	}
