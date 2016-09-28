@@ -1,7 +1,6 @@
 package gov.hhs.cms.ff.fm.eps.ep.sbm.mappers;
 
 import gov.cms.dsh.sbmi.FileInformationType;
-import gov.cms.dsh.sbmi.PolicyMemberType;
 import gov.cms.dsh.sbmi.PolicyType;
 import gov.cms.dsh.sbmr.PolicyErrorType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SbmTransMsgStatus;
@@ -46,12 +45,7 @@ public class SbmTransMsgMapper {
 			po.setRecordControlNum(policy.getRecordControlNumber());
 			po.setPlanId(policy.getQHPId());
 			po.setExchangeAssignedPolicyId(policy.getExchangeAssignedPolicyId());
-
-			PolicyMemberType subscriber = SbmDataUtil.getSubsciber(policy);
-
-			if (subscriber != null) {
-				po.setExchangeAssignedSubscriberId(subscriber.getExchangeAssignedMemberId());
-			}
+			po.setExchangeAssignedSubscriberId(policy.getExchangeAssignedSubscriberId());
 		}
 
 		SbmTransMsgStatus status = determineSbmTransMsgStatus(inboundPolicyDTO);

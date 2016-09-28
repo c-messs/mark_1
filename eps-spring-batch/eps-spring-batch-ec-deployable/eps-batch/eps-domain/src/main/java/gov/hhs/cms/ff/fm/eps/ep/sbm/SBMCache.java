@@ -48,19 +48,6 @@ public class SBMCache {
 	/**
 	 * 
 	 * @param qhpId
-	 * @return
-	 */
-/*	public static List<String> getPlanYearsFromQhpMap(String qhpId) {
-		
-		if(qhpIdMap.containsKey(qhpId)) {
-			return qhpIdMap.get(qhpId);
-		}
-		return Collections.emptyList();
-	}*/
-	
-	/**
-	 * 
-	 * @param qhpId
 	 * @param planYear
 	 * @return boolean
 	 */
