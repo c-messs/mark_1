@@ -16,12 +16,12 @@ public class SbmPolicyMemberVersionPO extends PolicyMemberVersionPO {
 	//Excluded from Hashcode and Equals
 	private Long priorPolicyMemberVersionId;
 	private Long sbmTransMsgID;
+	private String nonCoveredSubscriberInd; 
 
 	//Attributes included in Hashcode and Equals.
 	private LocalDate policyMemberDeathDate;
 	private String x12TobaccoUseTypeCode;
 	private String incorrectGenderTypeCode;
-	private String nonCoveredSubscriberInd; // TODO Temporarily removed from hashCode/equals until functional clarification.
 	private String x12LanguageCode;
 	private String x12LanguageQualifierTypeCd;
 	private String x12RaceEthnicityTypeCode;
@@ -158,7 +158,6 @@ public class SbmPolicyMemberVersionPO extends PolicyMemberVersionPO {
 		final int prime = 31;
 		int result = super.hashCode();
 		result = prime * result + ((incorrectGenderTypeCode == null) ? 0 : incorrectGenderTypeCode.hashCode());
-		// TODO result = prime * result + ((nonCoveredSubscriberInd == null) ? 0 : nonCoveredSubscriberInd.hashCode());
 		result = prime * result + ((policyMemberDeathDate == null) ? 0 : policyMemberDeathDate.hashCode());
 		result = prime * result + ((x12LanguageCode == null) ? 0 : x12LanguageCode.hashCode());
 		result = prime * result + ((x12LanguageQualifierTypeCd == null) ? 0 : x12LanguageQualifierTypeCd.hashCode());
