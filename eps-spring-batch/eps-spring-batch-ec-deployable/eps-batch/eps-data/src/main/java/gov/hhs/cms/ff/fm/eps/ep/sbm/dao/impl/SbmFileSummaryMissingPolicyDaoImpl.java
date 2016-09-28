@@ -52,17 +52,17 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 
 		if (summaryPO.getIssuerId() != null) {
 			
-			recordCnt = findAndInsertMissingPolicyByIssuer(summaryPO.getSbmFileProcSumId(), stateCd, summaryPO.getIssuerId());
+			recordCnt = findAndInsertMissingPolicyByIssuer(summaryPO.getSbmFileProcSumId(), stateCd, summaryPO.getIssuerId(), summaryPO.getCoverageYear());
 		} else {
 			
-			recordCnt = findAndInsertMissingPolicyByState(summaryPO.getSbmFileProcSumId(), stateCd);
+			recordCnt = findAndInsertMissingPolicyByState(summaryPO.getSbmFileProcSumId(), stateCd, summaryPO.getCoverageYear());
 		}
 		return recordCnt;
 	}
 	
 	
 
-	private int findAndInsertMissingPolicyByIssuer(final Long sbmFileProcSumId, final String stateCd, final String issuerId) {
+	private int findAndInsertMissingPolicyByIssuer(final Long sbmFileProcSumId, final String stateCd, final String issuerId, int coverageYear) {
 
 		int[] rowsAffected = jdbcTemplate.batchUpdate(findInsertMissingPolicyByIssuerSql, new BatchPreparedStatementSetter() {
 
@@ -75,6 +75,7 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 				ps.setLong(4, sbmFileProcSumId);
 				ps.setString(5, stateCd);
 				ps.setString(6, issuerId);
+				ps.setInt(7, coverageYear);
 			}
 
 			@Override
@@ -86,7 +87,7 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 		return rowsAffected.length;		
 	}
 
-	private int findAndInsertMissingPolicyByState(final Long sbmFileProcSumId, final String stateCd) {
+	private int findAndInsertMissingPolicyByState(final Long sbmFileProcSumId, final String stateCd, int coverageYear) {
 
 		int[] rowsAffected = jdbcTemplate.batchUpdate(findInsertMissingPolicyByStateSql, new BatchPreparedStatementSetter() {
 
@@ -98,6 +99,7 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 				ps.setString(3, userVO.getUserId());
 				ps.setLong(4, sbmFileProcSumId);
 				ps.setString(5, stateCd);
+				ps.setInt(6, coverageYear);
 			}
 
 			@Override
@@ -118,16 +120,16 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 
 		if (summaryPO.getIssuerId() != null) {
 			
-			recordCnt = findAndInsertMissingMemberByIssuer(summaryPO.getSbmFileProcSumId(), stateCd, summaryPO.getIssuerId());
+			recordCnt = findAndInsertMissingMemberByIssuer(summaryPO.getSbmFileProcSumId(), stateCd, summaryPO.getIssuerId(), summaryPO.getCoverageYear());
 		} else {
 			
-			recordCnt = findAndInsertMissingMemberByState(summaryPO.getSbmFileProcSumId(), stateCd);
+			recordCnt = findAndInsertMissingMemberByState(summaryPO.getSbmFileProcSumId(), stateCd, summaryPO.getCoverageYear());
 		}
 		return recordCnt;
 	}
 	
 	
-	private int findAndInsertMissingMemberByIssuer(final Long sbmFileProcSumId, final String stateCd, final String issuerId) {
+	private int findAndInsertMissingMemberByIssuer(final Long sbmFileProcSumId, final String stateCd, final String issuerId, int coverageYear) {
 
 		int[] rowsAffected = jdbcTemplate.batchUpdate(findInsertMissingMemberByIssuerSql, new BatchPreparedStatementSetter() {
 
@@ -140,6 +142,7 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 				ps.setLong(4, sbmFileProcSumId);
 				ps.setString(5, stateCd);
 				ps.setString(6, issuerId);
+				ps.setInt(7, coverageYear);
 			}
 
 			@Override
@@ -152,7 +155,7 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 	}
 
 	
-	private int findAndInsertMissingMemberByState(final Long sbmFileProcSumId, final String stateCd) {
+	private int findAndInsertMissingMemberByState(final Long sbmFileProcSumId, final String stateCd, int coverageYear) {
 
 		int[] rowsAffected = jdbcTemplate.batchUpdate(findInsertMissingMemberByStateSql, new BatchPreparedStatementSetter() {
 
@@ -164,6 +167,7 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 				ps.setString(3, userVO.getUserId());
 				ps.setLong(4, sbmFileProcSumId);
 				ps.setString(5, stateCd);
+				ps.setInt(6, coverageYear);
 			}
 
 			@Override
@@ -254,7 +258,6 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 	public void setMissingPolicyRowMapper(SbmMissingPolicyRowMapper missingPolicyRowMapper) {
 		this.missingPolicyRowMapper = missingPolicyRowMapper;
 	}
-
 
 
 }
