@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>gov.hhs.cms.ffe.fm.eps-batch</groupId>
   <artifactId>eps</artifactId>
-  <version>26.0.105-SNAPSHOT</version>
+  <version>26.0.105</version>
   <packaging>pom</packaging>
   <properties>
     <git.url>ssh://git@origin-github.cms.gov:2222</git.url>
@@ -127,6 +127,6 @@
   <scm>
     <connection>scm:git:${git.repo.url}</connection>
     <developerConnection>scm:git:${git.repo.url}</developerConnection>
-    <tag>eps-25.0.2</tag>
+    <tag>eps-26.0.105</tag>
   </scm>
 </project>
