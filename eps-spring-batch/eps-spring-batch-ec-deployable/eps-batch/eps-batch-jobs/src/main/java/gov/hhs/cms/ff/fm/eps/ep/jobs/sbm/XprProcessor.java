@@ -232,11 +232,11 @@ public class XprProcessor implements ItemProcessor<SBMPolicyDTO, SBMPolicyDTO> {
 					break;
 		
 				case XMLStreamConstants.END_ELEMENT:
-					if ("FileInformation".equals(xmlr.getLocalName())) {
+					if (SBMPolicyEnum.FILE_INFO.getElementNm().equalsIgnoreCase(xmlr.getLocalName())) {
 						isFileInfoEndTag = true;
 						break;
 					}
-					if ("IssuerId".equals(xmlr.getLocalName())) {
+					if (SBMPolicyEnum.ISS_ID.getElementNm().equalsIgnoreCase(xmlr.getLocalName())) {
 						issuerId = tagContent;
 						isFileInfoEndTag = true;
 						break;

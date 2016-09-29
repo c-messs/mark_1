@@ -2,6 +2,8 @@ package gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -86,159 +88,159 @@ public class ErlPAETCutOffFileIngestJobTest extends BaseBatchTest {
 	 * System shall check the PAETCompletion Indicator of >the previous job run and continue loading the 
 	 * IPP records extracted for ingestion if the PAETCompletion indicator of previous FileIngest Job was N
 	 */
-//	@Test
-//	public void testJob_ErlFileIngestion_PAETInd_N() throws Exception {
-//
-//		int berCnt = 1;
-//		int bemCnt = 1;
-//		int memCnt = 1;
-//		// Make both an INITIAL and EFFECTUATION per ExchangePolicyId.
-//		boolean makeBoth = false;
-//		List<String> expectedArchiveFileNmList = new ArrayList<String>();
-//		String manifestFileNum = null;
-//
-//		int expectedInvalid = 0;
-//		int expectedArchive = 1;
-//		int expectedSkipped = 0;
-//		int expectedProcessed = expectedArchive * berCnt * bemCnt;
-//
-//		if (makeBoth) {
-//			expectedProcessed *= 2;
-//		}
-//
-//		ErlTestFileGenerator fileGenerator = new ErlTestFileGenerator(berCnt, bemCnt, memCnt, makeBoth, manifestDir, inputDir);
-//		for (int i = 0; i < expectedArchive; ++i) {
-//			manifestFileNum = fileGenerator.makeFiles(); 
-//			expectedArchiveFileNmList.add(manifestFileNum);
-//		}
-//		
-//		try {
-//			insertBatchRunControl("N");
-//			
-//			//Launch Injestion job
-//			JobExecution jobExInjestion = jobLauncherTestUtils.launchJob(jobParametersInjestion);
-//			jobIdInjestion = jobExInjestion.getJobId();
-//			assertJobCompleted(jobExInjestion);
-//
-//			// If fails, more than likely the ErlTestFileGenerator needs to be updated.
-//			assertEquals("No 'invalid' files put in directory: " + invalidDir.getName(), expectedInvalid, invalidDir.list().length);
-//			// If fails, review logs or query BATCHTRANSMSG TRANSMSGSKIPREASONTYPECD and/or TRANSMSGSKIPREASONDESC to 
-//			// determine reason for skip (ApplicationException).
-//			assertEquals("No 'skipped' files put in directory: " + skippedDir.getName(), expectedSkipped, skippedDir.list().length);
-//			assertEquals("Correct number of files put in directory: " + processedDir.getName(), expectedProcessed, processedDir.list().length);
-//			assertArchiveFileList(expectedArchiveFileNmList, expectedArchive);
-//			assertEquals("No files remain in directory: " + privateDir.getName(), 0, privateDir.list().length);
-//
-//			Integer bemIdxCntAfterJob1 = getJdbc().queryForObject("SELECT Count(*) FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' and INGESTJOBID ="+jobIdInjestion, Integer.class);
-//			assertEquals("Bem Index is populated after file extract job", fileGenerator.getExcectedBemCount(), bemIdxCntAfterJob1.intValue());
-//
-//			JobExecution jobExProcessor = jobLauncherTestUtils.launchJob(jobParametersProcessor);
-//			jobIdProcessor = jobExProcessor.getJobId();
-//			assertJobCompleted(jobExProcessor);	
-//
-//			assertMemberVersionCount(jobIdProcessor, fileGenerator.getExpectedMemberVersionCount());
-//
-//			assertPolicyVersionCount(jobIdProcessor, fileGenerator.getExcectedBemCount());
-//			
-//			bemIdxCntAfterJob1 = getJdbc().queryForObject("SELECT Count(*) FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' and INGESTJOBID ="+jobIdInjestion, Integer.class);
-//			assertEquals("Bem Index is populated after file extract job", 0, bemIdxCntAfterJob1.intValue());
-//
-//		} finally {
-//
-//			if(jobIdProcessor != null) {
-//				deleteTestData(jobIdProcessor);
-//			}
-//			if(jobIdInjestion != null) {
-//				deleteSetUpData(jobIdInjestion);
-//			}
-//			getJdbc().execute("DELETE BATCHRUNCONTROL WHERE JOB_INSTANCE_ID IS NULL");
-//			for (String manifestNum : expectedArchiveFileNmList) {
-//				getJdbc().execute("DELETE BATCHRUNCONTROL WHERE CREATEBY = 'ERL_INGESTION' AND BATCHRUNCONTROLID = " + manifestNum);				
-//			}
-//		}
-//	}
-//	
+	@Test
+	public void testJob_ErlFileIngestion_PAETInd_N() throws Exception {
+
+		int berCnt = 1;
+		int bemCnt = 1;
+		int memCnt = 1;
+		// Make both an INITIAL and EFFECTUATION per ExchangePolicyId.
+		boolean makeBoth = false;
+		List<String> expectedArchiveFileNmList = new ArrayList<String>();
+		String manifestFileNum = null;
+
+		int expectedInvalid = 0;
+		int expectedArchive = 1;
+		int expectedSkipped = 0;
+		int expectedProcessed = expectedArchive * berCnt * bemCnt;
+
+		if (makeBoth) {
+			expectedProcessed *= 2;
+		}
+
+		ErlTestFileGenerator fileGenerator = new ErlTestFileGenerator(berCnt, bemCnt, memCnt, makeBoth, manifestDir, inputDir);
+		for (int i = 0; i < expectedArchive; ++i) {
+			manifestFileNum = fileGenerator.makeFiles(); 
+			expectedArchiveFileNmList.add(manifestFileNum);
+		}
+		
+		try {
+			insertBatchRunControl("N");
+			
+			//Launch Injestion job
+			JobExecution jobExInjestion = jobLauncherTestUtils.launchJob(jobParametersInjestion);
+			jobIdInjestion = jobExInjestion.getJobId();
+			assertJobCompleted(jobExInjestion);
+
+			// If fails, more than likely the ErlTestFileGenerator needs to be updated.
+			assertEquals("No 'invalid' files put in directory: " + invalidDir.getName(), expectedInvalid, invalidDir.list().length);
+			// If fails, review logs or query BATCHTRANSMSG TRANSMSGSKIPREASONTYPECD and/or TRANSMSGSKIPREASONDESC to 
+			// determine reason for skip (ApplicationException).
+			assertEquals("No 'skipped' files put in directory: " + skippedDir.getName(), expectedSkipped, skippedDir.list().length);
+			assertEquals("Correct number of files put in directory: " + processedDir.getName(), expectedProcessed, processedDir.list().length);
+			assertArchiveFileList(expectedArchiveFileNmList, expectedArchive);
+			assertEquals("No files remain in directory: " + privateDir.getName(), 0, privateDir.list().length);
+
+			Integer bemIdxCntAfterJob1 = getJdbc().queryForObject("SELECT Count(*) FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' and INGESTJOBID ="+jobIdInjestion, Integer.class);
+			assertEquals("Bem Index is populated after file extract job", fileGenerator.getExcectedBemCount(), bemIdxCntAfterJob1.intValue());
+
+			JobExecution jobExProcessor = jobLauncherTestUtils.launchJob(jobParametersProcessor);
+			jobIdProcessor = jobExProcessor.getJobId();
+			assertJobCompleted(jobExProcessor);	
+
+			assertMemberVersionCount(jobIdProcessor, fileGenerator.getExpectedMemberVersionCount());
+
+			assertPolicyVersionCount(jobIdProcessor, fileGenerator.getExcectedBemCount());
+			
+			bemIdxCntAfterJob1 = getJdbc().queryForObject("SELECT Count(*) FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' and INGESTJOBID ="+jobIdInjestion, Integer.class);
+			assertEquals("Bem Index is populated after file extract job", 0, bemIdxCntAfterJob1.intValue());
+
+		} finally {
+
+			if(jobIdProcessor != null) {
+				deleteTestData(jobIdProcessor);
+			}
+			if(jobIdInjestion != null) {
+				deleteSetUpData(jobIdInjestion);
+			}
+			getJdbc().execute("DELETE BATCHRUNCONTROL WHERE JOB_INSTANCE_ID IS NULL");
+			for (String manifestNum : expectedArchiveFileNmList) {
+				getJdbc().execute("DELETE BATCHRUNCONTROL WHERE CREATEBY = 'ERL_INGESTION' AND BATCHRUNCONTROLID = " + manifestNum);				
+			}
+		}
+	}
+	
 	/**
 	 * PAETCompletion Indicator = Y..
 	 * System shall Query and Log the Max MaintenanceStartDateTime if the DailyBemIndexer queue is empty prior to loading the next set of records for ingestion
 	 */
-//	@Test
-//	public void testJob_ErlFileIngestion_PAETInd_Y_MaxPolicyMSDT_exits() throws Exception {
-//		
-//		int berCnt = 1;
-//		int bemCnt = 1;
-//		int memCnt = 1;
-//		// Make both an INITIAL and EFFECTUATION per ExchangePolicyId.
-//		boolean makeBoth = false;
-//		List<String> expectedArchiveFileNmList = new ArrayList<String>();
-//		String manifestFileNum = null;
-//
-//		int expectedInvalid = 0;
-//		int expectedArchive = 1;
-//		int expectedSkipped = 0;
-//		int expectedProcessed = expectedArchive * berCnt * bemCnt;
-//
-//		if (makeBoth) {
-//			expectedProcessed *= 2;
-//		}
-//
-//		ErlTestFileGenerator fileGenerator = new ErlTestFileGenerator(berCnt, bemCnt, memCnt, makeBoth, manifestDir, inputDir);
-//		for (int i = 0; i < expectedArchive; ++i) {
-//			manifestFileNum = fileGenerator.makeFiles(); 
-//			expectedArchiveFileNmList.add(manifestFileNum);
-//		}
-//		
-//		try {
-//			insertBatchRunControl("Y");
-//			
-//			Long transMsgId = insertTransMsg(JOB_ID, "FFM");
-//			insertPolicyVersion(transMsgId, LocalDateTime.now(), LocalDate.now(), LocalDate.now().plusYears(1), "ZZ", "EXCHPOLICY", "HIOSID", "planId", new Integer(1));
-//			
-//			//Launch Injestion job
-//			JobExecution jobExInjestion = jobLauncherTestUtils.launchJob(jobParametersInjestion);
-//			jobIdInjestion = jobExInjestion.getJobId();
-//			assertJobCompleted(jobExInjestion);
-//
-//			// If fails, more than likely the ErlTestFileGenerator needs to be updated.
-//			assertEquals("No 'invalid' files put in directory: " + invalidDir.getName(), expectedInvalid, invalidDir.list().length);
-//			// If fails, review logs or query BATCHTRANSMSG TRANSMSGSKIPREASONTYPECD and/or TRANSMSGSKIPREASONDESC to 
-//			// determine reason for skip (ApplicationException).
-//			assertEquals("No 'skipped' files put in directory: " + skippedDir.getName(), expectedSkipped, skippedDir.list().length);
-//			assertEquals("Correct number of files put in directory: " + processedDir.getName(), expectedProcessed, processedDir.list().length);
-//			assertArchiveFileList(expectedArchiveFileNmList, expectedArchive);
-//			assertEquals("No files remain in directory: " + privateDir.getName(), 0, privateDir.list().length);
-//
-//			Integer bemIdxCntAfterJob1 = getJdbc().queryForObject("SELECT Count(*) FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' and INGESTJOBID ="+jobIdInjestion, Integer.class);
-//			assertEquals("Bem Index is populated after file extract job", fileGenerator.getExcectedBemCount(), bemIdxCntAfterJob1.intValue());
-//
-//			JobExecution jobExProcessor = jobLauncherTestUtils.launchJob(jobParametersProcessor);
-//			jobIdProcessor = jobExProcessor.getJobId();
-//			assertJobCompleted(jobExProcessor);	
-//
-//			assertMemberVersionCount(jobIdProcessor, fileGenerator.getExpectedMemberVersionCount());
-//
-//			assertPolicyVersionCount(jobIdProcessor, fileGenerator.getExcectedBemCount());
-//			
-//			bemIdxCntAfterJob1 = getJdbc().queryForObject("SELECT Count(*) FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' and INGESTJOBID ="+jobIdInjestion, Integer.class);
-//			assertEquals("Bem Index is populated after file extract job", 0, bemIdxCntAfterJob1.intValue());
-//
-//		} finally {
-//
-//			if(jobIdProcessor != null) {
-//				deleteTestData(jobIdProcessor);
-//			}
-//			if(jobIdInjestion != null) {
-//				deleteSetUpData(jobIdInjestion);
-//			}
-//			deleteTestData(JOB_ID);
-//			//deleteSetUpData(JOB_ID);
-//	
-//			getJdbc().execute("DELETE BATCHRUNCONTROL WHERE JOB_INSTANCE_ID IS NULL");
-//			for (String manifestNum : expectedArchiveFileNmList) {
-//				getJdbc().execute("DELETE BATCHRUNCONTROL WHERE CREATEBY = 'ERL_INGESTION' AND BATCHRUNCONTROLID = " + manifestNum);				
-//			}
-//		}
-//	}
+	@Test
+	public void testJob_ErlFileIngestion_PAETInd_Y_MaxPolicyMSDT_exits() throws Exception {
+		
+		int berCnt = 1;
+		int bemCnt = 1;
+		int memCnt = 1;
+		// Make both an INITIAL and EFFECTUATION per ExchangePolicyId.
+		boolean makeBoth = false;
+		List<String> expectedArchiveFileNmList = new ArrayList<String>();
+		String manifestFileNum = null;
+
+		int expectedInvalid = 0;
+		int expectedArchive = 1;
+		int expectedSkipped = 0;
+		int expectedProcessed = expectedArchive * berCnt * bemCnt;
+
+		if (makeBoth) {
+			expectedProcessed *= 2;
+		}
+
+		ErlTestFileGenerator fileGenerator = new ErlTestFileGenerator(berCnt, bemCnt, memCnt, makeBoth, manifestDir, inputDir);
+		for (int i = 0; i < expectedArchive; ++i) {
+			manifestFileNum = fileGenerator.makeFiles(); 
+			expectedArchiveFileNmList.add(manifestFileNum);
+		}
+		
+		try {
+			insertBatchRunControl("Y");
+			
+			Long transMsgId = insertTransMsg(JOB_ID, "FFM");
+			insertPolicyVersion(transMsgId, LocalDateTime.now(), LocalDate.now(), LocalDate.now().plusYears(1), "ZZ", "EXCHPOLICY", "HIOSID", "planId", new Integer(1));
+			
+			//Launch Injestion job
+			JobExecution jobExInjestion = jobLauncherTestUtils.launchJob(jobParametersInjestion);
+			jobIdInjestion = jobExInjestion.getJobId();
+			assertJobCompleted(jobExInjestion);
+
+			// If fails, more than likely the ErlTestFileGenerator needs to be updated.
+			assertEquals("No 'invalid' files put in directory: " + invalidDir.getName(), expectedInvalid, invalidDir.list().length);
+			// If fails, review logs or query BATCHTRANSMSG TRANSMSGSKIPREASONTYPECD and/or TRANSMSGSKIPREASONDESC to 
+			// determine reason for skip (ApplicationException).
+			assertEquals("No 'skipped' files put in directory: " + skippedDir.getName(), expectedSkipped, skippedDir.list().length);
+			assertEquals("Correct number of files put in directory: " + processedDir.getName(), expectedProcessed, processedDir.list().length);
+			assertArchiveFileList(expectedArchiveFileNmList, expectedArchive);
+			assertEquals("No files remain in directory: " + privateDir.getName(), 0, privateDir.list().length);
+
+			Integer bemIdxCntAfterJob1 = getJdbc().queryForObject("SELECT Count(*) FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' and INGESTJOBID ="+jobIdInjestion, Integer.class);
+			assertEquals("Bem Index is populated after file extract job", fileGenerator.getExcectedBemCount(), bemIdxCntAfterJob1.intValue());
+
+			JobExecution jobExProcessor = jobLauncherTestUtils.launchJob(jobParametersProcessor);
+			jobIdProcessor = jobExProcessor.getJobId();
+			assertJobCompleted(jobExProcessor);	
+
+			assertMemberVersionCount(jobIdProcessor, fileGenerator.getExpectedMemberVersionCount());
+
+			assertPolicyVersionCount(jobIdProcessor, fileGenerator.getExcectedBemCount());
+			
+			bemIdxCntAfterJob1 = getJdbc().queryForObject("SELECT Count(*) FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' and INGESTJOBID ="+jobIdInjestion, Integer.class);
+			assertEquals("Bem Index is populated after file extract job", 0, bemIdxCntAfterJob1.intValue());
+
+		} finally {
+
+			if(jobIdProcessor != null) {
+				deleteTestData(jobIdProcessor);
+			}
+			if(jobIdInjestion != null) {
+				deleteSetUpData(jobIdInjestion);
+			}
+			deleteTestData(JOB_ID);
+			//deleteSetUpData(JOB_ID);
+	
+			getJdbc().execute("DELETE BATCHRUNCONTROL WHERE JOB_INSTANCE_ID IS NULL");
+			for (String manifestNum : expectedArchiveFileNmList) {
+				getJdbc().execute("DELETE BATCHRUNCONTROL WHERE CREATEBY = 'ERL_INGESTION' AND BATCHRUNCONTROLID = " + manifestNum);				
+			}
+		}
+	}
 
 	/**
 	 * PAETCompletion Indicator = Y..

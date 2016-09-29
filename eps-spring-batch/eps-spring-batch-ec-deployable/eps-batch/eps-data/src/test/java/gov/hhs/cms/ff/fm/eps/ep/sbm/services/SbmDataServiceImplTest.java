@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.TransactionConfiguration;
@@ -153,6 +154,8 @@ public class SbmDataServiceImplTest extends BaseSbmServicesTest {
 			actual = sbmDataService.getCsrMultiplierByVariant(variantId, String.valueOf(YEAR));
 		} catch (EmptyResultDataAccessException erdaEx) {
 			assertEquals("Error Msg", expectedMsg, erdaEx.getMessage());
+		} catch (IncorrectResultSizeDataAccessException idrEx) {
+			assertNull("Incorrect result size: expected 1, actual >1 ", actual);
 		}
 		assertEquals("getCsrMultiplierByVariant", expected, actual);	
 	}
