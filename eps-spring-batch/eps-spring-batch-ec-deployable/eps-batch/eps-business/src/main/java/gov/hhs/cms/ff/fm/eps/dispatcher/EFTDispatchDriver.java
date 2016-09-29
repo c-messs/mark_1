@@ -162,8 +162,6 @@ public class EFTDispatchDriver {
 					"TARGETPHYSICALDOCUMENTTYPECD").toString();
 			String targetsourceID = names.get("TARGETTRADINGPARTNERDENTIFIER")
 					.toString();
-			String targetEnvTypeCd = names.get("TARGETSERVERENVIRONMENTTYPECD") == null ? 
-					StringUtils.EMPTY : names.get("TARGETSERVERENVIRONMENTTYPECD").toString().trim();
 
 			Calendar calendar = Calendar.getInstance();
 			calendar.setTime(dateTime.toDate());
@@ -177,7 +175,7 @@ public class EFTDispatchDriver {
 				environmentTypeCD =  serverEnvironmentTypeCd;
 			}
 			
-			String fileName =  targetsourceID + "."+ targetFunctionCode + targetEnvTypeCd + "."+ "D" + day + "." + "T" + time + "." + environmentTypeCD;
+			String fileName =  targetsourceID + "."+ targetFunctionCode + "."+ "D" + day + "." + "T" + time + "." + environmentTypeCD;
 
 			logger.debug("physicalDocumentFileName created: " + fileName);
 			fileNames.add(fileName);
@@ -202,7 +200,6 @@ public class EFTDispatchDriver {
 
 		String targetFunctionCode = functionCd;
 		String targetsourceID = tradingPartnerId;
-		String targetEnvTypeCd = serverEnvironmentTypeCd;
 
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(dateTime.toDate());
@@ -211,7 +208,10 @@ public class EFTDispatchDriver {
 		format = new SimpleDateFormat("HHmmssSSS");
 		String time = format.format(dateTime.toDate());	
 
-		String environmentTypeCD = (serverEnvironmentTypeCd.equalsIgnoreCase("P") || serverEnvironmentTypeCd.equalsIgnoreCase("R") )? "P" : "T";
+		String environmentTypeCD = "T";			
+		if(serverEnvironmentTypeCd.equalsIgnoreCase("P") || serverEnvironmentTypeCd.equalsIgnoreCase("R")) {
+			environmentTypeCD =  serverEnvironmentTypeCd;
+		}
 
 		String fileName =  targetsourceID + "."+ targetFunctionCode /*+ targetEnvTypeCd */ + "."+ "D" + day + "." + "T" + time + "." + environmentTypeCD;
 
