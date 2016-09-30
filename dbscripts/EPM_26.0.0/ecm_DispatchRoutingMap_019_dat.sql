@@ -56,7 +56,7 @@ AND    physicalDocumentTypeCd in ('SBMS','SBMR','SBMAR','SBMIS');
 
 UPDATE DispatchRoutingMap
 SET    targetServerEnvironmentTypeCd = null
-WHERE  physicalDocumentTypeCd in ('SBMS','SBMR','SBMAR','SBMIS')
+WHERE  physicalDocumentTypeCd in ('SBMS','SBMR','SBMAR','SBMIS');
 
 SELECT count(*) 
 FROM   DispatchRoutingMap
