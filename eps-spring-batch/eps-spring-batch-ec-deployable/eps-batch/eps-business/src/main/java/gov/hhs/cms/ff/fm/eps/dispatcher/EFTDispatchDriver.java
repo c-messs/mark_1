@@ -213,7 +213,7 @@ public class EFTDispatchDriver {
 			environmentTypeCD =  serverEnvironmentTypeCd;
 		}
 
-		String fileName =  targetsourceID + "."+ targetFunctionCode /*+ targetEnvTypeCd */ + "."+ "D" + day + "." + "T" + time + "." + environmentTypeCD;
+		String fileName =  targetsourceID + "."+ targetFunctionCode + "."+ "D" + day + "." + "T" + time + "." + environmentTypeCD;
 
 		logger.debug("physicalDocumentFileName created: " + fileName);
 		fileNames.add(fileName);
