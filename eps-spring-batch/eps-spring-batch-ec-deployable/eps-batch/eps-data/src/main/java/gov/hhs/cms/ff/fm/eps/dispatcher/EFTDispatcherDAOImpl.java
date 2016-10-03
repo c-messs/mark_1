@@ -144,11 +144,10 @@ public class EFTDispatcherDAOImpl implements EFTDispatcherDAO {
 			String physicalDocumentTypeCd, String serverEnvironmentTypeCd) {
 		List<Map<String, Object>> fileNamesMap = new ArrayList<Map<String, Object>>();
 
-		String getListofFileNames = String.format(ecmQueryProps
+		String listofFileNames = String.format(ecmQueryProps
 				.getProperty("dispatcher.dispatchRoutingMap.select"));
 		fileNamesMap.addAll(getJdbcTemplate().queryForList(
-				getListofFileNames.replace("[**001**]", physicalDocumentTypeCd)
-						.replace("[**002**]", serverEnvironmentTypeCd)));
+				listofFileNames, physicalDocumentTypeCd, serverEnvironmentTypeCd));
 
 		return fileNamesMap;
 	}
