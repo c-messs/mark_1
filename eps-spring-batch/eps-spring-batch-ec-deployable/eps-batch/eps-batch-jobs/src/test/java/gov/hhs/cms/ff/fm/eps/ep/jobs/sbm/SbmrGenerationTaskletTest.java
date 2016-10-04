@@ -76,7 +76,7 @@ public class SbmrGenerationTaskletTest {
 	@Test
 	public void test_afterStep() throws Exception {
 		
-		ExitStatus status = tasklet.afterStep(EasyMock.anyObject());
+		ExitStatus status = tasklet.afterStep(new StepExecution("sbmrGeneration", new JobExecution(21001L)));
 		
 		Assert.assertNull("AfterStep should return null", status);		
 		
