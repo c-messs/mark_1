@@ -465,11 +465,7 @@ public class SbmXMLValidator {
 		try {
 			SBMScemaErrorsDTO dto = validateXMLforXPR(sbmiXMLSnippet); 
 			sbmFileErrorList.addAll(parseSchemaErrors(dto));
-		} catch (SAXException e) {			
-			LOG.info("Unable to perform schema validation: " + e.getMessage());
-			// create error with generic error code
-			sbmFileErrorList.add(SbmHelper.createErrorLog(null, SBMErrorWarningCode.ER_003.getCode(), e.getMessage()));
-		} catch (ParserConfigurationException e) {			
+		} catch (SAXException | ParserConfigurationException e) {			
 			LOG.info("Unable to perform schema validation: " + e.getMessage());
 			// create error with generic error code
 			sbmFileErrorList.add(SbmHelper.createErrorLog(null, SBMErrorWarningCode.ER_003.getCode(), e.getMessage()));
