@@ -140,41 +140,41 @@ public class StagingSbmFileDaoImplTest extends BaseSBMDaoTest {
 
 
 
-	@Test
-	public void test_getStagingPolicies() {
-
-		int expectedListSize = 3;
-
-		String tenantId = TestDataSBMUtility.getRandomSbmState() + "0";		
-		Long fileId = TestDataSBMUtility.getRandomNumberAsLong(8);
-		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(4);
-		
-		SBMFileProcessingDTO fileDTO = insertParentFileRecords(tenantId, fileId.toString());
-		Long sbmFileProcSumId = fileDTO.getSbmFileProcSumId();
-
-		Enrollment enrollment = new Enrollment();
-
-		enrollment.getPolicy().add(TestDataSBMUtility.makePolicyType(tenantId, "EXPOLID-1111"));
-		enrollment.getPolicy().add(TestDataSBMUtility.makePolicyType(tenantId, "EXPOLID-2222"));
-		enrollment.getPolicy().add(TestDataSBMUtility.makePolicyType(tenantId, "EXPOLID-3333"));
-
-		String sbmFileXML = TestDataSBMUtility.getEnrollmentAsXmlString(enrollment);
-
-		// set up some data, insert the Enrollment XML into staging		
-		String sql = "INSERT INTO STAGINGSBMFILE (SBMXML, BATCHID, SBMFILEPROCESSINGSUMMARYID, SBMFILEINFOID) " +
-				"VALUES (XMLTYPE('" + sbmFileXML + "'), " + batchId + ", " + sbmFileProcSumId + 
-				", " + fileDTO.getSbmFileInfo().getSbmFileInfoId() + ")";
-		jdbc.execute(sql);
-		
-		sql = "INSERT INTO STAGINGSBMGROUPLOCK (SBMFILEPROCESSINGSUMMARYID, PROCESSINGGROUPID, BATCHID) " +
-				"VALUES ('" + sbmFileProcSumId + "', " + 101 + ", " + batchId + ")";
-		jdbc.execute(sql);
-
-		List<String> actualList = stagingSbmFileDao.getStagingPolicies(batchId);
-		
-		assertEquals("count POLICIES extracted STAGINGSBMFILE record", expectedListSize, actualList.size());
-
-
-	}
+//	@Test
+//	public void test_getStagingPolicies() {
+//
+//		int expectedListSize = 3;
+//
+//		String tenantId = TestDataSBMUtility.getRandomSbmState() + "0";		
+//		Long fileId = TestDataSBMUtility.getRandomNumberAsLong(8);
+//		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(4);
+//		
+//		SBMFileProcessingDTO fileDTO = insertParentFileRecords(tenantId, fileId.toString());
+//		Long sbmFileProcSumId = fileDTO.getSbmFileProcSumId();
+//
+//		Enrollment enrollment = new Enrollment();
+//
+//		enrollment.getPolicy().add(TestDataSBMUtility.makePolicyType(tenantId, "EXPOLID-1111"));
+//		enrollment.getPolicy().add(TestDataSBMUtility.makePolicyType(tenantId, "EXPOLID-2222"));
+//		enrollment.getPolicy().add(TestDataSBMUtility.makePolicyType(tenantId, "EXPOLID-3333"));
+//
+//		String sbmFileXML = TestDataSBMUtility.getEnrollmentAsXmlString(enrollment);
+//
+//		// set up some data, insert the Enrollment XML into staging		
+//		String sql = "INSERT INTO STAGINGSBMFILE (SBMXML, BATCHID, SBMFILEPROCESSINGSUMMARYID, SBMFILEINFOID) " +
+//				"VALUES (XMLTYPE('" + sbmFileXML + "'), " + batchId + ", " + sbmFileProcSumId + 
+//				", " + fileDTO.getSbmFileInfo().getSbmFileInfoId() + ")";
+//		jdbc.execute(sql);
+//		
+//		sql = "INSERT INTO STAGINGSBMGROUPLOCK (SBMFILEPROCESSINGSUMMARYID, PROCESSINGGROUPID, BATCHID) " +
+//				"VALUES ('" + sbmFileProcSumId + "', " + 101 + ", " + batchId + ")";
+//		jdbc.execute(sql);
+//
+//		List<String> actualList = stagingSbmFileDao.getStagingPolicies(batchId);
+//		
+//		assertEquals("count POLICIES extracted STAGINGSBMFILE record", expectedListSize, actualList.size());
+//
+//
+//	}
 
 }

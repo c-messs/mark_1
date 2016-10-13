@@ -40,7 +40,7 @@ public class SbmPolicyMemberVersionRowMapper implements RowMapper<SbmPolicyMembe
 		po.setIncorrectGenderTypeCode(rs.getString("INCORRECTGENDERTYPECD"));
 		// TODO need to determine EPS to SBM mapping and vice versa for NonCoveredSubscriberInd.
 		// Hard coded to 'N'.
-		po.setNonCoveredSubscriberInd("N");
+		po.setNonCoveredSubscriberInd(rs.getString("NONCOVEREDSUBSCRIBERIND"));
 		po.setX12LanguageCode(rs.getString("X12LANGUAGETYPECD"));
 		po.setX12LanguageQualifierTypeCd(rs.getString("X12LANGUAGEQUALIFIERTYPECD"));
 		po.setX12RaceEthnicityTypeCode(rs.getString("X12RACEETHNICITYTYPECD"));
