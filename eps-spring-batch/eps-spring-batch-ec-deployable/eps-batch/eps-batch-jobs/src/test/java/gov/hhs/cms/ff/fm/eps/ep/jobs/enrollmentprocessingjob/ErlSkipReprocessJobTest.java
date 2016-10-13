@@ -1,14 +1,6 @@
 package gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob;
 
 
-import gov.cms.dsh.bem.BenefitEnrollmentMaintenanceType;
-import gov.cms.dsh.bem.BenefitEnrollmentRequest;
-import gov.cms.dsh.bem.FileInformationType;
-import gov.hhs.cms.ff.fm.eps.ep.enums.ExchangeType;
-import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
-import gov.hhs.cms.ff.fm.eps.ep.enums.ProcessedToDbInd;
-import gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.data.util.TestDataUtil;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -45,7 +37,6 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.test.JobLauncherTestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.format.datetime.DateFormatter;
 import org.springframework.test.annotation.DirtiesContext;
@@ -57,6 +48,14 @@ import org.springframework.test.context.support.DependencyInjectionTestExecution
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
+
+import gov.cms.dsh.bem.BenefitEnrollmentMaintenanceType;
+import gov.cms.dsh.bem.BenefitEnrollmentRequest;
+import gov.cms.dsh.bem.FileInformationType;
+import gov.hhs.cms.ff.fm.eps.ep.enums.ExchangeType;
+import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
+import gov.hhs.cms.ff.fm.eps.ep.enums.ProcessedToDbInd;
+import gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.data.util.TestDataUtil;
 
 /**
  * @author girish.padmanabhan
@@ -85,19 +84,13 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 			.appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true).appendPattern("XXX").toFormatter();
 
 	@Autowired
-	private ApplicationContext context;	
-	@Autowired
 	private JobLauncherTestUtils  jobLauncherTestUtils;
-	@Autowired
-	private SkipBemListener skipBemListener;
 	@Autowired
 	private ErlManifestFileReader manifestFileReader;
 	@Autowired
 	private ErlManifestWriter erlManifestWriter;
 	@Autowired
 	private FileIngestionReader xsdValidator;
-	@Autowired
-	private FileIngestionWriter fileIngestionWriter;
 	@Autowired
 	private BEMExtractionProcessor bemExtractionProcessor;
 	@Autowired
@@ -229,6 +222,7 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 	public void testJob_Erl_reprocessSkips() throws Exception {
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		getJdbc().execute("DELETE FROM BATCHPROCESSLOG WHERE JOBNM='enrollmentProcessingBatchJob' AND JOBSTATUSCD = 'STARTED'");
 		Long jobId1 = null;
@@ -333,6 +327,7 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 	public void testJob_Erl_reprocessSkips_validationErrors() throws Exception {
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		getJdbc().execute("DELETE FROM BATCHPROCESSLOG WHERE JOBNM='enrollmentProcessingBatchJob' AND JOBSTATUSCD = 'STARTED'");
 		Long jobId1 = null;
@@ -445,6 +440,7 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 	public void testJob_Erl_reprocessSkips_resultingSkips() throws Exception {
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		getJdbc().execute("DELETE FROM BATCHPROCESSLOG WHERE JOBNM='enrollmentProcessingBatchJob' AND JOBSTATUSCD = 'STARTED'");
 		Long jobId1 = null;

@@ -54,7 +54,8 @@ public class SBMFileStatusHandler {
 		}
 		
 		//check if all files in fileset received
-		if(fileInfoType.getIssuerFileInformation() != null && fileInfoType.getIssuerFileInformation().getIssuerFileSet() != null) {
+		if(fileInfoType.getIssuerFileInformation() != null && fileInfoType.getIssuerFileInformation().getIssuerFileSet() != null
+				&& fileInfoType.getIssuerFileInformation().getIssuerFileSet().getTotalIssuerFiles() > 1) {
 			
 			//set default status
 			fileProcDto.setSbmFileStatusType(SBMFileStatus.PENDING_FILES); 
