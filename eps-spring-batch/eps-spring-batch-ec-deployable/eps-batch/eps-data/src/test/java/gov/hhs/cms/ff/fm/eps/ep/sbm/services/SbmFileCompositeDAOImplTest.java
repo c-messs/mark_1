@@ -368,29 +368,29 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 	
 	
 	
-	@Test
-	public void test_saveFileInfoAndErrors() {
-		 
-		String state = "RI";
-		String tenantId = state + "0";
-		String issuerId = "88888";
-		String fileSetId = "111888";
-		SBMFileStatus fileStatus = SBMFileStatus.REJECTED;
-		
-		SBMFileProcessingDTO inboundFileDTO = new SBMFileProcessingDTO();
-
-		Long sbmFileProcSumId = insertSBMFileProcessingSummary(tenantId, issuerId, fileSetId, fileStatus);
-		inboundFileDTO.setSbmFileProcSumId(sbmFileProcSumId);
-		inboundFileDTO.setFileInfoType(TestDataSBMUtility.makeFileInformationType(tenantId, issuerId, TestDataSBMUtility.FILES_FILESET));
-		
-		inboundFileDTO.setBatchId(Long.valueOf("8888888"));
-		inboundFileDTO.getErrorList().addAll(TestDataSBMUtility.makeSBMErrorDTOList(2));
-        inboundFileDTO.setSbmFileInfo(TestDataSBMUtility.makeSBMFileInfo("33", "3", SBMFileStatus.IN_PROCESS));
-
-		Long sbmFileInfoId = sbmFileCompositeDao.saveFileInfoAndErrors(inboundFileDTO);
-		
-		assertNotNull("sbmFileInfoId", sbmFileInfoId);
-	}
+//	@Test
+//	public void test_saveFileInfoAndErrors() {
+//		 
+//		String state = "RI";
+//		String tenantId = state + "0";
+//		String issuerId = "88888";
+//		String fileSetId = "111888";
+//		SBMFileStatus fileStatus = SBMFileStatus.REJECTED;
+//		
+//		SBMFileProcessingDTO inboundFileDTO = new SBMFileProcessingDTO();
+//
+//		Long sbmFileProcSumId = insertSBMFileProcessingSummary(tenantId, issuerId, fileSetId, fileStatus);
+//		inboundFileDTO.setSbmFileProcSumId(sbmFileProcSumId);
+//		inboundFileDTO.setFileInfoType(TestDataSBMUtility.makeFileInformationType(tenantId, issuerId, TestDataSBMUtility.FILES_FILESET));
+//		
+//		inboundFileDTO.setBatchId(Long.valueOf("8888888"));
+//		inboundFileDTO.getErrorList().addAll(TestDataSBMUtility.makeSBMErrorDTOList(2));
+//        inboundFileDTO.setSbmFileInfo(TestDataSBMUtility.makeSBMFileInfo("33", "3", SBMFileStatus.IN_PROCESS));
+//
+//		Long sbmFileInfoId = sbmFileCompositeDao.saveFileInfoAndErrors(inboundFileDTO);
+//		
+//		assertNotNull("sbmFileInfoId", sbmFileInfoId);
+//	}
 	
 	@Test
 	public void test_saveSBMFileErrors() {
