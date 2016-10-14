@@ -4,7 +4,7 @@
   <parent>
     <groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
     <artifactId>eps</artifactId>
-    <version>26.0.102-SNAPSHOT</version>
+    <version>26.0.111-SNAPSHOT</version>
   </parent>
   <artifactId>eps-batch-jobs</artifactId>
   <name>eps-batch-jobs</name>
