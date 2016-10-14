@@ -109,6 +109,7 @@ public class ErlIngestionJobTest extends BaseBatchTest {
 		writeErlExtractFile("ERL.TEST.D141218.T163855502.T.11165VA0020999");
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM BATCHPROCESSLOG WHERE JOBNM='enrollmentProcessingBatchJob' AND JOBSTATUSCD = 'STARTED'");
 		Long jobId1 = null;
 		Long jobId = null;
@@ -188,6 +189,7 @@ public class ErlIngestionJobTest extends BaseBatchTest {
 		writeErlExtractFile("ERLPRORATN.TEST.D150101.T102222546.T.65192ID0050008");
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		getJdbc().execute("DELETE FROM BATCHPROCESSLOG WHERE JOBNM='enrollmentProcessingBatchJob' AND JOBSTATUSCD = 'STARTED'");
 		Long jobId1 = null;
@@ -274,6 +276,7 @@ public class ErlIngestionJobTest extends BaseBatchTest {
 		writeErlExtractFile("ERLSKIP.POLIDNULL.D150101.T102222546.T.65192ID0050008");
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		getJdbc().execute("DELETE FROM BATCHPROCESSLOG WHERE JOBNM='enrollmentProcessingBatchJob' AND JOBSTATUSCD = 'STARTED'");
 		Long jobId1 = null;

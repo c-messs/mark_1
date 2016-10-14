@@ -221,8 +221,12 @@ public class SBMEvaluatePendingFilesTest {
 		
 		LocalDate today = LocalDate.now();
 		
-		sbmEvaluatePendingFiles.setFreezePeriodStartDay(3);
-		sbmEvaluatePendingFiles.setFreezePeriodEndDay(4);
+		//Freeze Period cannot be across months
+		int freezeStartDay = 3;
+		int freezeEndDay = 4;
+		
+		sbmEvaluatePendingFiles.setFreezePeriodStartDay(freezeStartDay);
+		sbmEvaluatePendingFiles.setFreezePeriodEndDay(freezeEndDay);
 		
 		
 		List<SBMSummaryAndFileInfoDTO> summaryDtoList = new ArrayList<>();
@@ -243,8 +247,11 @@ public class SBMEvaluatePendingFilesTest {
 		
 		sbmEvaluatePendingFiles.evaluatePendingFiles(123L, true);
 		
-		Assert.assertTrue("Status should be changed to EXPIRED", SBMFileStatus.EXPIRED.equals(dto.getSbmFileStatusType()));
-		
+		if (today.getDayOfMonth() == freezeStartDay || today.getDayOfMonth() == freezeEndDay) {
+			Assert.assertTrue("Status should be PENDING FILES", SBMFileStatus.PENDING_FILES.equals(dto.getSbmFileStatusType()));
+		} else {
+			Assert.assertTrue("Status should be changed to EXPIRED", SBMFileStatus.EXPIRED.equals(dto.getSbmFileStatusType()));
+		}
 	}
 
 	@Test

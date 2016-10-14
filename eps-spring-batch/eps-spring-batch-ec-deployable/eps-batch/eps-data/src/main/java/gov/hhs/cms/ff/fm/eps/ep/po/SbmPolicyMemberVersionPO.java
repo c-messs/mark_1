@@ -16,9 +16,9 @@ public class SbmPolicyMemberVersionPO extends PolicyMemberVersionPO {
 	//Excluded from Hashcode and Equals
 	private Long priorPolicyMemberVersionId;
 	private Long sbmTransMsgID;
-	private String nonCoveredSubscriberInd; 
 
 	//Attributes included in Hashcode and Equals.
+	private String nonCoveredSubscriberInd; 
 	private LocalDate policyMemberDeathDate;
 	private String x12TobaccoUseTypeCode;
 	private String incorrectGenderTypeCode;
@@ -163,6 +163,7 @@ public class SbmPolicyMemberVersionPO extends PolicyMemberVersionPO {
 		result = prime * result + ((x12LanguageQualifierTypeCd == null) ? 0 : x12LanguageQualifierTypeCd.hashCode());
 		result = prime * result + ((x12RaceEthnicityTypeCode == null) ? 0 : x12RaceEthnicityTypeCode.hashCode());
 		result = prime * result + ((x12TobaccoUseTypeCode == null) ? 0 : x12TobaccoUseTypeCode.hashCode());
+		result = prime * result + ((nonCoveredSubscriberInd == null) ? 0 : nonCoveredSubscriberInd.hashCode());
 		result = prime * result + ((zipPlus4Cd == null) ? 0 : zipPlus4Cd.hashCode());
 		return result;
 	}
@@ -214,6 +215,11 @@ public class SbmPolicyMemberVersionPO extends PolicyMemberVersionPO {
 			if (other.zipPlus4Cd != null)
 				return false;
 		} else if (!zipPlus4Cd.equals(other.zipPlus4Cd))
+			return false;
+		if (nonCoveredSubscriberInd == null) {
+			if (other.nonCoveredSubscriberInd != null)
+				return false;
+		} else if (!nonCoveredSubscriberInd.equals(other.nonCoveredSubscriberInd))
 			return false;
 		return true;
 	}

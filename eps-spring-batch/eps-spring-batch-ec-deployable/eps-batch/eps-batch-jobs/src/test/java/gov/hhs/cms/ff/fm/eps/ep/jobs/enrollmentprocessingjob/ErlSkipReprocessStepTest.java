@@ -1,15 +1,6 @@
 package gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob;
 
 
-import gov.cms.dsh.bem.BenefitEnrollmentMaintenanceType;
-import gov.cms.dsh.bem.BenefitEnrollmentRequest;
-import gov.cms.dsh.bem.FileInformationType;
-import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentMaintenanceDTO;
-import gov.hhs.cms.ff.fm.eps.ep.enums.ExchangeType;
-import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
-import gov.hhs.cms.ff.fm.eps.ep.enums.ProcessedToDbInd;
-import gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.data.util.TestDataUtil;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
@@ -22,7 +13,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.sql.DataSource;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.Marshaller;
@@ -40,7 +30,6 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.test.JobLauncherTestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.format.datetime.DateFormatter;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -51,6 +40,15 @@ import org.springframework.test.context.support.DependencyInjectionTestExecution
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
+
+import gov.cms.dsh.bem.BenefitEnrollmentMaintenanceType;
+import gov.cms.dsh.bem.BenefitEnrollmentRequest;
+import gov.cms.dsh.bem.FileInformationType;
+import gov.hhs.cms.ff.fm.eps.ep.BenefitEnrollmentMaintenanceDTO;
+import gov.hhs.cms.ff.fm.eps.ep.enums.ExchangeType;
+import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
+import gov.hhs.cms.ff.fm.eps.ep.enums.ProcessedToDbInd;
+import gov.hhs.cms.ff.fm.eps.ep.jobs.enrollmentprocessingjob.data.util.TestDataUtil;
 
 /**
  * @author girish.padmanabhan
@@ -65,22 +63,13 @@ import org.springframework.test.context.transaction.TransactionalTestExecutionLi
 public class ErlSkipReprocessStepTest extends BaseBatchTest {
 
 	@Autowired
-	private ApplicationContext context;
-
-	@Autowired
 	private JobLauncherTestUtils  jobLauncherTestUtils;
 
 	@Autowired
 	private JdbcBatchItemWriter<BenefitEnrollmentMaintenanceDTO> bemIndexWriter;
 
 	@Autowired
-	private DataSource dataSource;
-
-	@Autowired
 	private String erlBEMIndexInsert;
-
-	@Autowired
-	private SkipBemListener skipBemListener;
 
 	private static Marshaller marshallerBEM;
 	private static Marshaller marshallerFileInfo;
@@ -119,6 +108,7 @@ public class ErlSkipReprocessStepTest extends BaseBatchTest {
 	public void testDoStep_bemHandlerFFM_reprocessSkips() throws Exception {
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		StepExecution stepExec = null;
 		Long jobId = null;
@@ -278,6 +268,7 @@ public class ErlSkipReprocessStepTest extends BaseBatchTest {
 	public void testDoStep_bemHandlerFFM_reprocessSkips_validationErros() throws Exception {
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		StepExecution stepExec = null;
 		Long jobId = null;
@@ -428,6 +419,7 @@ public class ErlSkipReprocessStepTest extends BaseBatchTest {
 	public void testDoStep_bemHandlerFFM_reprocessSkips_multipleInboundVersions() throws Exception {
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		StepExecution stepExec = null;
 		Long jobId = null;
@@ -611,6 +603,7 @@ public class ErlSkipReprocessStepTest extends BaseBatchTest {
 	public void testDoStep_bemHandlerFFM_reprocessSkips_resultingSkips() throws Exception {
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		StepExecution stepExec = null;
 		Long jobId = null;
@@ -756,6 +749,7 @@ public class ErlSkipReprocessStepTest extends BaseBatchTest {
 	public void testDoStep_bemHandlerFFM_reprocessSkips_resultingSkips_V2Inbound() throws Exception {
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		StepExecution stepExec = null;
 		Long jobId = null;

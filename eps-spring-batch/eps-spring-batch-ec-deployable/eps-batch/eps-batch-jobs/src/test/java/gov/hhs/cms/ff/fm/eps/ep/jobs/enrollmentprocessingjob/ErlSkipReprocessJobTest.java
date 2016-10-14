@@ -222,6 +222,7 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 	public void testJob_Erl_reprocessSkips() throws Exception {
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		getJdbc().execute("DELETE FROM BATCHPROCESSLOG WHERE JOBNM='enrollmentProcessingBatchJob' AND JOBSTATUSCD = 'STARTED'");
 		Long jobId1 = null;
@@ -326,6 +327,7 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 	public void testJob_Erl_reprocessSkips_validationErrors() throws Exception {
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		getJdbc().execute("DELETE FROM BATCHPROCESSLOG WHERE JOBNM='enrollmentProcessingBatchJob' AND JOBSTATUSCD = 'STARTED'");
 		Long jobId1 = null;
@@ -438,6 +440,7 @@ public class ErlSkipReprocessJobTest extends BaseBatchTest {
 	public void testJob_Erl_reprocessSkips_resultingSkips() throws Exception {
 
 		// clean up prior and after incase previous test failed.
+		getJdbc().execute("DELETE FROM STAGINGPLANLOCK ");
 		getJdbc().execute("DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM' AND SUBSCRIBERSTATECD = 'ZZ'");
 		getJdbc().execute("DELETE FROM BATCHPROCESSLOG WHERE JOBNM='enrollmentProcessingBatchJob' AND JOBSTATUSCD = 'STARTED'");
 		Long jobId1 = null;

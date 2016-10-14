@@ -481,6 +481,8 @@ public abstract class BaseBatchTest extends TestCase {
 		jdbc.execute(sql);
 		sql = "DELETE FROM DAILYBEMINDEXER WHERE EXCHANGETYPECD='FFM'";
 		jdbc.execute(sql);
+		sql = "DELETE FROM STAGINGPLANLOCK WHERE BATCHID=" + batchId;
+		jdbc.execute(sql);
 		sql = "DELETE FROM BATCHPROCESSLOG WHERE JOBID=" + batchId;
 		jdbc.execute(sql);
 	}

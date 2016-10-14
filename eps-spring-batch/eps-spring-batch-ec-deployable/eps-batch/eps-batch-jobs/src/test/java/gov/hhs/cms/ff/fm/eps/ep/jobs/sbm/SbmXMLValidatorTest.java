@@ -116,6 +116,23 @@ public class SbmXMLValidatorTest {
 		
 	}
 	
+	@Test
+	public void testSAXErrors() throws SAXException, IOException {
+		
+		File xmlFile = new File("./src/test/resources/sbm/schemaErrors/SBMI_schemaErrors_2.xml");
+		String xmlString = readFile(xmlFile);
+		LOG.info("xmlString:\n{}", xmlString);
+		
+		List<SBMErrorDTO> errors = sbmXMLValidator.validateSchemaForXPR(xmlString.replace("<p:Policy>", ""));
+		LOG.info("errorCount: {}", errors.size());
+		for(SBMErrorDTO err: errors) {
+			LOG.info("error: {}", err);
+		}
+		
+		Assert.assertEquals("error ER-003", errors.get(0).getSbmErrorWarningTypeCd(), SBMErrorWarningCode.ER_003.getCode());
+		
+	}
+	
 	/**
 	 * 
 	 * @throws SAXException

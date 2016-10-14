@@ -69,33 +69,33 @@ public class SBMFileInfoDaoImplTest extends BaseSBMDaoTest {
 		
 	}
 
-	@Test
-	public void test_insertSBMFileInfo_null_FileInfoXML() {
-
-		userVO.setUserId(userId);
-		assertNotNull("sbmFileInfoDao", sbmFileInfoDao);
-
-		String tenantId = "NY0";
-		Long sbmFileProcSumId = insertSBMFileProcessingSummary(tenantId);
-
-		SbmFileInfoPO expected = makeSbmFileInfoPO(sbmFileProcSumId);
-		// set null for this test
-		expected.setFileInfoXML(null);
-
-		Long sbmFileInfoId = sbmFileInfoDao.insertSBMFileInfo(expected);
-
-		assertNotNull("SbmFileInfoId", sbmFileInfoId);
-
-		// Go and get what was just put in. (only testing the XML)
-		String sql = "SELECT sfi.FILEINFOXML.getClobval() AS FILEINFOXML FROM SBMFILEINFO sfi WHERE sfi.SBMFILEINFOID = " + sbmFileInfoId;
-
-		List<Map<String, Object>> actualList = jdbc.queryForList(sql);
-		assertEquals("SBMFILEINFO record list size", 1, actualList.size());
-
-		Map<String, Object> row = actualList.get(0);
-
-		String strXML = (String) row.get("FILEINFOXML");
-		assertNull("FILEINFOXML", strXML);
-	}
+//	@Test
+//	public void test_insertSBMFileInfo_null_FileInfoXML() {
+//
+//		userVO.setUserId(userId);
+//		assertNotNull("sbmFileInfoDao", sbmFileInfoDao);
+//
+//		String tenantId = "NY0";
+//		Long sbmFileProcSumId = insertSBMFileProcessingSummary(tenantId);
+//
+//		SbmFileInfoPO expected = makeSbmFileInfoPO(sbmFileProcSumId);
+//		// set null for this test
+//		expected.setFileInfoXML(null);
+//
+//		Long sbmFileInfoId = sbmFileInfoDao.insertSBMFileInfo(expected);
+//
+//		assertNotNull("SbmFileInfoId", sbmFileInfoId);
+//
+//		// Go and get what was just put in. (only testing the XML)
+//		String sql = "SELECT sfi.FILEINFOXML.getClobval() AS FILEINFOXML FROM SBMFILEINFO sfi WHERE sfi.SBMFILEINFOID = " + sbmFileInfoId;
+//
+//		List<Map<String, Object>> actualList = jdbc.queryForList(sql);
+//		assertEquals("SBMFILEINFO record list size", 1, actualList.size());
+//
+//		Map<String, Object> row = actualList.get(0);
+//
+//		String strXML = (String) row.get("FILEINFOXML");
+//		assertNull("FILEINFOXML", strXML);
+//	}
 
 }
