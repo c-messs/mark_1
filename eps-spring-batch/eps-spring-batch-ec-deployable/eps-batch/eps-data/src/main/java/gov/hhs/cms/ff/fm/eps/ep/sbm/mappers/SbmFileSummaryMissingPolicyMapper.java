@@ -29,7 +29,7 @@ public class SbmFileSummaryMissingPolicyMapper {
 
 				missingPolicy.setExchangeAssignedPolicyId(data.getExchangePolicyId());
 				missingPolicy.setQHPId(data.getPlanId());
-				missingPolicy.setCurrentCMSPolicyStatus(data.getPolicyStatus().getValue());
+				missingPolicy.setCurrentCMSPolicyStatus(data.getPolicyStatus().getDescription());
 
 				missingPolicyList.add(missingPolicy);
 			}
