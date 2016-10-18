@@ -2,8 +2,6 @@ package gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -321,7 +319,7 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 
 				if (PolicyStatus.EFFECTUATED_2.equals(missingPolicyData.getPolicyStatus())) {
 
-					if (determineEffectuatedPolicyTerminated(missingPolicyData.getPolicyEndDate())) {
+					if (sbmFileSumMissingPolicyMapper.determineTerminated(missingPolicyData.getPolicyEndDate())) {
 						notSubmittedTerminatedCnt++;
 					} else {
 						notSubmittedEffectuatedCnt++;
@@ -362,30 +360,6 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 			isBackOut = true;
 		}
 		return isBackOut;
-	}
-
-	/**
-	 *  Policy termination determination	FR-FM-PP-SBMI-541
-	 *	System shall identify an effectuated policy as terminated when 
-	 *  the end date month of the policy is less than or equal to the 
-	 *	processing month of SBMI ingestion job.
-	 * @param policyEndDate (of Effectuated Policy)
-	 * @return
-	 */
-	private boolean determineEffectuatedPolicyTerminated(LocalDate policyEndDate) {
-		
-		boolean isTerm = false;
-
-		if (policyEndDate != null) {
-			
-			YearMonth pedYrMon = YearMonth.of(policyEndDate.getYear(), policyEndDate.getMonthValue());
-			YearMonth curYrMon = YearMonth.now();
-
-			if (pedYrMon.isBefore(curYrMon) || pedYrMon.equals(curYrMon)) {
-				isTerm = true;
-			}
-		}
-		return isTerm;
 	}
 
 
