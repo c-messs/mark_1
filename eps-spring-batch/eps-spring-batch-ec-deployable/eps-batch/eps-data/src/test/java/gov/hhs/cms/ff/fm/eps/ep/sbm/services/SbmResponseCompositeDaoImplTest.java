@@ -16,6 +16,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import gov.cms.dsh.sbmi.Enrollment;
+import gov.cms.dsh.sbmr.MissingPolicyType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.PolicyStatus;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMResponsePhaseTypeCode;
@@ -365,6 +366,8 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		Map<String, Object> actual = actualList.get(0);
 
 		assertEquals("TotalRecordProcessedCnt", expected_TOT, actual.get("TOTALRECORDPROCESSEDCNT"));
+
+
 	}
 
 
@@ -372,8 +375,13 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 	@Test
 	public void test_totalPreviousPoliciesNotSubmit_EFF_CAN_TERM() {
 
-		PolicyStatus[] statuses = {PolicyStatus.EFFECTUATED_2, PolicyStatus.CANCELLED_3,  PolicyStatus.EFFECTUATED_2, 
-				PolicyStatus.EFFECTUATED_2, PolicyStatus.CANCELLED_3, PolicyStatus.EFFECTUATED_2};
+		PolicyStatus[] statuses = {PolicyStatus.EFFECTUATED_2, PolicyStatus.CANCELLED_3,  
+				PolicyStatus.EFFECTUATED_2, PolicyStatus.EFFECTUATED_2, 
+				PolicyStatus.CANCELLED_3, PolicyStatus.EFFECTUATED_2};
+		// The first policy will derive to TERM since PED will be less than job run date.  See new for loop.
+		String[] expectedSBMRStatus = {PolicyStatus.TERMINATED_4.getDescription(), PolicyStatus.CANCELLED_3.getDescription(), 
+				PolicyStatus.EFFECTUATED_2 .getDescription(), PolicyStatus.EFFECTUATED_2.getDescription(), 
+				PolicyStatus.CANCELLED_3.getDescription(), PolicyStatus.EFFECTUATED_2.getDescription()};
 
 		// Note:System shall identify an effectuated policy as terminated when 
 		//the end date month of the policy is less than or equal to the 
@@ -453,6 +461,17 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		assertEquals("NotSubmittedEffectuatedCnt", expected_EFF, actual.get("NOTSUBMITTEDEFFECTUATEDCNT"));
 		assertEquals("NotSubmittedCancelledCnt", expected_CAN, actual.get("NOTSUBMITTEDCANCELLEDCNT"));
 		assertEquals("NotSubmittedTerminatedCnt", expected_TERM, actual.get("NOTSUBMITTEDTERMINATEDCNT"));
+
+		// Confirm the outbound SBMR FileAcceptanceRejection section for the missing policy statuses.
+		List<MissingPolicyType> actualMissingPolicyList = responseDTO.getSbmr().getMissingPolicy();
+
+		assertEquals("MissingPolicy list size", statuses.length, actualMissingPolicyList.size());
+
+		int idx = 0;
+		for (MissingPolicyType actualMissingPolicy :  actualMissingPolicyList) {
+			assertEquals("Element " +(idx + 1) + ") ExchangePolicyId=" + actualMissingPolicy.getExchangeAssignedPolicyId(), 
+					expectedSBMRStatus[idx++], actualMissingPolicy.getCurrentCMSPolicyStatus());
+		}
 	}
 
 	/*
@@ -529,6 +548,10 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		assertEquals("MatchingPlcNoChangeCnt", expected_ANC, actual.get("MATCHINGPLCNOCHGCNT"));
 		assertEquals("MatchingPlcChgApplCnt", expected_ACC, actual.get("MATCHINGPLCCHGAPPLCNT"));
 		assertEquals("MatchingPlcCorrectedChgApplCnt", expected_ACC_Corrected, actual.get("MATCHINGPLCCORRECTEDCHGAPPLCNT"));
+
+		// Confirm the outbound SBMR FileAcceptanceRejection section for the missing policy statuses.
+		List<MissingPolicyType> actualMissingPolicyList = responseDTO.getSbmr().getMissingPolicy();
+		assertEquals("MissingPolicy list size", 0, actualMissingPolicyList.size());
 	}
 
 	/*
@@ -623,7 +646,6 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		List<Map<String, Object>> actualList = jdbc.queryForList(sql);
 		assertEquals("SBMFILEPROCESSINGSUMMARY record list size", 1, actualList.size());
 
-		Map<String, Object> actual = actualList.get(0);
 	}
 
 
@@ -643,7 +665,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		assertEquals("TotalPreviousPoliciesNotSubmit", expectedTotalPreviousPoliciesNotSubmit, epsPO.getTotalPreviousPoliciesNotSubmit().intValue());
 		assertEquals("NotSubmittedEffectuatedCnt", expectedNotSubmittedEffectuatedCnt, epsPO.getNotSubmittedEffectuatedCnt().intValue());
 		assertEquals("NotSubmittedCancelledCnt", expectedNotSubmittedCancelledCnt, epsPO.getNotSubmittedCancelledCnt().intValue());
-		assertEquals("NotSubmittedTerminatedCnt", expectedNotSubmittedTerminatedCnt, epsPO.getNotSubmittedTerminatedCnt().intValue());		
+		assertEquals("NotSubmittedTerminatedCnt", expectedNotSubmittedTerminatedCnt, epsPO.getNotSubmittedTerminatedCnt().intValue());	
 	}
 
 
@@ -732,43 +754,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 			assertEquals("should be " + expected + " for status: " + status.getValue(), expected, actual.booleanValue());
 		}
 	}
-	
-	
-	@Test
-	public void test_determineEffectuatedPolicyTerminated_Before() {
 
-		boolean expected = true;
-		
-		LocalDate ped = LocalDate.now().minusMonths(9);
-		
-		Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(sbmResponseCompositeDao, "determineEffectuatedPolicyTerminated", ped);
-			
-		assertEquals("should be " + expected + " for PolicyEndDate=" + ped.toString(), expected, actual.booleanValue());
-	}
-	
-	@Test
-	public void test_determineEffectuatedPolicyTerminated_Same() {
-
-		boolean expected = true;
-		
-		LocalDate ped = LocalDate.now();
-		
-		Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(sbmResponseCompositeDao, "determineEffectuatedPolicyTerminated", ped);
-			
-		assertEquals("should be " + expected + " for PolicyEndDate=" + ped.toString(), expected, actual.booleanValue());
-	}
-	
-	@Test
-	public void test_determineEffectuatedPolicyTerminated_After() {
-
-		boolean expected = false;
-		
-		LocalDate ped = LocalDate.now().plusMonths(2);
-		
-		Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(sbmResponseCompositeDao, "determineEffectuatedPolicyTerminated", ped);
-			
-		assertEquals("should be " + expected + " for PolicyEndDate=" + ped.toString(), expected, actual.booleanValue());
-	}
 
 	@Test
 	public void test_lockSummaryIdForSBMR_false() {
