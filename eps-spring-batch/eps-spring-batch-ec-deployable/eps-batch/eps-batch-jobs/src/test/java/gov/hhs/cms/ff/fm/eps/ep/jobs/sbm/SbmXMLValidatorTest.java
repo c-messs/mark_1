@@ -13,6 +13,8 @@ import javax.xml.stream.XMLStreamException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -23,8 +25,10 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMPolicyEnum;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMSchemaValidationRuleEnum;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
+import junit.framework.TestCase;
 
-public class SbmXMLValidatorTest {
+@RunWith(JUnit4.class)
+public class SbmXMLValidatorTest extends TestCase {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmXMLValidatorTest.class);
 	private SbmXMLValidator sbmXMLValidator;

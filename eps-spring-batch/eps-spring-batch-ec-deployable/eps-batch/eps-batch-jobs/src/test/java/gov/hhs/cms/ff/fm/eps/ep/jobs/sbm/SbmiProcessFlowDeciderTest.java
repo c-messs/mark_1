@@ -15,6 +15,8 @@ import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameter;
 import org.springframework.batch.core.JobParameters;
@@ -23,11 +25,14 @@ import org.springframework.batch.core.job.flow.FlowExecutionStatus;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import junit.framework.TestCase;
+
 /**
  * @author rajesh.talanki
  *
  */
-public class SbmiProcessFlowDeciderTest {
+@RunWith(JUnit4.class)
+public class SbmiProcessFlowDeciderTest extends TestCase {
 	
 	private SbmiProcessFlowDecider sbmiFlowDecider;
 	

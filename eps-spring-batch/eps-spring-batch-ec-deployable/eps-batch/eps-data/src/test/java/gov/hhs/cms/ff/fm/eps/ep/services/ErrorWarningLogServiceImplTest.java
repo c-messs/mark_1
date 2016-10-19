@@ -17,6 +17,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.accenture.foundation.common.exception.ApplicationException;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations={"classpath:/eps-data-config.xml", "classpath:/test-context-data.xml"})
 @TransactionConfiguration(transactionManager = "transactionManager", defaultRollback = true)
@@ -103,6 +105,7 @@ public class ErrorWarningLogServiceImplTest extends BaseServicesTest {
 		List<ErrorWarningLogDTO> errWarnLogDTOList = new ArrayList<ErrorWarningLogDTO>();
 		ErrorWarningLogDTO errWarnLogDTO = new ErrorWarningLogDTO();
 		errWarnLogDTOList.add(errWarnLogDTO);
+		
 		errorWarningLogService.saveErrorWarningLogs(errWarnLogDTOList);
 	}
 

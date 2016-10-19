@@ -2,8 +2,6 @@ package gov.hhs.cms.ff.fm.eps.ep.jobs.sbm;
 
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.sql.SQLSyntaxErrorException;
@@ -23,9 +21,10 @@ import com.accenture.foundation.common.exception.ApplicationException;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMPolicyDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmXprService;
+import junit.framework.TestCase;
 
 @RunWith(JUnit4.class)
-public class SbmXprSkipListenerTest {
+public class SbmXprSkipListenerTest extends TestCase {
 
 	private static final Long BATCH_ID = new Long("9999999999001");
 

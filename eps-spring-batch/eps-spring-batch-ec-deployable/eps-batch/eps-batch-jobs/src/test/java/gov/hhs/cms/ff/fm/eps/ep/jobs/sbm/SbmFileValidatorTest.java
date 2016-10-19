@@ -7,6 +7,8 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,13 +24,15 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
+import junit.framework.TestCase;
 
 /**
  * 
  * @author rajesh.talanki
  *
  */
-public class SbmFileValidatorTest {
+@RunWith(JUnit4.class)
+public class SbmFileValidatorTest extends TestCase {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmFileValidatorTest.class);
 	

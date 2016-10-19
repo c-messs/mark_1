@@ -11,16 +11,21 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameter;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.job.flow.FlowExecutionStatus;
 
+import junit.framework.TestCase;
+
 /**
  * @author rajesh.talanki
  *
  */
-public class SbmiProcessTypeFlowExecutionDeciderTest {
+@RunWith(JUnit4.class)
+public class SbmiProcessTypeFlowExecutionDeciderTest extends TestCase {
 	
 	private SbmiProcessTypeFlowExecutionDecider sbmFlowDecider;
 		

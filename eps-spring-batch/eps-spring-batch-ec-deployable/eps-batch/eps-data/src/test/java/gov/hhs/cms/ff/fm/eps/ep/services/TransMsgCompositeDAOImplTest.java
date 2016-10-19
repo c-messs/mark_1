@@ -181,6 +181,7 @@ public class TransMsgCompositeDAOImplTest extends BaseServicesTest {
 		assertNotNull("TransMsgCompositeDAO", transMsgService);
 		BenefitEnrollmentMaintenanceDTO bemDTO = new BenefitEnrollmentMaintenanceDTO();
 		bemDTO.setTransMsgId(Long.valueOf("888888"));
+		
 		transMsgService.updateBatchTransMsg(bemDTO, ProcessedToDbInd.S, "EPROD-10", "Skippable error desc.");
 	}
 
@@ -194,6 +195,7 @@ public class TransMsgCompositeDAOImplTest extends BaseServicesTest {
 		assertNotNull("TransMsgCompositeDAO", transMsgService);
 		BenefitEnrollmentMaintenanceDTO bemDTO = new BenefitEnrollmentMaintenanceDTO();
 		bemDTO.setBatchId(Long.valueOf("777777"));
+		
 		transMsgService.updateBatchTransMsg(bemDTO, ProcessedToDbInd.Y);
 	}
 

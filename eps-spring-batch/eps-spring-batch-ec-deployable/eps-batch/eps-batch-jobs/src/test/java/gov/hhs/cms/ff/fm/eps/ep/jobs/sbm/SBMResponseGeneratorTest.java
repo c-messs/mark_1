@@ -2,7 +2,6 @@ package gov.hhs.cms.ff.fm.eps.ep.jobs.sbm;
 
 import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.N;
 import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.Y;
-import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -38,10 +37,11 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmResponseDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmResponseCompositeDao;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmUpdateStatusDataService;
+import junit.framework.TestCase;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:/sbmi-batch-context.xml")
-public class SBMResponseGeneratorTest {
+public class SBMResponseGeneratorTest extends TestCase {
 
 	private SBMResponseGenerator sbmrGenerator;
 	private SBMFileCompositeDAO fileCompositeDaoMock;

@@ -1,8 +1,5 @@
 package gov.hhs.cms.ff.fm.eps.ep.jobs.sbm;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,6 +7,8 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,8 +18,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMUpdateStatusErrorDTO;
+import junit.framework.TestCase;
 
-public class SbmHelperTest {
+@RunWith(JUnit4.class)
+public class SbmHelperTest extends TestCase {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmHelperTest.class);
 	

@@ -1,10 +1,5 @@
 package gov.hhs.cms.ff.fm.eps.ep.jobs.sbm;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -16,6 +11,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 import org.springframework.batch.item.NonTransientResourceException;
 import org.springframework.batch.item.ParseException;
@@ -26,8 +23,10 @@ import org.xml.sax.SAXException;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
+import junit.framework.TestCase;
 
-public class SbmiFileIngestionReaderTest {
+@RunWith(JUnit4.class)
+public class SbmiFileIngestionReaderTest extends TestCase {
 	
 	private static final String eftFolderPath = "./src/test/resources/sbm/readerTest/eftFolder";
 	private static final String privateFolderPath = "./src/test/resources/sbm/readerTest/privateFolder";
