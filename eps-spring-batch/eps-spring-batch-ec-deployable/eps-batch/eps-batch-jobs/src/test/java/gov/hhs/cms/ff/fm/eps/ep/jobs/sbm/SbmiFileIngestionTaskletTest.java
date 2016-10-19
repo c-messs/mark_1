@@ -13,8 +13,8 @@ import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
@@ -37,6 +37,21 @@ public class SbmiFileIngestionTaskletTest {
 
 		tasklet = new SbmiFileIngestionTasklet();
 
+	}
+
+	@After
+	public void tearDown() throws IOException {
+
+		
+	}
+
+	@Test
+	public void test_ValidFile() throws Exception {
+
+		String expectedExitCd = SBMConstants.CONTINUE;
+
+		JobExecution jobEx = new JobExecution(111111L);
+
 		mockFileIngestionReader = EasyMock.createMock(SbmiFileIngestionReader.class);
 		mockFileIngestionWriter = EasyMock.createMock(SbmiFileIngestionWriter.class);
 		mockSbmEvaluatePendingFiles = EasyMock.createMock(SBMEvaluatePendingFiles.class);
@@ -44,34 +59,26 @@ public class SbmiFileIngestionTaskletTest {
 		tasklet.setFileIngestionReader(mockFileIngestionReader);
 		tasklet.setFileIngestionWriter(mockFileIngestionWriter);
 		tasklet.setSbmEvaluatePendingFiles(mockSbmEvaluatePendingFiles);
-	}
-
-	@After
-	public void tearDown() throws IOException {
-
-	}
-
-	@Test
-	public void test_ValidFile() throws Exception {
-
-		String expectedExitCd = SBMConstants.CONTINUE;
-		
-		JobExecution jobEx = new JobExecution(111111L);
 
 		SBMFileProcessingDTO mockDTO = new SBMFileProcessingDTO();		
 		expect(mockFileIngestionReader.read(EasyMock.anyLong())).andReturn(mockDTO);
 		replay(mockFileIngestionReader);
 
 		mockFileIngestionWriter.write(mockDTO);
-		EasyMock.expectLastCall();
 		replay(mockFileIngestionWriter);
 
-		ChunkContext chkContext = new ChunkContext(new StepContext(new StepExecution("fileIngestionStep", jobEx)));		
-		RepeatStatus status = tasklet.execute(Mockito.any(), chkContext);
+		ChunkContext chkContext = new ChunkContext(new StepContext(new StepExecution("fileIngestionStep", jobEx)));	
+		StepExecution stepEx = new StepExecution("AnyStep", jobEx);
+		StepContribution contribution = new StepContribution(stepEx);
+		RepeatStatus status = tasklet.execute(contribution, chkContext);
 
 		assertNotNull("Tasklet should not return null", status);
 		assertEquals("RepeatStatus", RepeatStatus.FINISHED, status);
 		assertEquals("Exit Code", expectedExitCd, jobEx.getExecutionContext().get(SBMConstants.JOB_EXIT_CODE));
+		
+		EasyMock.reset(mockFileIngestionReader);
+		EasyMock.reset(mockFileIngestionWriter);
+		EasyMock.reset(mockSbmEvaluatePendingFiles);
 
 	}
 
@@ -79,28 +86,37 @@ public class SbmiFileIngestionTaskletTest {
 	public void test_InvalidFile() throws Exception {
 
 		String expectedExitCd = SBMConstants.EXIT;
-		
+
 		Long jobId = Long.valueOf(222222);
 		JobExecution jobEx = new JobExecution(jobId);
 
+		mockFileIngestionReader = EasyMock.createMock(SbmiFileIngestionReader.class);
+		mockSbmEvaluatePendingFiles = EasyMock.createMock(SBMEvaluatePendingFiles.class);
+
+		tasklet.setFileIngestionReader(mockFileIngestionReader);
+		tasklet.setSbmEvaluatePendingFiles(mockSbmEvaluatePendingFiles);
+
 		SBMFileProcessingDTO mockDTO = null;		
 		expect(mockFileIngestionReader.read(EasyMock.anyLong())).andReturn(mockDTO);
-		replay(mockFileIngestionReader);
-
+	
 		mockSbmEvaluatePendingFiles.evaluateBypassFreeze(EasyMock.anyLong());
 		mockSbmEvaluatePendingFiles.evaluateFreezeFiles(EasyMock.anyLong());
 		mockSbmEvaluatePendingFiles.evaluateOnHoldFiles(EasyMock.anyLong());
-		
-		EasyMock.expectLastCall();
-		replay(mockSbmEvaluatePendingFiles);
 
 
-		ChunkContext chkContext = new ChunkContext(new StepContext(new StepExecution("fileIngestionStep", jobEx)));	
-		RepeatStatus status = tasklet.execute(Mockito.any(), chkContext);
+		replay(mockSbmEvaluatePendingFiles, mockFileIngestionReader);
+
+		ChunkContext chkContext = new ChunkContext(new StepContext(new StepExecution("fileIngestionStep", jobEx)));
+		StepExecution stepEx = new StepExecution("AnyStep", jobEx);
+		StepContribution contribution = new StepContribution(stepEx);
+		RepeatStatus status = tasklet.execute(contribution, chkContext);
 
 		assertNotNull("Tasklet should not return null", status);
 		assertEquals("RepeatStatus", RepeatStatus.FINISHED, status);
 		assertEquals("Exit Code", expectedExitCd, jobEx.getExecutionContext().get(SBMConstants.JOB_EXIT_CODE));
+		
+		EasyMock.reset(mockFileIngestionReader);
+		EasyMock.reset(mockSbmEvaluatePendingFiles);
 
 	}
 }

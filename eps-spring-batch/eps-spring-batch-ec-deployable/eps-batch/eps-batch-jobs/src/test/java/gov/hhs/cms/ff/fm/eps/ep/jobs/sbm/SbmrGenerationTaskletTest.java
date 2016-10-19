@@ -3,7 +3,6 @@ package gov.hhs.cms.ff.fm.eps.ep.jobs.sbm;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
-import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -16,20 +15,24 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.xml.sax.SAXException;
 
-import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmResponseCompositeDao;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.impl.SbmResponseCompositeDaoImpl;
+import junit.framework.TestCase;
 
-public class SbmrGenerationTaskletTest {
+@RunWith(JUnit4.class)
+public class SbmrGenerationTaskletTest extends TestCase {
 
 	private SbmrGenerationTasklet tasklet;
 	
@@ -41,12 +44,8 @@ public class SbmrGenerationTaskletTest {
 		
 		tasklet = new SbmrGenerationTasklet();
 		
-		mockSbmResponseGenerator = createMock(SBMResponseGenerator.class);
-		tasklet.setSbmResponseGenerator(mockSbmResponseGenerator);
-		
 		mockSbmResponseDao = createMock(SbmResponseCompositeDaoImpl.class);
 		tasklet.setSbmResponseDao(mockSbmResponseDao);
-		
 	}
 	
 	@After
@@ -143,7 +142,6 @@ public class SbmrGenerationTaskletTest {
 		tasklet.beforeStep(stepExec);
 		
 		Assert.assertNotNull("Tasklet should not return null", stepExec);		
-		
 	}
 	
 	@Test
@@ -156,13 +154,20 @@ public class SbmrGenerationTaskletTest {
 		
 		replay(mockSbmResponseDao);
 		
+		mockSbmResponseGenerator = createMock(SBMResponseGenerator.class);
+		tasklet.setSbmResponseGenerator(mockSbmResponseGenerator);
+		
 		mockSbmResponseGenerator.generateSBMRWithPolicyErrors(EasyMock.anyLong(), EasyMock.anyLong());
 		EasyMock.expectLastCall().anyTimes();
 		replay(mockSbmResponseGenerator);
 		
-
-		ChunkContext chkContext = new ChunkContext(new StepContext(new StepExecution("sbmrGeneration", new JobExecution(21001L))));		
-		RepeatStatus status = tasklet.execute(EasyMock.anyObject(), chkContext);
+		Long jobId = Long.valueOf(222222);
+		JobExecution jobEx = new JobExecution(jobId);
+		
+		ChunkContext chkContext = new ChunkContext(new StepContext(new StepExecution("sbmrGeneration", jobEx)));	
+		StepExecution stepEx = new StepExecution("AnyStep", jobEx);
+		StepContribution contribution = new StepContribution(stepEx);
+		RepeatStatus status = tasklet.execute(contribution, chkContext);
 		
 		assertNotNull("Tasklet should not return null", status);		
 		

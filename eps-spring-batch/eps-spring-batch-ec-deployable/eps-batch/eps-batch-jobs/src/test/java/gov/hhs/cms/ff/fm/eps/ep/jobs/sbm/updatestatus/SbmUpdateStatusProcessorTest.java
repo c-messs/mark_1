@@ -11,6 +11,8 @@ import javax.xml.bind.JAXBException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +28,10 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMUpdateStatusErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMUpdateStatusRecordDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmUpdateStatusDataService;
+import junit.framework.TestCase;
 
-public class SbmUpdateStatusProcessorTest {
+@RunWith(JUnit4.class)
+public class SbmUpdateStatusProcessorTest extends TestCase {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmUpdateStatusProcessorTest.class);
 	

@@ -37,6 +37,7 @@ public class PolicyMemberVersionDaoImplTest extends BaseDaoTest {
 		assertNotNull("PolicyMemberVersionDao", memberVersionDao);
 		PolicyMemberVersionPO expectedPo = super.makePolicyMemberVersion();
 		expectedPo.setX12GenderTypeCd("X");
+		
 		memberVersionDao.insertPolicyMemberVersion(expectedPo);
 	}
 	

@@ -53,9 +53,6 @@ public class XprProcessorTest extends TestCase {
 		sbmXMLValidator.setXsdFilePath("/xsd/SBMPolicy.xsd");
 		xprProcessor.setSbmXMLValidator(sbmXMLValidator);
 		
-		mockSbmValidationService = createMock(SbmValidationService.class);
-		xprProcessor.setSbmValidationService(mockSbmValidationService);
-		
 		mockSbmFileCompositeDao = createMock(SBMFileCompositeDAO.class);
 		xprProcessor.setSbmFileCompositeDao(mockSbmFileCompositeDao);
 		
@@ -66,6 +63,9 @@ public class XprProcessorTest extends TestCase {
 	 */
 	@Test
 	public void testProcess_success() throws Exception {
+		
+		mockSbmValidationService = createMock(SbmValidationService.class);
+		xprProcessor.setSbmValidationService(mockSbmValidationService);
 		
 		mockSbmValidationService.validatePolicy(EasyMock.anyObject(SBMValidationRequest.class));
 		EasyMock.expectLastCall();
@@ -103,6 +103,9 @@ public class XprProcessorTest extends TestCase {
 	@Test
 	public void testProcess_success_schemaErrors() throws Exception {
 		
+		mockSbmValidationService = createMock(SbmValidationService.class);
+		xprProcessor.setSbmValidationService(mockSbmValidationService);
+		
 		mockSbmValidationService.validatePolicy(EasyMock.anyObject(SBMValidationRequest.class));
 		EasyMock.expectLastCall();
 		replay(mockSbmValidationService);
@@ -132,6 +135,9 @@ public class XprProcessorTest extends TestCase {
 	 */
 	@Test
 	public void testProcess_success_schemaErrors_KeyFields() throws Exception {
+		
+		mockSbmValidationService = createMock(SbmValidationService.class);
+		xprProcessor.setSbmValidationService(mockSbmValidationService);
 		
 		mockSbmValidationService.validatePolicy(EasyMock.anyObject(SBMValidationRequest.class));
 		EasyMock.expectLastCall();

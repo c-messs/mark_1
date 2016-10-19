@@ -9,6 +9,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 import org.springframework.batch.item.NonTransientResourceException;
 import org.springframework.batch.item.ParseException;
@@ -19,8 +21,10 @@ import gov.cms.dsh.sbmi.FileInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
+import junit.framework.TestCase;
 
-public class SBMFileStatusHandlerTest {
+@RunWith(JUnit4.class)
+public class SBMFileStatusHandlerTest extends TestCase {
 	
 	private SBMFileStatusHandler fileSatusHandler;
 	private SBMFileCompositeDAO fileCompositeDaoMock;
