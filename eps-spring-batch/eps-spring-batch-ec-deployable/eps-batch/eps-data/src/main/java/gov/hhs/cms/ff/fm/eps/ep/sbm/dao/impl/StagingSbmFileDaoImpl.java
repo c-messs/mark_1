@@ -71,7 +71,7 @@ public class StagingSbmFileDaoImpl extends GenericEpsDao<StagingSbmFilePO> imple
 				po.getSbmFileXMLStream().close();
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOG.error("IOException happened while closing stream" + e.getMessage());
 		}
 		return (result == 1);
 	}
