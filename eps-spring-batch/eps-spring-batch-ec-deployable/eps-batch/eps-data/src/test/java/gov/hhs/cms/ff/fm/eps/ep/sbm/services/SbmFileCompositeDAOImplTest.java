@@ -2,6 +2,8 @@ package gov.hhs.cms.ff.fm.eps.ep.sbm.services;
 
 import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.GROUP_ID_EXTRACT;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -83,6 +85,8 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 		
 		String sbmXML = TestDataSBMUtility.getEnrollmentAsXmlString(expectedEnrollment);
 		inboundFileDTO.setSbmFileXML(sbmXML);
+		
+		inboundFileDTO.setSbmFileXMLStream(new InputStreamReader(new ByteArrayInputStream(sbmXML.getBytes())));
 		
 		inboundFileDTO.getSbmFileInfo().setSbmFileNm(sbmFileNm);
 		inboundFileDTO.getSbmFileInfo().setTradingPartnerId("BOB");

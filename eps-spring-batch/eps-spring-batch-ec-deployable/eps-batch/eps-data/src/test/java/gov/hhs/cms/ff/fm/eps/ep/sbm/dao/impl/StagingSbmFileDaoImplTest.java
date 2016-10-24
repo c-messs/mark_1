@@ -1,5 +1,7 @@
 package gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +73,7 @@ public class StagingSbmFileDaoImplTest extends BaseSBMDaoTest {
 		String expectedSbmXML = TestDataSBMUtility.getEnrollmentAsXmlString(enrollment);
 		StagingSbmFilePO expected = new StagingSbmFilePO();
 		expected.setSbmXML(expectedSbmXML);
+		expected.setSbmFileXMLStream(new InputStreamReader(new ByteArrayInputStream((expectedSbmXML.getBytes()))));
 		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(8);
 		expected.setBatchId(batchId);
 		userVO.setUserId(batchId.toString());

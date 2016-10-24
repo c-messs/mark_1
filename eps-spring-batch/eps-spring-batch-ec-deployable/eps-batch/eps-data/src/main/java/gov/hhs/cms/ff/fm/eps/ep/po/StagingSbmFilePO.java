@@ -1,5 +1,9 @@
 package gov.hhs.cms.ff.fm.eps.ep.po;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+
 /**
  * @author j.radziewski
  * 
@@ -12,6 +16,7 @@ public class StagingSbmFilePO extends GenericSbmFilePO<StagingSbmFilePO>{
 	private String sbmXML;
 	private Long batchId;
 	private Long sbmFileProcessingSummaryId;
+	private InputStreamReader sbmFileXMLStream;
 	
 	/**
 	 * @return the sbmXML
@@ -50,4 +55,11 @@ public class StagingSbmFilePO extends GenericSbmFilePO<StagingSbmFilePO>{
 		this.sbmFileProcessingSummaryId = sbmFileProcessingSummaryId;
 	}
 
+	public InputStreamReader getSbmFileXMLStream() {
+		return sbmFileXMLStream; 
+	}
+	
+	public void setSbmFileXMLStream(InputStreamReader in) {
+		this.sbmFileXMLStream = in; 
+	}
 }
