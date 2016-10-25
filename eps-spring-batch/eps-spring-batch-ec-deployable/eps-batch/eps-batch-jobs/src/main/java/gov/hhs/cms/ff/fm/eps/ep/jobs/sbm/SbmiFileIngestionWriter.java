@@ -1,6 +1,9 @@
 package gov.hhs.cms.ff.fm.eps.ep.jobs.sbm;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -72,8 +75,11 @@ public class SbmiFileIngestionWriter {
 
 		//save StagingSBMFile
 		if(dto.isValidXML()) {
-			String xmlString = FileUtils.readFileToString(dto.getSbmiFile());
-			dto.setSbmFileXML(xmlString);
+			
+			InputStream in = new FileInputStream(dto.getSbmiFile());
+			InputStreamReader reader=new InputStreamReader(in);  
+			dto.setSbmFileXMLStream(reader);
+			
 			LOG.info("Saving SBMI file to StagingSBMFile");
 			fileCompositeDao.saveFileToStagingSBMFile(dto);
 		}

@@ -1,6 +1,7 @@
 package gov.hhs.cms.ff.fm.eps.ep.sbm;
 
 import java.io.File;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class SBMFileProcessingDTO extends SBMFileProccessingSummary {
 	private Integer xprProcGroupSize;
 	private String fileInfoXML;
 	private SBMSummaryAndFileInfoDTO fileProcSummaryFromDB;
+	private InputStreamReader sbmFileXMLStream;
 	
 	/**
 	 * @return the fileInfoType
@@ -184,6 +186,14 @@ public class SBMFileProcessingDTO extends SBMFileProccessingSummary {
 	 */
 	public void setFileProcSummaryFromDB(SBMSummaryAndFileInfoDTO fileProcSummaryFromDB) {
 		this.fileProcSummaryFromDB = fileProcSummaryFromDB;
+	}
+
+	public InputStreamReader getSbmFileXMLStream() {
+		return sbmFileXMLStream; 
+	}
+	
+	public void setSbmFileXMLStream(InputStreamReader in) {
+		this.sbmFileXMLStream = in; 
 	}
 
 	

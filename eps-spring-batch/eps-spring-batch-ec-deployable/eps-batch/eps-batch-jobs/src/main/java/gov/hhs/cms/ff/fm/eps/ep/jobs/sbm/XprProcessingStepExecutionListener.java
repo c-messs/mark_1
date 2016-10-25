@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import gov.hhs.cms.ff.fm.eps.ep.dao.StagingSbmFileDao;
@@ -50,12 +51,18 @@ public class XprProcessingStepExecutionListener implements StepExecutionListener
 			
 			for (String sql : stageDataSqls) {
 				
-				if(sql.contains(":jobId")) {
-					sql = sql.replace(":jobId", jobId);
-				}	
-				
-				LOG.debug("sql: " + sql);
-		 		jdbcTemplate.execute(sql);
+				try {
+					if(sql.contains(":jobId")) {
+						sql = sql.replace(":jobId", jobId);
+					}	
+					
+					LOG.debug("sql: " + sql);
+			 		jdbcTemplate.execute(sql);
+		 		
+				} catch(DuplicateKeyException e) {
+					LOG.info("Got Unique Constraint Exception while inserting to StagingSbmGroupLock for Job ID: " + jobId);
+					LOG.info(e.getMessage());
+				}
 			}
 			
 			loadPolicyIdMap(jobId);

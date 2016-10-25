@@ -1,6 +1,6 @@
 package gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl;
 
-import java.sql.Clob;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -45,15 +45,13 @@ public class StagingSbmFileDaoImpl extends GenericEpsDao<StagingSbmFilePO> imple
 				try {
 					ps = con.prepareStatement(insertStagingSql);
 
-					Clob clob = ps.getConnection().createClob();
-					clob.setString(1, po.getSbmXML());
-					ps.setClob(1, clob);
+					ps.setCharacterStream(1, po.getSbmFileXMLStream());
 					ps.setLong(2, po.getBatchId());
 					ps.setLong(3, po.getSbmFileProcessingSummaryId());
 					ps.setLong(4, po.getSbmFileInfoId());
 					ps.setString(5, userVO.getUserId());
 					ps.setString(6, userVO.getUserId());
-
+					
 					return ps;
 
 				} catch (Exception e) {
@@ -68,6 +66,13 @@ public class StagingSbmFileDaoImpl extends GenericEpsDao<StagingSbmFilePO> imple
 				}
 			}
 		});
+		try {
+			if(po.getSbmFileXMLStream() != null) {
+				po.getSbmFileXMLStream().close();
+			}
+		} catch (IOException e) {
+			LOG.error("IOException happened while closing stream" + e.getMessage());
+		}
 		return (result == 1);
 	}
 

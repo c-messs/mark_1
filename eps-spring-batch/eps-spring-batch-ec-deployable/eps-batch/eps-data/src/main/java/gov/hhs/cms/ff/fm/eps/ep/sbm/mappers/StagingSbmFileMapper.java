@@ -22,6 +22,7 @@ public class StagingSbmFileMapper {
 	   po.setSbmFileInfoId(inboundFileDTO.getSbmFileInfo().getSbmFileInfoId());
 	   po.setSbmFileProcessingSummaryId(inboundFileDTO.getSbmFileProcSumId());
 	   po.setSbmXML(inboundFileDTO.getSbmFileXML());
+	   po.setSbmFileXMLStream(inboundFileDTO.getSbmFileXMLStream());
 	   
 	   return po;	   
    }
