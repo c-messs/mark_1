@@ -221,10 +221,11 @@ public class SbmValidationUtil {
 		
 		SBMErrorDTO errorTypeCd = 
 				xprSchemaErrors.stream()
-				.filter(xprSchemaError -> xprSchemaError.getElementInErrorNm()
-						.equalsIgnoreCase(SBMPolicyEnum.REC_CTRL_NUM.getElementNm()))
-				.findAny()
-				.orElse(null);
+					.filter(xprSchemaError -> xprSchemaError.getElementInErrorNm() != null 
+						&& xprSchemaError.getElementInErrorNm()
+							.equalsIgnoreCase(SBMPolicyEnum.REC_CTRL_NUM.getElementNm()))
+					.findAny()
+					.orElse(null);
 		
 		if(errorTypeCd != null) {
 			return true;
@@ -241,7 +242,8 @@ public class SbmValidationUtil {
 		
 		SBMErrorDTO errorTypeCd = 
 				xprSchemaErrors.stream()
-				.filter(xprSchemaError -> xprSchemaError.getElementInErrorNm()
+				.filter(xprSchemaError -> xprSchemaError.getElementInErrorNm() != null 
+					&& xprSchemaError.getElementInErrorNm()
 						.equalsIgnoreCase(SBMPolicyEnum.QHPID.getElementNm()))
 				.findAny()
 				.orElse(null);
@@ -261,7 +263,8 @@ public class SbmValidationUtil {
 		
 		SBMErrorDTO errorTypeCd = 
 				xprSchemaErrors.stream()
-				.filter(xprSchemaError -> xprSchemaError.getElementInErrorNm()
+				.filter(xprSchemaError -> xprSchemaError.getElementInErrorNm() != null 
+					&& xprSchemaError.getElementInErrorNm()
 						.equalsIgnoreCase(SBMPolicyEnum.EX_ASSIGN_POL_ID.getElementNm()))
 				.findAny()
 				.orElse(null);
@@ -281,7 +284,8 @@ public class SbmValidationUtil {
 		
 		SBMErrorDTO errorTypeCd = 
 				xprSchemaErrors.stream()
-				.filter(xprSchemaError -> xprSchemaError.getElementInErrorNm()
+				.filter(xprSchemaError -> xprSchemaError.getElementInErrorNm() != null 
+					&& xprSchemaError.getElementInErrorNm()
 						.equalsIgnoreCase(SBMPolicyEnum.EX_ASSIGN_SUB_ID.getElementNm()))
 				.findAny()
 				.orElse(null);

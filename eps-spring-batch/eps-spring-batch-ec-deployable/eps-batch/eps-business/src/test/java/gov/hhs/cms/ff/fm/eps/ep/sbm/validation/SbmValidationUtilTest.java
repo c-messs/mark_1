@@ -238,6 +238,20 @@ public class SbmValidationUtilTest extends TestCase {
 	}
 	
 	@Test
+	public void test_hasXprValidationErrors_null_RecordControlNumError() {
+		
+		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
+		SBMErrorDTO err = new SBMErrorDTO();
+		err.setElementInErrorNm(null);
+		
+		errorList.add(err);
+		
+		boolean hasErrors = SbmValidationUtil.hasRecordControlNumError(errorList);
+		
+		assertFalse("hasErrors", hasErrors);	
+	}
+	
+	@Test
 	public void test_hasXprValidationErrors_True_QhpIdError() {
 		
 		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
@@ -257,6 +271,20 @@ public class SbmValidationUtilTest extends TestCase {
 		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
 		SBMErrorDTO err = new SBMErrorDTO();
 		err.setElementInErrorNm(SBMPolicyEnum.REC_CTRL_NUM.getElementNm());
+		
+		errorList.add(err);
+		
+		boolean hasErrors = SbmValidationUtil.hasExchangePolicyIdError(errorList);
+		
+		assertFalse("hasErrors", hasErrors);	
+	}
+	
+	@Test
+	public void test_hasXprValidationErrors_null_PolicyIdError() {
+		
+		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
+		SBMErrorDTO err = new SBMErrorDTO();
+		err.setElementInErrorNm(null);
 		
 		errorList.add(err);
 		
@@ -294,6 +322,20 @@ public class SbmValidationUtilTest extends TestCase {
 	}
 	
 	@Test
+	public void test_hasXprValidationErrors_null_SubscriberIdError() {
+		
+		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
+		SBMErrorDTO err = new SBMErrorDTO();
+		err.setElementInErrorNm(null);
+		
+		errorList.add(err);
+		
+		boolean hasErrors = SbmValidationUtil.hasExchangeSubscriberIdError(errorList);
+		
+		assertFalse("hasErrors", hasErrors);	
+	}
+	
+	@Test
 	public void test_hasXprValidationErrors_True_SubscriberIdError() {
 		
 		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
@@ -313,6 +355,20 @@ public class SbmValidationUtilTest extends TestCase {
 		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
 		SBMErrorDTO err = new SBMErrorDTO();
 		err.setElementInErrorNm(SBMPolicyEnum.REC_CTRL_NUM.getElementNm());
+		
+		errorList.add(err);
+		
+		boolean hasErrors = SbmValidationUtil.hasQhpIdError(errorList);
+		
+		assertFalse("hasErrors", hasErrors);	
+	}
+	
+	@Test
+	public void test_hasXprValidationErrors_null_QhpIdError() {
+		
+		List<SBMErrorDTO> errorList = new ArrayList<SBMErrorDTO>();
+		SBMErrorDTO err = new SBMErrorDTO();
+		err.setElementInErrorNm(null);
 		
 		errorList.add(err);
 		
