@@ -40,6 +40,7 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMUpdateStatusErrorDTO;
 public class SbmHelper {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmHelper.class);
+	private static final String EXCEPTION_OCCUR = "Exception occurred";
 	
 	/**
 	 * Create SBMFileError
@@ -294,7 +295,7 @@ public class SbmHelper {
 			zipfile = new ZipFile(file);
 			return true;
 		} catch (ZipException e) {
-			LOG.info("Exception occurred:{}", e.getMessage());
+			LOG.info(EXCEPTION_OCCUR, e.getMessage());
 			return false;
 		} finally {
 			try {
@@ -303,7 +304,7 @@ public class SbmHelper {
 					zipfile = null;
 				}
 			} catch (IOException e) {
-				LOG.info("Exception occurred:{}", e.getMessage());
+				LOG.info(EXCEPTION_OCCUR, e.getMessage());
 			}
 		}
 	}
@@ -321,7 +322,7 @@ public class SbmHelper {
 			magic = raf.read() & 0xff | ((raf.read() << 8) & 0xff00);
 			raf.close();
 		} catch (IOException e) {
-			LOG.info("Exception occurred:{}", e.getMessage());
+			LOG.info(EXCEPTION_OCCUR, e.getMessage());
 		}
 		return magic == GZIPInputStream.GZIP_MAGIC;
 	}

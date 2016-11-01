@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import gov.hhs.cms.ff.fm.eps.ep.dao.StagingSbmFileDao;
@@ -28,6 +27,8 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMCache;
 public class XprProcessingStepExecutionListener implements StepExecutionListener  {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(XprProcessingStepExecutionListener.class);
+
+	private static final CharSequence JOB_ID = ":jobId";
 	
 	private JdbcTemplate jdbcTemplate;
 	private String processingType;
@@ -51,18 +52,12 @@ public class XprProcessingStepExecutionListener implements StepExecutionListener
 			
 			for (String sql : stageDataSqls) {
 				
-				try {
-					if(sql.contains(":jobId")) {
-						sql = sql.replace(":jobId", jobId);
-					}	
-					
-					LOG.debug("sql: " + sql);
-			 		jdbcTemplate.execute(sql);
-		 		
-				} catch(DuplicateKeyException e) {
-					LOG.info("Got Unique Constraint Exception while inserting to StagingSbmGroupLock for Job ID: " + jobId);
-					LOG.info(e.getMessage());
-				}
+				if(sql.contains(JOB_ID)) {
+					sql = sql.replace(JOB_ID, jobId);
+				}	
+				
+				LOG.debug("sql: " + sql);
+		 		jdbcTemplate.execute(sql);
 			}
 			
 			loadPolicyIdMap(jobId);
@@ -91,8 +86,8 @@ public class XprProcessingStepExecutionListener implements StepExecutionListener
 			
 			for (String sql : postCleanUpSqls) {
 				
-				if(sql.contains(":jobId")) {
-					sql = sql.replace(":jobId", jobId);
+				if(sql.contains(JOB_ID)) {
+					sql = sql.replace(JOB_ID, jobId);
 				}	
 				
 				LOG.debug("sql: " + sql);

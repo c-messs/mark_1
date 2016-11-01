@@ -86,7 +86,7 @@ public class SbmExecutionReportTaskletTest extends TestCase {
 		
 		expect(mockEFTDispatchDriver.saveDispatchContent((byte[])EasyMock.anyObject(), 
 				EasyMock.anyString(), EasyMock.anyString(), EasyMock.anyString(), 
-				EasyMock.anyString(), EasyMock.anyInt(), EasyMock.anyString(), EasyMock.anyString())).andReturn(1L);
+				EasyMock.anyString(), EasyMock.anyInt(), EasyMock.anyString())).andReturn(1L);
 		replay(mockEFTDispatchDriver);
 		
 		

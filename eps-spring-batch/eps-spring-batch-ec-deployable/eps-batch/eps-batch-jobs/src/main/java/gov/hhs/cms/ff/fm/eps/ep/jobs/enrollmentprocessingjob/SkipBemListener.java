@@ -71,32 +71,10 @@ StepExecutionListener {
 		String skipReasonCode = null;
 		String skipReasonDesc = null;
 		bemDTO.setBatchId(jobId);
+		String [] strArg = getSkipOne(t,bemDTO);
 		
-		// ApplicationException and NullPointerException are the only ones defined as "skippable-exception-classes" in config.
-		if (t.getClass().getName().equals("com.accenture.foundation.common.exception.ApplicationException")) {
-
-			ApplicationException appEx = (ApplicationException) t;
-			skipReasonCode = appEx.getInformationCode();
-			skipReasonDesc = appEx.getMessage();
-		}
-
-		if (t.getClass().getName().equals("java.lang.NullPointerException")) {
-
-			skipReasonCode = EProdEnum.EPROD_22.getCode();
-			skipReasonDesc = t.getMessage();
-		}
-
-		if (skipReasonCode == null) {
-
-			// FUTURE: Remove once all hard coded EPROD strings are replaced with constants.
-			if (skipReasonDesc != null) {
-				if (skipReasonDesc.indexOf(EPROD) == 0) {
-					skipReasonCode = (skipReasonDesc.length() > EPROD_LEN) ? skipReasonDesc.substring(0, EPROD_LEN) : skipReasonDesc;
-					skipReasonCode = (skipReasonCode.indexOf(EPROD) == 0) ? skipReasonCode : null;
-				}
-			}
-		}
-
+		skipReasonCode = strArg[0];
+		skipReasonDesc = strArg[1];
 		// If skipReasonDesc is still null at this point, just get the message.
 		if (skipReasonDesc == null) {
 			skipReasonDesc = t.getMessage() != null ? t.getMessage() : null;
@@ -122,24 +100,63 @@ StepExecutionListener {
 		}
 
 		LOG.error(logMsg, t);
+		getSkipTwo(t,bemDTO,skipReasonCode,skipReasonDesc);
 		
-		// Just in case Desc is larger than column width.
-		if (skipReasonDesc != null) {
-			if (skipReasonDesc.length() > TRANSMSGSKIPREASONDESC_LEN) {
-				skipReasonDesc = skipReasonDesc.substring(0, TRANSMSGSKIPREASONDESC_LEN);
-			} 
-		}
-		
-		//  For ERL (only), Update the previously skipped version to 'D'
-		if(StringUtils.isNotBlank(source) && source.equalsIgnoreCase(EPSConstants.JOBPARAMETER_SOURCE_FFM)
-				&& !skipReasonCode.equals(EProdEnum.EPROD_30.getCode()) && !skipReasonCode.equals(EProdEnum.EPROD_31.getCode())
-						&& !skipReasonCode.equals(EProdEnum.EPROD_32.getCode()) && !skipReasonCode.equals(EProdEnum.EPROD_33.getCode())) {
-			transMsgCompositeDAO.updateSkippedVersion(bemDTO, ProcessedToDbInd.D);
-		}
-		
-		transMsgCompositeDAO.updateBatchTransMsg(bemDTO, ProcessedToDbInd.S, skipReasonCode, skipReasonDesc);
 	}
 	
+	private void getSkipTwo(Throwable t, BenefitEnrollmentMaintenanceDTO bemDTO, String skipReasonCode,
+			String skipReasonDesc) {
+		// Just in case Desc is larger than column width.
+				if (skipReasonDesc != null) {
+					if (skipReasonDesc.length() > TRANSMSGSKIPREASONDESC_LEN) {
+						skipReasonDesc = skipReasonDesc.substring(0, TRANSMSGSKIPREASONDESC_LEN);
+					} 
+				}
+				
+				//  For ERL (only), Update the previously skipped version to 'D'
+				if(StringUtils.isNotBlank(source) && source.equalsIgnoreCase(EPSConstants.JOBPARAMETER_SOURCE_FFM)
+						&& !skipReasonCode.equals(EProdEnum.EPROD_30.getCode()) && !skipReasonCode.equals(EProdEnum.EPROD_31.getCode())
+								&& !skipReasonCode.equals(EProdEnum.EPROD_32.getCode()) && !skipReasonCode.equals(EProdEnum.EPROD_33.getCode())) {
+					transMsgCompositeDAO.updateSkippedVersion(bemDTO, ProcessedToDbInd.D);
+				}
+				
+				transMsgCompositeDAO.updateBatchTransMsg(bemDTO, ProcessedToDbInd.S, skipReasonCode, skipReasonDesc);
+		
+	}
+
+	private String[] getSkipOne(Throwable t, BenefitEnrollmentMaintenanceDTO bemDTO) {
+		String skipReasonCode = null;
+		String skipReasonDesc = null;
+		String [] strArr = new String[2];
+		// ApplicationException and NullPointerException are the only ones defined as "skippable-exception-classes" in config.
+				if (t.getClass().getName().equals("com.accenture.foundation.common.exception.ApplicationException")) {
+
+					ApplicationException appEx = (ApplicationException) t;
+					skipReasonCode = appEx.getInformationCode();
+					skipReasonDesc = appEx.getMessage();
+				}
+
+				if (t.getClass().getName().equals("java.lang.NullPointerException")) {
+
+					skipReasonCode = EProdEnum.EPROD_22.getCode();
+					skipReasonDesc = t.getMessage();
+				}
+
+				if (skipReasonCode == null) {
+
+					// FUTURE: Remove once all hard coded EPROD strings are replaced with constants.
+					if (skipReasonDesc != null) {
+						if (skipReasonDesc.indexOf(EPROD) == 0) {
+							skipReasonCode = (skipReasonDesc.length() > EPROD_LEN) ? skipReasonDesc.substring(0, EPROD_LEN) : skipReasonDesc;
+							skipReasonCode = (skipReasonCode.indexOf(EPROD) == 0) ? skipReasonCode : null;
+						}
+					}
+				}
+				strArr[0]=skipReasonCode;
+				strArr[1]=skipReasonDesc;
+				return strArr; 
+	}
+
 	/**
 	 * Extracts nested cause message.
 	 * @param t

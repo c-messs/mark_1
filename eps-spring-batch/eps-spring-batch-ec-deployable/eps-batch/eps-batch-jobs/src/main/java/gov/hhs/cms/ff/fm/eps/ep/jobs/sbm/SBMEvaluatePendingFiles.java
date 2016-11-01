@@ -46,7 +46,10 @@ public class SBMEvaluatePendingFiles {
 	private int freezePeriodEndDay;
 	private SBMFileCompositeDAO fileCompositeDao;
 	private SBMResponseGenerator responseGenerator;
-	
+	private Long jobId;
+	private static final String EXTRACT_MSG = "Inserted StagingSbmGroupLock for extract process for SbmFileProcSumId :{}";
+
+	private static final String INFO_FOR_FREEZE = "firstFileCreateDatetime: {}, adjustmentDuration: {}, fileSetDeadline(adjusted for freeze period): {}";
 	/**
 	 * Evaluate all pending files for deadline expiration
 	 * @param jobId
@@ -55,32 +58,21 @@ public class SBMEvaluatePendingFiles {
 	 * @throws SQLException
 	 * @throws IOException
 	 */
-	public void evaluatePendingFiles(Long jobId, boolean sendSBMSForPendingFiles) throws JAXBException, SQLException, IOException {
-		
+	public void evaluatePendingFiles(Long jobId, boolean sendSBMSForPendingFiles) throws JAXBException,IOException,SQLException {
+		this.jobId = jobId;
 		LOG.info("Evaluating all pending files.");
 		LOG.info("fileSetDeadlineDays:{}", fileSetDeadlineHours);
 		LOG.info("freezePeriodStartDay:{}, freezePeriodEndDay (Inclusive):{}", freezePeriodStartDay, freezePeriodEndDay);
-		
-		if(freezePeriodStartDay > freezePeriodEndDay) {
-			throw new ApplicationException("Freeze period property values are incorrect freezePeriodStartDay should be less or equal to freezePeriodEndDay");
-		}
-		
-		if(fileSetDeadlineHours < 0) {
-			throw new ApplicationException("fileSetDeadlineHours property cannot be less than zero");
-		}
-		
 		LocalDateTime currentTime = LocalDateTime.now();
 		LocalDateTime freezeStartDateTime =  LocalDate.now().withDayOfMonth(freezePeriodStartDay).atStartOfDay();
 		//freezeEndDateTime is exclusive so any dateTime less than freezeEndDateTime is freeze period but not equal to freezeEndDateTime 
 		LocalDateTime freezeEndDateTime =  LocalDate.now().withDayOfMonth(freezePeriodEndDay).plusDays(1).atStartOfDay(); 
 		LOG.info("In DateTime: freezeStartDateTime:{}, freezeEndDateTime (exclusive):{}", freezeStartDateTime, freezeEndDateTime);
-		
-		
-		//No pending files will be evaluated during freeze period
-		if((freezePeriodStartDay <= currentTime.getDayOfMonth()) && (currentTime.getDayOfMonth() <= freezePeriodEndDay)) {
-			LOG.info("In Freeze period, No pending files were evaluated.");
+				
+		if(!validatedOne(currentTime,freezeStartDateTime,freezeEndDateTime)){
 			return;
 		}
+		
 		
 		//evaluate all pending file and set it to EXPIRED if deadline is passed
 		List<SBMSummaryAndFileInfoDTO> pendingFiles = fileCompositeDao.getAllSBMFileProcessingSummary(SBMFileStatus.PENDING_FILES);
@@ -107,39 +99,11 @@ public class SBMEvaluatePendingFiles {
 			 *     			11			15			5				9
 			 *          	11			15			11				20
 			 */
-
-			LOG.info("currentDateTime: {}", currentTime);
-			LOG.info("firstFileCreateDatetime: {}, fileSetDeadline(not adjusted for freeze period): {}", firstFileCreateDatetime, fileSetDeadline);
-			if(currentTime.isBefore(fileSetDeadline)) {
-				LOG.info("Deadline NOT expired for SbmFileProcSumId {}", summaryDto.getSbmFileProcSumId());
-				if(sendSBMSForPendingFiles) {
-					sendSBMSForAllSBMFileInfos(summaryDto);
-				}
-				continue;
-			}
-			else if(firstFileCreateDatetime.compareTo(freezeEndDateTime) >= 0 || fileSetDeadline.compareTo(freezeStartDateTime) <= 0 ) {
-				LOG.info("Deadline expired for SbmFileProcSumId {}", summaryDto.getSbmFileProcSumId());
-				summaryDto.setSbmFileStatusType(SBMFileStatus.EXPIRED);
-				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);		
-				sendSBMSForAllSBMFileInfos(summaryDto);
-				continue;
-			}
-			//recalculate fileSetDeadline with adjusted duration
-			else if(firstFileCreateDatetime.compareTo(freezeStartDateTime) <= 0 && fileSetDeadline.compareTo(freezeStartDateTime) > 0) {
-				Duration adjustmentDuration = Duration.between(freezeStartDateTime, fileSetDeadline);
-				fileSetDeadline = greaterOf(freezeEndDateTime, fileSetDeadline).plus(adjustmentDuration);
-				LOG.info("firstFileCreateDatetime: {}, adjustmentDuration: {}, fileSetDeadline(adjusted for freeze period): {}", firstFileCreateDatetime, adjustmentDuration, fileSetDeadline);
-			}
-			else if(firstFileCreateDatetime.compareTo(freezeEndDateTime) < 0 && fileSetDeadline.compareTo(freezeEndDateTime) >= 0) {
-				Duration adjustmentDuration = Duration.between(firstFileCreateDatetime, freezeEndDateTime);
-				fileSetDeadline = greaterOf(freezeEndDateTime, fileSetDeadline).plus(adjustmentDuration);
-				LOG.info("firstFileCreateDatetime: {}, adjustmentDuration: {}, fileSetDeadline(adjusted for freeze period): {}", firstFileCreateDatetime, adjustmentDuration, fileSetDeadline);
-			}
-			else if(firstFileCreateDatetime.compareTo(freezeStartDateTime) >= 0 && fileSetDeadline.compareTo(freezeEndDateTime) <= 0) {
-				Duration adjustmentDuration = Duration.between(firstFileCreateDatetime, fileSetDeadline);
-				fileSetDeadline = freezeEndDateTime.plus(adjustmentDuration);
-				LOG.info("firstFileCreateDatetime: {}, adjustmentDuration: {}, fileSetDeadline(adjusted for freeze period): {}", firstFileCreateDatetime, adjustmentDuration, fileSetDeadline);
-			}
+            if(!validated(currentTime,fileSetDeadline,freezeEndDateTime,freezeStartDateTime,summaryDto,
+            		firstFileCreateDatetime,sendSBMSForPendingFiles)){
+            	continue;
+            }
+			
 
 			//compare again with adjusted fileSetDeadline
 			if(currentTime.compareTo(fileSetDeadline) >= 0) {
@@ -159,6 +123,72 @@ public class SBMEvaluatePendingFiles {
 		
 	}
 	
+	private boolean validatedOne(LocalDateTime currentTime, LocalDateTime freezeStartDateTime,
+			LocalDateTime freezeEndDateTime) {
+		if(freezePeriodStartDay > freezePeriodEndDay) {
+			throw new ApplicationException("Freeze period property values are incorrect freezePeriodStartDay should be less or equal to freezePeriodEndDay");
+		}
+		
+		if(fileSetDeadlineHours < 0) {
+			throw new ApplicationException("fileSetDeadlineHours property cannot be less than zero");
+		}
+		
+		
+		
+		
+		//No pending files will be evaluated during freeze period
+		if((freezePeriodStartDay <= currentTime.getDayOfMonth()) && (currentTime.getDayOfMonth() <= freezePeriodEndDay)) {
+			LOG.info("In Freeze period, No pending files were evaluated.");
+			return false;
+		}
+		return true;
+	}
+
+	private boolean validated(LocalDateTime currentTime, LocalDateTime fileSetDeadline, LocalDateTime freezeEndDateTime,
+			LocalDateTime freezeStartDateTime, SBMSummaryAndFileInfoDTO summaryDto, LocalDateTime firstFileCreateDatetime, boolean sendSBMSForPendingFiles) throws JAXBException, SQLException, IOException {
+		LOG.info("currentDateTime: {}", currentTime);
+		LOG.info("firstFileCreateDatetime: {}, fileSetDeadline(not adjusted for freeze period): {}", firstFileCreateDatetime, fileSetDeadline);
+		
+		if(currentTime.isBefore(fileSetDeadline)) {
+			LOG.info("Deadline NOT expired for SbmFileProcSumId {}", summaryDto.getSbmFileProcSumId());
+			if(sendSBMSForPendingFiles) {
+				sendSBMSForAllSBMFileInfos(summaryDto);
+			}
+			return false;
+		}
+		
+		else if(firstFileCreateDatetime.compareTo(freezeEndDateTime) >= 0 || fileSetDeadline.compareTo(freezeStartDateTime) <= 0 ) {
+			LOG.info("Deadline expired for SbmFileProcSumId {}", summaryDto.getSbmFileProcSumId());
+			summaryDto.setSbmFileStatusType(SBMFileStatus.EXPIRED);
+			fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);		
+			sendSBMSForAllSBMFileInfos(summaryDto);
+			return false;
+		}
+		return performValidateTwo(firstFileCreateDatetime,freezeStartDateTime,freezeEndDateTime,fileSetDeadline);
+		
+	}
+
+	private boolean performValidateTwo(LocalDateTime firstFileCreateDatetime, LocalDateTime freezeStartDateTime,
+			LocalDateTime freezeEndDateTime,LocalDateTime fileSetDeadline){
+				if(firstFileCreateDatetime.compareTo(freezeStartDateTime) <= 0 && fileSetDeadline.compareTo(freezeStartDateTime) > 0) {
+					Duration adjustmentDuration = Duration.between(freezeStartDateTime, fileSetDeadline);
+					fileSetDeadline = greaterOf(freezeEndDateTime, fileSetDeadline).plus(adjustmentDuration);
+					LOG.info(INFO_FOR_FREEZE, firstFileCreateDatetime, adjustmentDuration, fileSetDeadline);
+				}
+				else if(firstFileCreateDatetime.compareTo(freezeEndDateTime) < 0 && fileSetDeadline.compareTo(freezeEndDateTime) >= 0) {
+					Duration adjustmentDuration = Duration.between(firstFileCreateDatetime, freezeEndDateTime);
+					fileSetDeadline = greaterOf(freezeEndDateTime, fileSetDeadline).plus(adjustmentDuration);
+					LOG.info(INFO_FOR_FREEZE, firstFileCreateDatetime, adjustmentDuration, fileSetDeadline);
+				}
+				else if(firstFileCreateDatetime.compareTo(freezeStartDateTime) >= 0 && fileSetDeadline.compareTo(freezeEndDateTime) <= 0) {
+					Duration adjustmentDuration = Duration.between(firstFileCreateDatetime, fileSetDeadline);
+					fileSetDeadline = freezeEndDateTime.plus(adjustmentDuration);
+					LOG.info(INFO_FOR_FREEZE, firstFileCreateDatetime, adjustmentDuration, fileSetDeadline);
+				}
+				return true;
+		
+	}
+
 	/**
 	 * Evaluate all On-Hold files and set to IN_PROCESS if no other file is processing or pending approval for the SBM state	
 	 * @param jobId
@@ -195,7 +225,7 @@ public class SBMEvaluatePendingFiles {
 				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);
 				LOG.info("Status updated from ON_HOLD to IN_PROCESS for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
 				fileCompositeDao.insertStagingSbmGroupLockForExtract(summaryDto.getSbmFileProcSumId());
-				LOG.info("Inserted StagingSbmGroupLock for extract process for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
+				LOG.info(EXTRACT_MSG, summaryDto.getSbmFileProcSumId());
 			}
 			else {
 				//All files in fileSet not received
@@ -260,7 +290,7 @@ public class SBMEvaluatePendingFiles {
 				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);
 				LOG.info("Status updated from FREEZE to IN_PROCESS for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
 				fileCompositeDao.insertStagingSbmGroupLockForExtract(summaryDto.getSbmFileProcSumId());
-				LOG.info("Inserted StagingSbmGroupLock for extract process for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
+				LOG.info(EXTRACT_MSG, summaryDto.getSbmFileProcSumId());
 			}
 			else {
 				//All files in fileSet not received
@@ -309,7 +339,7 @@ public class SBMEvaluatePendingFiles {
 				fileCompositeDao.updateFileStatus(summaryDto.getSbmFileProcSumId(), summaryDto.getSbmFileStatusType(), jobId);
 				LOG.info("Status updated from BYPASS_FREEZE to IN_PROCESS for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
 				fileCompositeDao.insertStagingSbmGroupLockForExtract(summaryDto.getSbmFileProcSumId());
-				LOG.info("Inserted StagingSbmGroupLock for extract process for SbmFileProcSumId :{}", summaryDto.getSbmFileProcSumId());
+				LOG.info(EXTRACT_MSG, summaryDto.getSbmFileProcSumId());
 			}
 			else if( ! isFreezePeriod) {
 				//All files in fileSet not received

@@ -27,6 +27,9 @@ import gov.hhs.cms.ff.fm.eps.ep.jobs.CommonUtil;
 public class SbmUpdateStatusTasklet implements Tasklet {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmUpdateStatusTasklet.class);
+
+
+	private static final String FILES_IN_LBL = "Files in {}: {}";
 	
 	
 	private File eftFolder;
@@ -68,7 +71,7 @@ public class SbmUpdateStatusTasklet implements Tasklet {
 		File fileToProcess = null;
 		
 		List<File> filesList = CommonUtil.getFilesFromDir(privateFolder);
-		LOG.info("Files in {}: {}", privateFolder, filesList);
+		LOG.info(FILES_IN_LBL, privateFolder, filesList);
 				
 		if(CollectionUtils.isNotEmpty(filesList)) {
 			LOG.info("Files in {}: {}", privateFolder, filesList);
@@ -78,7 +81,7 @@ public class SbmUpdateStatusTasklet implements Tasklet {
 		}
 		else {
 			filesList = CommonUtil.getFilesFromDir(eftFolder);
-			LOG.info("Files in {}: {}", eftFolder, filesList);
+			LOG.info(FILES_IN_LBL, eftFolder, filesList);
 			if(CollectionUtils.isNotEmpty(filesList)) {
 				File fileFromEft = filesList.get(0);
 				fileToProcess = new File(privateFolder, fileFromEft.getName());

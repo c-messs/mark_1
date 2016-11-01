@@ -25,8 +25,6 @@ import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.STATUS_APPROVE;
 import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.STATUS_BACKOUT;
 import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.STATUS_BYPASS_FREEZE;
 import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.STATUS_DISAPPROVED;
-import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.TARGET_EFT_APPLICATION_TYPE;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -96,74 +94,15 @@ public class SbmUpdateStatusProcessor {
 	 * @throws SQLException
 	 * @throws JAXBException
 	 */
-	public void processUpdateStatus(File inputFile, Long jobId) throws IOException, SQLException, JAXBException {
+	//IOException, SQLException, JAXBException
+	public void processUpdateStatus(File inputFile, Long jobId) throws  IOException, SQLException, JAXBException{
 				
 		List<CSVRecord> lineItems = SbmHelper.readCSVFile(inputFile);
 		
 		List<SBMUpdateStatusRecordDTO> fileRecords = new ArrayList<>();
 		List<SBMUpdateStatusErrorDTO> errorList = new ArrayList<>();
-		
-		if(lineItems.isEmpty()) {
-			errorList.add(SbmHelper.createError(null, ER_517.getCode(), SBMCache.getErrorDescription(ER_517.getCode()), null, null));
-		}
-				
-		for(CSVRecord csvRecord: lineItems) {	
-			
-			SBMUpdateStatusRecordDTO recordDto = mapToDto(csvRecord);			
-			if(csvRecord.getRecordNumber() == 1) {
-				// validate headers
-				errorList.addAll(validateHeaders(recordDto));
-				continue;
-			}
-			
-			fileRecords.add(recordDto);
-								
-			errorList.addAll(validateRowContents(recordDto));	
-			
-			//this is to find duplicate FileId in the file
-			if(StringUtils.isNotBlank(recordDto.getFileId()) && StringUtils.isNotBlank(recordDto.getLinenumber())) {
-				if(fileIdMap.get(recordDto.getFileId()) == null) {
-					fileIdMap.put(recordDto.getFileId(), new ArrayList<>());
-				}
-				
-				fileIdMap.get(recordDto.getFileId()).add(recordDto.getLinenumber());
-			}
-			
-			//this is to find duplicate IssuerFileSetId in the file
-			if(StringUtils.isNotBlank(recordDto.getIssuerFileSetId()) && StringUtils.isNotBlank(recordDto.getLinenumber())) {
-				if(fileSetIdMap.get(recordDto.getIssuerFileSetId()) == null) {
-					fileSetIdMap.put(recordDto.getIssuerFileSetId(), new ArrayList<>());
-				}
-				
-				fileSetIdMap.get(recordDto.getIssuerFileSetId()).add(recordDto.getLinenumber());
-			}
-		}
-		
-		//validate duplicate fileId
-		for(Entry<String, List<String>> entry: fileIdMap.entrySet()) {
-			if(entry.getValue().size() > 1) {
-				for(String linenumber: entry.getValue()) {
-					errorList.add(SbmHelper.createError(linenumber, SBMErrorWarningCode.ER_516));
-				}
-			}
-		}
-		
-		//validate duplicate fileSetId
-		for(Entry<String, List<String>> entry: fileSetIdMap.entrySet()) {
-			if(entry.getValue().size() > 1) {
-				for(String linenumber: entry.getValue()) {
-					errorList.add(SbmHelper.createError(linenumber, SBMErrorWarningCode.ER_516));
-				}
-			}
-		}
-		
-		
-		if( ! errorList.isEmpty()) {
-			// generate error report
-			generateErrorReport(inputFile.getName(), errorList);
-			return;
-		}
-		
+		findDuplicateField(fileRecords,errorList,lineItems);
+		validateDuplicateField(errorList,inputFile);
 		//process each line item		
 		for(SBMUpdateStatusRecordDTO dto: fileRecords) {
 			if(STATUS_APPROVE.equalsIgnoreCase(dto.getStatus())) {
@@ -207,14 +146,218 @@ public class SbmUpdateStatusProcessor {
 				
 	}
 		
+	private void validateDuplicateField(List<SBMUpdateStatusErrorDTO> errorList, File inputFile) 
+	throws IOException,SQLException{
+		//validate duplicate fileId
+				for(Entry<String, List<String>> entry: fileIdMap.entrySet()) {
+					if(entry.getValue().size() > 1) {
+						for(String linenumber: entry.getValue()) {
+							errorList.add(SbmHelper.createError(linenumber, SBMErrorWarningCode.ER_516));
+						}
+					}
+				}
+				
+				//validate duplicate fileSetId
+				for(Entry<String, List<String>> entry: fileSetIdMap.entrySet()) {
+					if(entry.getValue().size() > 1) {
+						for(String linenumber: entry.getValue()) {
+							errorList.add(SbmHelper.createError(linenumber, SBMErrorWarningCode.ER_516));
+						}
+					}
+				}
+				
+				
+				if( ! errorList.isEmpty()) {
+					// generate error report
+					generateErrorReport(inputFile.getName(), errorList);
+					return;
+				}
+		
+	}
+
+	private void findDuplicateField(List<SBMUpdateStatusRecordDTO> fileRecords,
+			List<SBMUpdateStatusErrorDTO> errorList, List<CSVRecord> lineItems) {
+		if(lineItems.isEmpty()) {
+			errorList.add(SbmHelper.createError(null, ER_517.getCode(), SBMCache.getErrorDescription(ER_517.getCode()), null, null));
+		}
+				
+		for(CSVRecord csvRecord: lineItems) {	
+			
+			SBMUpdateStatusRecordDTO recordDto = mapToDto(csvRecord);			
+			if(csvRecord.getRecordNumber() == 1) {
+				// validate headers
+				errorList.addAll(validateHeaders(recordDto));
+				continue;
+			}
+			
+			fileRecords.add(recordDto);
+								
+			errorList.addAll(validateRowContents(recordDto));	
+			
+			//this is to find duplicate FileId in the file
+			if(StringUtils.isNotBlank(recordDto.getFileId()) && StringUtils.isNotBlank(recordDto.getLinenumber())) {
+				if(fileIdMap.get(recordDto.getFileId()) == null) {
+					fileIdMap.put(recordDto.getFileId(), new ArrayList<>());
+				}
+				
+				fileIdMap.get(recordDto.getFileId()).add(recordDto.getLinenumber());
+			}
+			
+			//this is to find duplicate IssuerFileSetId in the file
+			if(StringUtils.isNotBlank(recordDto.getIssuerFileSetId()) && StringUtils.isNotBlank(recordDto.getLinenumber())) {
+				if(fileSetIdMap.get(recordDto.getIssuerFileSetId()) == null) {
+					fileSetIdMap.put(recordDto.getIssuerFileSetId(), new ArrayList<>());
+				}
+				
+				fileSetIdMap.get(recordDto.getIssuerFileSetId()).add(recordDto.getLinenumber());
+			}
+		}
+		
+	}
+
 	private List<SBMUpdateStatusErrorDTO> validateRowContents(SBMUpdateStatusRecordDTO recordDto) {
 				
 		List<SBMUpdateStatusErrorDTO> errorList = new ArrayList<>();
+		List<SBMSummaryAndFileInfoDTO> summaryDtoList=new ArrayList<>();
+		if(erroListAdded(errorList,recordDto,summaryDtoList)){
+        	return errorList;
+        }
+		
 
+		//validate based on status
+		if(STATUS_APPROVE.equalsIgnoreCase(recordDto.getStatus())) {				
+			validateApprove(recordDto,errorList,summaryDtoList);
+		}
+		else if(STATUS_DISAPPROVED.equalsIgnoreCase(recordDto.getStatus())) {
+			validateDisapproved(recordDto,errorList,summaryDtoList);
+			
+		}
+		else if(STATUS_BYPASS_FREEZE.equalsIgnoreCase(recordDto.getStatus())) {
+			validateBypassFreeze(recordDto,errorList,summaryDtoList);
+		}
+		else if(STATUS_BACKOUT.equalsIgnoreCase(recordDto.getStatus())) {
+			validateBackout(recordDto,errorList,summaryDtoList);
+		}
+		return errorList;
+	}
+	
+	private void validateBackout(SBMUpdateStatusRecordDTO recordDto, List<SBMUpdateStatusErrorDTO> errorList,
+			List<SBMSummaryAndFileInfoDTO> summaryDtoList) {
+		if(CollectionUtils.isEmpty(summaryDtoList)) {
+			errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_513));
+		}
+		else {
+			for(SBMSummaryAndFileInfoDTO summaryDto: summaryDtoList) {
+				if(SbmHelper.isFileStatusMatched(summaryDto.getSbmFileStatusType(), APPROVED, APPROVED_WITH_ERRORS, APPROVED_WITH_WARNINGS)) {
+					//create error	ER-514 if the file is not latest file
+					LOG.info("SBMSummaryAndFileInfoDTO for the given lineitem: {}", summaryDto);
+					SBMSummaryAndFileInfoDTO latestSummaryDto = null;
+					if(StringUtils.isNotBlank(recordDto.getIssuerId())) {
+						LOG.info("Getting latest SBM Summary record by issuerId:{}", recordDto.getIssuerId());
+						latestSummaryDto = fileCompositeDao.getLatestSBMFileProcessingSummaryByIssuer(recordDto.getIssuerId());
+					}
+					else {
+						LOG.info("Getting latest SBM Summary record by stateCode:{}", SbmDataUtil.getStateCd(recordDto.getTenantId()));
+						latestSummaryDto = fileCompositeDao.getLatestSBMFileProcessingSummaryByState(SbmDataUtil.getStateCd(recordDto.getTenantId()));
+					}
+					
+					LOG.info("latestSummaryDto : {}", latestSummaryDto);
+					
+					if(latestSummaryDto == null || latestSummaryDto.getSbmFileProcSumId() == null 
+							|| latestSummaryDto.getSbmFileProcSumId().equals(summaryDto.getSbmFileProcSumId())) {						
+						recordDto.setSbmFileProcSumId(summaryDto.getSbmFileProcSumId());
+						recordDto.setCurrentFileStatus(summaryDto.getSbmFileStatusType());
+					}	
+					else {
+						LOG.info("latestSummaryDto Not matched creating error");
+						errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_514));
+					}
+					return;
+				}
+			}
+			//create error
+			errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_515));
+		}
+	}	
+
+	private void validateBypassFreeze(SBMUpdateStatusRecordDTO recordDto, List<SBMUpdateStatusErrorDTO> errorList,
+			List<SBMSummaryAndFileInfoDTO> summaryDtoList) {
+		if(CollectionUtils.isEmpty(summaryDtoList)) {
+			errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_520));
+		}
+		else {
+			for(SBMSummaryAndFileInfoDTO summaryDto: summaryDtoList) {
+				if(SbmHelper.isFileStatusMatched(summaryDto.getSbmFileStatusType(), FREEZE)) {
+					if(StringUtils.isBlank(summaryDto.getIssuerFileSetId()) || isIssuerFileSetFilesReceived(summaryDto)) {
+						recordDto.setSbmFileProcSumId(summaryDto.getSbmFileProcSumId());
+						recordDto.setCurrentFileStatus(summaryDto.getSbmFileStatusType());
+				    }
+					else {
+						//incomplete file set
+						errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_522));
+					}
+					return;
+				}
+			}
+			//create error
+			errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_521));
+		}
+		
+	}
+
+	private void validateDisapproved(SBMUpdateStatusRecordDTO recordDto, List<SBMUpdateStatusErrorDTO> errorList,
+			List<SBMSummaryAndFileInfoDTO> summaryDtoList) {
+		if(CollectionUtils.isEmpty(summaryDtoList)) {
+			errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_511));
+		}
+		else {
+			for(SBMSummaryAndFileInfoDTO summaryDto: summaryDtoList) {
+				if(SbmHelper.isFileStatusMatched(summaryDto.getSbmFileStatusType(), ACCEPTED, ACCEPTED_WITH_ERRORS, ACCEPTED_WITH_WARNINGS, ON_HOLD, FREEZE, PENDING_FILES)) {
+					recordDto.setSbmFileProcSumId(summaryDto.getSbmFileProcSumId());
+					recordDto.setCurrentFileStatus(summaryDto.getSbmFileStatusType());
+					return;
+				}
+			}
+			//create error
+			errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_512));
+		}
+	}
+
+	private void validateApprove(SBMUpdateStatusRecordDTO recordDto, List<SBMUpdateStatusErrorDTO> errorList,
+			List<SBMSummaryAndFileInfoDTO> summaryDtoList) {
+		if(CollectionUtils.isEmpty(summaryDtoList)) {
+			errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_509));
+		}
+		else {
+			for(SBMSummaryAndFileInfoDTO summaryDto: summaryDtoList) {
+				if(SbmHelper.isFileStatusMatched(summaryDto.getSbmFileStatusType(), ACCEPTED, ACCEPTED_WITH_ERRORS, ACCEPTED_WITH_WARNINGS)) {
+					recordDto.setSbmFileProcSumId(summaryDto.getSbmFileProcSumId());
+					recordDto.setCurrentFileStatus(summaryDto.getSbmFileStatusType());
+					return;
+				}
+			}
+			//create error
+			errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_510));
+		}
+		
+	}
+
+	private boolean erroListAdded(List<SBMUpdateStatusErrorDTO> errorList, SBMUpdateStatusRecordDTO recordDto,
+			List<SBMSummaryAndFileInfoDTO> summaryDtoList) {
 		if(StringUtils.isBlank(recordDto.getLinenumber())) {
 			errorList.add(SbmHelper.createError(null, ER_500.getCode(), getErrorDescription(ER_500.getCode()), recordDto.getFileId(), recordDto.getIssuerFileSetId()));
-			return errorList;
+			return true;
 		}
+        if( ! updateErrorList(errorList,recordDto).isEmpty()) {			
+			return true;
+		}
+		
+		//perform business validations
+		return buisnessValidated(recordDto,summaryDtoList,errorList);
+		
+	}
+
+	private List<SBMUpdateStatusErrorDTO> updateErrorList(List<SBMUpdateStatusErrorDTO> errorList, SBMUpdateStatusRecordDTO recordDto) {
 
 		if(StringUtils.isBlank(recordDto.getTenantId())) {
 			errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_501));
@@ -238,133 +381,30 @@ public class SbmUpdateStatusProcessor {
 		else if( ! CommonUtil.isStringMatched(recordDto.getStatus(), STATUS_APPROVE, STATUS_DISAPPROVED, STATUS_BYPASS_FREEZE, STATUS_BACKOUT)) {
 			errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_518)); 
 		}
-		
-		if( ! errorList.isEmpty()) {			
-			return errorList;
-		}
-		
-		//perform business validations
-		List<SBMSummaryAndFileInfoDTO> summaryDtoList;
+		return errorList;
+	}
+
+	private boolean buisnessValidated(SBMUpdateStatusRecordDTO recordDto, List<SBMSummaryAndFileInfoDTO> summaryDtoList,
+			List<SBMUpdateStatusErrorDTO> errorList) {
 		if(StringUtils.isNotBlank(recordDto.getFileId())) {
 			//get summaryId
-			summaryDtoList = fileCompositeDao.performSbmFileMatch(recordDto.getFileId(), recordDto.getTenantId());
+			summaryDtoList.addAll(fileCompositeDao.performSbmFileMatch(recordDto.getFileId(), recordDto.getTenantId()));
 		}
 		else {
-			summaryDtoList = fileCompositeDao.getSBMFileProcessingSummary(recordDto.getIssuerId(), recordDto.getIssuerFileSetId(), recordDto.getTenantId());
+			summaryDtoList.addAll(fileCompositeDao.getSBMFileProcessingSummary(recordDto.getIssuerId(), recordDto.getIssuerFileSetId(), recordDto.getTenantId()));
 		}
 		
 		//if the file submission was a fileSet then fileSetId should be provided instead of fileId
 		for(SBMSummaryAndFileInfoDTO summaryDto: summaryDtoList) {
 			if(StringUtils.isNotBlank(recordDto.getFileId()) && StringUtils.isNotBlank(summaryDto.getIssuerFileSetId())) {
 				errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_519));
-				return errorList;
+				return true;
 			}
 		}
-
-		//validate based on status
-		if(STATUS_APPROVE.equalsIgnoreCase(recordDto.getStatus())) {				
-			
-			if(CollectionUtils.isEmpty(summaryDtoList)) {
-				errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_509));
-			}
-			else {
-				for(SBMSummaryAndFileInfoDTO summaryDto: summaryDtoList) {
-					if(SbmHelper.isFileStatusMatched(summaryDto.getSbmFileStatusType(), ACCEPTED, ACCEPTED_WITH_ERRORS, ACCEPTED_WITH_WARNINGS)) {
-						recordDto.setSbmFileProcSumId(summaryDto.getSbmFileProcSumId());
-						recordDto.setCurrentFileStatus(summaryDto.getSbmFileStatusType());
-						return errorList;
-					}
-				}
-				//create error
-				errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_510));
-			}
-		}
-		else if(STATUS_DISAPPROVED.equalsIgnoreCase(recordDto.getStatus())) {
-			
-			if(CollectionUtils.isEmpty(summaryDtoList)) {
-				errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_511));
-			}
-			else {
-				for(SBMSummaryAndFileInfoDTO summaryDto: summaryDtoList) {
-					if(SbmHelper.isFileStatusMatched(summaryDto.getSbmFileStatusType(), ACCEPTED, ACCEPTED_WITH_ERRORS, ACCEPTED_WITH_WARNINGS, ON_HOLD, FREEZE, PENDING_FILES)) {
-						recordDto.setSbmFileProcSumId(summaryDto.getSbmFileProcSumId());
-						recordDto.setCurrentFileStatus(summaryDto.getSbmFileStatusType());
-						return errorList;
-					}
-				}
-				//create error
-				errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_512));
-			}
-			
-		}
-		else if(STATUS_BYPASS_FREEZE.equalsIgnoreCase(recordDto.getStatus())) {
-
-			if(CollectionUtils.isEmpty(summaryDtoList)) {
-				errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_520));
-			}
-			else {
-				for(SBMSummaryAndFileInfoDTO summaryDto: summaryDtoList) {
-					if(SbmHelper.isFileStatusMatched(summaryDto.getSbmFileStatusType(), FREEZE)) {
-						if(StringUtils.isBlank(summaryDto.getIssuerFileSetId()) || isIssuerFileSetFilesReceived(summaryDto)) {
-							recordDto.setSbmFileProcSumId(summaryDto.getSbmFileProcSumId());
-							recordDto.setCurrentFileStatus(summaryDto.getSbmFileStatusType());
-							return errorList;
-						}
-						else {
-							//incomplete file set
-							errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_522));
-							return errorList;
-						}
-					}
-				}
-				//create error
-				errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_521));
-			}
-			
-		}
-		else if(STATUS_BACKOUT.equalsIgnoreCase(recordDto.getStatus())) {
-							
-			if(CollectionUtils.isEmpty(summaryDtoList)) {
-				errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_513));
-			}
-			else {
-				for(SBMSummaryAndFileInfoDTO summaryDto: summaryDtoList) {
-					if(SbmHelper.isFileStatusMatched(summaryDto.getSbmFileStatusType(), APPROVED, APPROVED_WITH_ERRORS, APPROVED_WITH_WARNINGS)) {
-						//create error	ER-514 if the file is not latest file
-						LOG.info("SBMSummaryAndFileInfoDTO for the given lineitem: {}", summaryDto);
-						SBMSummaryAndFileInfoDTO latestSummaryDto = null;
-						if(StringUtils.isNotBlank(recordDto.getIssuerId())) {
-							LOG.info("Getting latest SBM Summary record by issuerId:{}", recordDto.getIssuerId());
-							latestSummaryDto = fileCompositeDao.getLatestSBMFileProcessingSummaryByIssuer(recordDto.getIssuerId());
-						}
-						else {
-							LOG.info("Getting latest SBM Summary record by stateCode:{}", SbmDataUtil.getStateCd(recordDto.getTenantId()));
-							latestSummaryDto = fileCompositeDao.getLatestSBMFileProcessingSummaryByState(SbmDataUtil.getStateCd(recordDto.getTenantId()));
-						}
-						
-						LOG.info("latestSummaryDto : {}", latestSummaryDto);
-						
-						if(latestSummaryDto == null || latestSummaryDto.getSbmFileProcSumId() == null 
-								|| latestSummaryDto.getSbmFileProcSumId().equals(summaryDto.getSbmFileProcSumId())) {						
-							recordDto.setSbmFileProcSumId(summaryDto.getSbmFileProcSumId());
-							recordDto.setCurrentFileStatus(summaryDto.getSbmFileStatusType());
-							return errorList;
-						}
-						else {
-							LOG.info("latestSummaryDto Not matched creating error");
-							errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_514));
-							return errorList;
-						}
-					}
-				}
-				//create error
-				errorList.add(SbmHelper.createError(recordDto.getLinenumber(), SBMErrorWarningCode.ER_515));
-			}
-		}
+		return false;
 		
-		return errorList;
 	}
-	
+
 	private List<SBMUpdateStatusErrorDTO> validateHeaders(SBMUpdateStatusRecordDTO recordDto) {
 		
 		List<SBMUpdateStatusErrorDTO> errorList = new ArrayList<>();
@@ -408,7 +448,7 @@ public class SbmUpdateStatusProcessor {
 		
 		String reportFilename = EFTDispatchDriver.getFileID(SBMConstants.FUNCTION_CODE_SBMAR);
 		
-		Long physicalDocId = eftDispatcher.saveDispatchContent(reportString.toString().getBytes(), reportFilename, SBMConstants.FUNCTION_CODE_SBMAR, environmentCodeSuffix, null, 0, null, TARGET_EFT_APPLICATION_TYPE); 
+		Long physicalDocId = eftDispatcher.saveDispatchContent(reportString.toString().getBytes(), reportFilename, SBMConstants.FUNCTION_CODE_SBMAR, environmentCodeSuffix, null, 0, null); 
 		LOG.info("SBMAR PhysicalDocumentId: {} for CSMS Approval/Disapprovaal template: {}", physicalDocId, filename);	
 	}
 	

@@ -98,7 +98,7 @@ public class SbmExecutionReportTasklet implements Tasklet {
 		String reportFilename = EFTDispatchDriver.getFileID(FUNCTION_CODE_SBMIS);
 		
 		Long physicalDocId = eftDispatcher.saveDispatchContent(
-				reportString.toString().getBytes(), reportFilename, FUNCTION_CODE_SBMIS, environmentCodeSuffix, null, 0, null, TARGET_EFT_APPLICATION_TYPE); 
+				reportString.toString().getBytes(), reportFilename, FUNCTION_CODE_SBMIS, environmentCodeSuffix, null, 0, null); 
 		LOG.info("SBMIS PhysicalDocumentId: {} for CMS SBM Exceution report PhysicalDocumentId: {} ", physicalDocId, reportFilename);	
 	}
 
