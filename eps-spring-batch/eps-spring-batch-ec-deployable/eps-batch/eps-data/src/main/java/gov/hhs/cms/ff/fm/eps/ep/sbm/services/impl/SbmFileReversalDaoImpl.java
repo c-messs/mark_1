@@ -24,6 +24,8 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 
 	private final static Logger LOG = LoggerFactory.getLogger(SbmFileReversalDaoImpl.class);
 
+	protected static final String FAILED_TO_CLOSE_PREPARE = "Failed to close prepared statement caused by: ";
+
 	protected JdbcTemplate jdbcTemplate;
 	private String voidPolicyStatusSql;
 	private String copyPrecedingPolicyVersionSql;
@@ -98,7 +100,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}
@@ -131,7 +133,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}
@@ -165,7 +167,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}
@@ -198,7 +200,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}
@@ -230,7 +232,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}
@@ -265,7 +267,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}
@@ -300,7 +302,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}
@@ -334,7 +336,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}
@@ -368,7 +370,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}

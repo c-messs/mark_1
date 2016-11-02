@@ -49,6 +49,8 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.validation.impl.SbmValidationUtil;
 public class XprProcessor implements ItemProcessor<SBMPolicyDTO, SBMPolicyDTO> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(XprProcessor.class);
+
+	private static final String INVALID_POLICY_ID = "INVALID9999999";
 	
 	private static Unmarshaller jaxbUnmarshaller;
 	private static Unmarshaller fileInfoUnmarshaller;
@@ -123,68 +125,12 @@ public class XprProcessor implements ItemProcessor<SBMPolicyDTO, SBMPolicyDTO> {
 			List<SBMErrorDTO> xprSchemaErrors = validateXprSchema(sbmPolicyDTO);
 			
 			if(CollectionUtils.isEmpty(xprSchemaErrors)) {
-			
-				//Unmarshal Policy
-				StringReader sbmPolicyStr = new StringReader(sbmPolicyDTO.getPolicyXml());
-	
-				JAXBElement<PolicyType> root = (JAXBElement<PolicyType>) jaxbUnmarshaller.unmarshal(new StreamSource(sbmPolicyStr), PolicyType.class);
-				sbmPolicy = root.getValue();
-				sbmPolicyDTO.setPolicy(sbmPolicy);
+				sbmPolicyDTO = performUnmarshalValidate(xprSchemaErrors,sbmPolicyDTO);
 				
-				if(SbmValidationUtil.isDuplicatePolicy(sbmPolicy.getExchangeAssignedPolicyId())) {
-					
-					sbmPolicyDTO.getErrorList().add(SbmValidationUtil.createErrorWarningLogDTO(
-							"ExchangeAssignedPolicyId", SBMErrorWarningCode.ER_023.getCode(), ERROR_DESC_INCORRECT_VALUE));
-					
-					sbmPolicyDTO.setErrorFlag(true);
-					
-					LOG.info("Duplicate Policy {} ", sbmPolicy.getExchangeAssignedPolicyId());
-					
-					return sbmPolicyDTO;
-				}
+			} 
+			else {
+				sbmPolicyDTO = performUnmarshalValidateNext(xprSchemaErrors,sbmPolicyDTO);
 				
-				//Call validation Service to Perform validations on the BEM
-				SBMValidationRequest sbmValidationRequest = new SBMValidationRequest();
-				sbmValidationRequest.setPolicyDTO(sbmPolicyDTO);
-				
-				LOG.info("Validating Policy XPR");
-				
-				sbmValidationService.validatePolicy(sbmValidationRequest);
-			
-			} else {
-				LOG.info("Schema errors found in Policy XPR");
-				
-				StringReader sbmPolicyStr = new StringReader(sbmPolicyDTO.getPolicyXml());
-				
-				try {
-					JAXBElement<PolicyType> root = (JAXBElement<PolicyType>) jaxbUnmarshaller.unmarshal(new StreamSource(sbmPolicyStr), PolicyType.class);
-					sbmPolicy = root.getValue();
-					
-					//Check for key fields
-					if(SbmValidationUtil.hasRecordControlNumError(xprSchemaErrors)) {
-						sbmPolicy.setRecordControlNumber(999999999);
-					}
-					
-					if(SbmValidationUtil.hasQhpIdError(xprSchemaErrors)) {
-						sbmPolicy.setQHPId("INVALID9999999");
-					}
-					
-					if(SbmValidationUtil.hasExchangePolicyIdError(xprSchemaErrors)) {
-						sbmPolicy.setExchangeAssignedPolicyId("INVALID9999999");
-					}
-					
-					if(SbmValidationUtil.hasExchangeSubscriberIdError(xprSchemaErrors)) {
-						sbmPolicy.setExchangeAssignedSubscriberId("INVALID9999999");
-					}
-					
-					sbmPolicyDTO.setPolicy(sbmPolicy);
-					
-				} catch (UnmarshalException ume) {
-					//XML File Invalid
-					LOG.info("Schema errors in Policy XPR");
-				}
-				
-				sbmPolicyDTO.setSchemaErrorList(xprSchemaErrors);
 			}
 			
 		} catch (UnmarshalException ume) {
@@ -192,6 +138,74 @@ public class XprProcessor implements ItemProcessor<SBMPolicyDTO, SBMPolicyDTO> {
 			throw new ApplicationException(SBMErrorWarningCode.SYSTEM_ERROR_999.getCode(), ume);
 		}
 		
+		return sbmPolicyDTO;
+	}
+
+	private SBMPolicyDTO performUnmarshalValidateNext(List<SBMErrorDTO> xprSchemaErrors, SBMPolicyDTO sbmPolicyDTO) throws JAXBException {
+		LOG.info("Schema errors found in Policy XPR");
+		
+		StringReader sbmPolicyStr = new StringReader(sbmPolicyDTO.getPolicyXml());
+		
+		try {
+			JAXBElement<PolicyType> root = (JAXBElement<PolicyType>) jaxbUnmarshaller.unmarshal(new StreamSource(sbmPolicyStr), PolicyType.class);
+			sbmPolicy = root.getValue();
+			
+			//Check for key fields
+			if(SbmValidationUtil.hasRecordControlNumError(xprSchemaErrors)) {
+				sbmPolicy.setRecordControlNumber(999999999);
+			}
+			
+			if(SbmValidationUtil.hasQhpIdError(xprSchemaErrors)) {
+				sbmPolicy.setQHPId(INVALID_POLICY_ID);
+			}
+			
+			if(SbmValidationUtil.hasExchangePolicyIdError(xprSchemaErrors)) {
+				sbmPolicy.setExchangeAssignedPolicyId(INVALID_POLICY_ID);
+			}
+			
+			if(SbmValidationUtil.hasExchangeSubscriberIdError(xprSchemaErrors)) {
+				sbmPolicy.setExchangeAssignedSubscriberId(INVALID_POLICY_ID);
+			}
+			
+			sbmPolicyDTO.setPolicy(sbmPolicy);
+			
+		} catch (UnmarshalException ume) {
+			//XML File Invalid
+			LOG.info("Schema errors in Policy XPR");
+		}
+		
+		sbmPolicyDTO.setSchemaErrorList(xprSchemaErrors);
+		return sbmPolicyDTO;
+	}
+
+	private SBMPolicyDTO performUnmarshalValidate(List<SBMErrorDTO> xprSchemaErrors, SBMPolicyDTO sbmPolicyDTO) throws JAXBException {
+		//Unmarshal Policy
+		StringReader sbmPolicyStr = new StringReader(sbmPolicyDTO.getPolicyXml());
+
+		JAXBElement<PolicyType> root = (JAXBElement<PolicyType>) jaxbUnmarshaller.unmarshal(new StreamSource(sbmPolicyStr), PolicyType.class);
+		sbmPolicy = root.getValue();
+		sbmPolicyDTO.setPolicy(sbmPolicy);
+		
+		if(SbmValidationUtil.isDuplicatePolicy(sbmPolicy.getExchangeAssignedPolicyId())) {
+			
+			sbmPolicyDTO.getErrorList().add(SbmValidationUtil.createErrorWarningLogDTO(
+					"ExchangeAssignedPolicyId", SBMErrorWarningCode.ER_023.getCode(), ERROR_DESC_INCORRECT_VALUE));
+			
+			sbmPolicyDTO.setErrorFlag(true);
+			
+			LOG.info("Duplicate Policy {} ", sbmPolicy.getExchangeAssignedPolicyId());
+			
+			return sbmPolicyDTO;
+		}
+		
+		//Call validation Service to Perform validations on the BEM
+		SBMValidationRequest sbmValidationRequest = new SBMValidationRequest();
+		sbmValidationRequest.setPolicyDTO(sbmPolicyDTO);
+		
+		LOG.info("Validating Policy XPR");
+		
+		sbmValidationService.validatePolicy(sbmValidationRequest);
+	
 		return sbmPolicyDTO;
 	}
 

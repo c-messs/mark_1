@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.TARGET_EFT_APPLICATION_TYPE;
+
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -54,9 +56,7 @@ public class EFTDispatchDriver {
 	 */
 	public Long saveDispatchContent(byte[] content, String FileName,
 			String physicalDocumentTypeCd, String serverEnvironmentTypeCd, String tradingPartnerId,
-			Integer issuerHIOSId, String statePostalCd,
-			String targetEFTTypeApplicationTypeCd) throws SQLException,
-			IOException {
+			Integer issuerHIOSId, String statePostalCd) throws SQLException, IOException {
 		DateTime dateTime = DateTime.now();
 
 
@@ -81,7 +81,7 @@ public class EFTDispatchDriver {
 		physicalDocument.setPhysicalDocumentApprvdInd("N");
 		physicalDocument.setPhysicalDcmntDsptchTypeCd("C");
 		physicalDocument
-				.setTargetEFTApplicationTypeCd(targetEFTTypeApplicationTypeCd);
+				.setTargetEFTApplicationTypeCd(TARGET_EFT_APPLICATION_TYPE);
 		// generating random unique FileId
 		physicalDocument.setPhysicalDocumentFileName(FileName);
 
@@ -134,7 +134,7 @@ public class EFTDispatchDriver {
 		}
 		byte[] byteArray = outputStream.toByteArray();
 
-		saveDispatchContent(byteArray, FileName, physicalDocumentTypeCd, serverEnvironmentTypeCd, null, issuerHIOSId, statePostalCd, targetEFTTypeApplicationTypeCd);
+		saveDispatchContent(byteArray, FileName, physicalDocumentTypeCd, serverEnvironmentTypeCd, null, issuerHIOSId, statePostalCd);
 	}
 
 	/**
@@ -162,6 +162,8 @@ public class EFTDispatchDriver {
 					"TARGETPHYSICALDOCUMENTTYPECD").toString();
 			String targetsourceID = names.get("TARGETTRADINGPARTNERDENTIFIER")
 					.toString();
+			String targetEnvTypeCd = names.get("TARGETSERVERENVIRONMENTTYPECD") == null ? 
+					StringUtils.EMPTY : names.get("TARGETSERVERENVIRONMENTTYPECD").toString().trim();
 
 			Calendar calendar = Calendar.getInstance();
 			calendar.setTime(dateTime.toDate());
@@ -175,7 +177,7 @@ public class EFTDispatchDriver {
 				environmentTypeCD =  serverEnvironmentTypeCd;
 			}
 			
-			String fileName =  targetsourceID + "."+ targetFunctionCode + "."+ "D" + day + "." + "T" + time + "." + environmentTypeCD;
+			String fileName =  targetsourceID + "."+ targetFunctionCode + targetEnvTypeCd + "."+ "D" + day + "." + "T" + time + "." + environmentTypeCD;
 
 			logger.debug("physicalDocumentFileName created: " + fileName);
 			fileNames.add(fileName);
@@ -200,6 +202,7 @@ public class EFTDispatchDriver {
 
 		String targetFunctionCode = functionCd;
 		String targetsourceID = tradingPartnerId;
+		String targetEnvTypeCd = serverEnvironmentTypeCd;
 
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(dateTime.toDate());
@@ -208,12 +211,9 @@ public class EFTDispatchDriver {
 		format = new SimpleDateFormat("HHmmssSSS");
 		String time = format.format(dateTime.toDate());	
 
-		String environmentTypeCD = "T";			
-		if(serverEnvironmentTypeCd.equalsIgnoreCase("P") || serverEnvironmentTypeCd.equalsIgnoreCase("R")) {
-			environmentTypeCD =  serverEnvironmentTypeCd;
-		}
+		String environmentTypeCD = (serverEnvironmentTypeCd.equalsIgnoreCase("P") || serverEnvironmentTypeCd.equalsIgnoreCase("R") )? "P" : "T";
 
-		String fileName =  targetsourceID + "."+ targetFunctionCode + "."+ "D" + day + "." + "T" + time + "." + environmentTypeCD;
+		String fileName =  targetsourceID + "."+ targetFunctionCode /*+ targetEnvTypeCd */ + "."+ "D" + day + "." + "T" + time + "." + environmentTypeCD;
 
 		logger.debug("physicalDocumentFileName created: " + fileName);
 		fileNames.add(fileName);

@@ -15,6 +15,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,6 +47,14 @@ import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmFinancialValidatorImpl.class);
+
+	private static final String PART_MNTH_EFFECT_DATE = "PartialMonthEffectiveStartDate";
+
+	private static final String FIN_EFFECT_DATE = "FinancialEffectiveStartDate";
+
+	private static final String PART_EFFECT_END_DATE = "PartialMonthEffectiveEndDate";
+
+	private static final String MNTH_CSR_AMT = "MonthlyCSRAmount";
 	
 	private SBMDataService sbmDataService;
 	private List<String> sbmBusinessRules;
@@ -180,21 +189,7 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 				performPremiumDateAlignment(inboundPremiums);
 			}
 
-		} /*else { //Single node
-			LOG.debug("Setting policy start and end dates to premium eff start and end dates");
-
-			//Modify EffectiveStartDate and EffectiveEndDate of Policy Premium record to align with the PolicyStartDate and Policy EndDate
-			Map.Entry<LocalDate, SBMPremium> entry = inboundPremiums.entrySet().iterator().next();
-
-			LocalDate premiumStartDt = entry.getKey();
-
-			SBMPremium premiumRec = entry.getValue();
-			premiumRec.setEffectiveStartDate(policyStartDate);
-			premiumRec.setEffectiveEndDate(policyEndDate);
-
-			inboundPremiums.remove(premiumStartDt);
-			inboundPremiums.put(policyStartDate, premiumRec);
-		}*/
+		} 
 
 	}
 
@@ -303,13 +298,13 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 				
 				//FR-FM-PP-SBMI-454 Overlap check
 				if(sbmBusinessRules.contains("R001")) {
-					performOverlapCheck(prevFinEndDt, finStartDt, "FinancialEffectiveStartDate",
+					performOverlapCheck(prevFinEndDt, finStartDt, FIN_EFFECT_DATE,
 							SBMErrorWarningCode.ER_033, financialErrors);
 				}
 				
 				//FR-FM-PP-SBMI-456 Gap check
 				if(sbmBusinessRules.contains("R002")) {
-					performGapCheck(prevFinEndDt, finStartDt, "FinancialEffectiveStartDate", SBMErrorWarningCode.ER_034,
+					performGapCheck(prevFinEndDt, finStartDt, FIN_EFFECT_DATE, SBMErrorWarningCode.ER_034,
 							financialErrors);
 				}
 				
@@ -359,14 +354,14 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 					//FR-FM-PP-SBMI-458 Overlap check R016 Validate for partial month overlap dates on the prorated node from one parent node to another for the same month
 					if(sbmBusinessRules.contains("R016")
 							&& (prevEndDt.getMonth().getValue() == finStartDt.getMonth().getValue())) {
-						performOverlapCheck(prevEndDt, finStartDt, "PartialMonthEffectiveStartDate",
+						performOverlapCheck(prevEndDt, finStartDt, PART_MNTH_EFFECT_DATE,
 								SBMErrorWarningCode.ER_043, prorationErrors);
 					}
 					
 					//FR-FM-PP-SBMI-460 Gap check - R017 Validate for  partial month gap dates on the prorated node from one parent node to another for the same month
 					if(sbmBusinessRules.contains("R017") 
 							&& (prevEndDt.getMonth().getValue() == finStartDt.getMonth().getValue())) {
-						performGapCheck(prevEndDt, finStartDt, "PartialMonthEffectiveStartDate",
+						performGapCheck(prevEndDt, finStartDt,PART_MNTH_EFFECT_DATE,
 								SBMErrorWarningCode.ER_044, prorationErrors);
 					}
 					
@@ -430,92 +425,30 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 		String metalLevel = sbmDataService.getMetalLevelByQhpid(qhpId, planYear);
 		
 		LOG.info("metalLevel: " + metalLevel);
-		
+		Map<String,Runnable>commands = new HashMap<>();
 		financialInfoList.forEach(financialInfo -> {
 			
 			LocalDate finStartDt = DateTimeUtil.getLocalDateFromXmlGC(financialInfo.getFinancialEffectiveStartDate());
 			LocalDate finEndDt = DateTimeUtil.getLocalDateFromXmlGC(financialInfo.getFinancialEffectiveEndDate());
-			
+			commands.put("R018", () -> validatePartialMonthDates(finStartDt, finEndDt, financialInfo, prorationValidationErrors));
+			commands.put("R019", () -> validatePartialMonthStartForSameMonth(financialInfo, financialInfoList, prorationValidationErrors));
+			commands.put("R020", () -> validatePartialMonthEndForSameMonth(financialInfo, financialInfoList, prorationValidationErrors));
+			commands.put("R021", () -> validatePartialMonthStart(financialInfo, finStartDt, prorationValidationErrors));
+			commands.put("R022", () -> validatePartialMonthEnd(financialInfo, finEndDt, prorationValidationErrors));
+			commands.put("R023", () -> validateProratedNodesSameMonth(financialInfo, prorationValidationErrors));
+			commands.put("R024", () -> validateProratedNodeAcrossMonths(financialInfo, prorationValidationErrors));
+			commands.put("R025", () -> validateProratedPremium(financialInfo, prorationValidationErrors));
+			commands.put("R026", () -> validateProratedAptc(financialInfo, prorationValidationErrors));
+			commands.put("R027", () -> validateProratedAptcGreaterThanTPA(financialInfo, prorationValidationErrors));
+			commands.put("R028", () -> validateAptcGreaterThanProratedTPA(financialInfo, prorationValidationErrors));
+			commands.put("R030", () -> validateProratedCSRVariant(financialInfo, prorationValidationErrors));
+			commands.put("R032", () -> calculateProratedCSR(financialInfo, metalLevel, planYear, prorationValidationErrors));
 			sbmBusinessRules.forEach(businessRuleCd -> {
-				
-				switch(businessRuleCd.toUpperCase()) {
-				
-				case "R018":
-					//FR-FM-PP-SBMI-462: R018	Validate that each partial month dates on the prorated node are tied to either the financial start date or fiananical end date of the parent node for the same month
-					validatePartialMonthDates(finStartDt, finEndDt, financialInfo, prorationValidationErrors);
-					break;
-					
-				case "R019":
-					//FR-FM-PP-SBMI-464: R019	Validate for the second part of the prorated amount when the parent financial node has the monthly amount and the first part of the prorated node is provided on the previous parent financial node
-					validatePartialMonthStartForSameMonth(financialInfo, financialInfoList, prorationValidationErrors);
-					break;
-
-				case "R020":
-					//FR-FM-PP-SBMI-506: R020	Validate for the first part of the prorated amount when the parent financial node has the monthly amount and the second part of the prorated node is provided on the subsequent parent financial node
-					validatePartialMonthEndForSameMonth(financialInfo, financialInfoList, prorationValidationErrors);
-					break;
-					
-				case "R021":
-					//FR-FM-PP-SBMI-268: R021 Validate that the partial month start date is greater than or equal to the financial start date of the parent node
-					validatePartialMonthStart(financialInfo, finStartDt, prorationValidationErrors);
-					break;
-					
-				case "R022":
-					//FR-FM-PP-SBMI-270: R022 Validate that the partial month end date is less than or equal to the financial end date of the parent node
-					validatePartialMonthEnd(financialInfo, finEndDt, prorationValidationErrors);
-					break;
-					
-				case "R023":
-					//FR-FM-PP-SBMI-492: R023 Validate for same month across multiple prorated nodes under one parent financial node
-					validateProratedNodesSameMonth(financialInfo, prorationValidationErrors);
-					break;
-					
-				case "R024":
-					//FR-FM-PP-SBMI-494: R024 Validate for prorated nodes that span multiple months
-					validateProratedNodeAcrossMonths(financialInfo, prorationValidationErrors);
-					break;
-					
-				case "R025":
-					//FR-FM-PP-SBMI-273: R025 Validate for PartialPremiumAmount less than or equal to MonthlyTotalPremiumAmount
-					validateProratedPremium(financialInfo, prorationValidationErrors);
-					break;
-					
-				case "R028":
-					//FR-FM-PP-SBMI-490: R028 Validate for MonthlyAPTCAmount does not exceed the PartialMonthPRemiumAmount when PartialMonthAPTC is not provided
-					validateAptcGreaterThanProratedTPA(financialInfo, prorationValidationErrors);
-					break;
-					
-				case "R026":
-					//FR-FM-PP-SBMI-276: R026 Validate for PartialMonthAPTCAmount less than or equal to MonthlyAPTC when PartialMonthAPTC exists.
-					validateProratedAptc(financialInfo, prorationValidationErrors);
-					break;
-					
-				case "R027":
-					//FR-FM-PP-SBMI-278: R027 Validate for PartialMonthAPTCAmount less than or equal to the PartialMonthPremiumAmount when PartialMonthAPTC exists
-					validateProratedAptcGreaterThanTPA(financialInfo, prorationValidationErrors);
-					break;
-					
-				//case "R029": FR-FM-PP-SBMI-281: No validation specified.
-					
-				case "R030":
-					//FR-FM-PP-SBMI-283: R030	Validate CSRVariantID is 02-06 when PartialMonthCSRAmount is provided
-					validateProratedCSRVariant(financialInfo, prorationValidationErrors);
-					break;					
-					
-				//case "R031": No validation specified.
-					
-				case "R032":
-					//FR-FM-PP-SBMI-284: R032	Validate that the PartialMonthCSRAmount provided matches the system calculated PartialMonthCSRAmount
-					calculateProratedCSR(financialInfo, metalLevel, planYear, prorationValidationErrors);
-					break;	
-					
-				default:
-					break;
-				
+				if(commands.containsKey(businessRuleCd.toUpperCase())){
+				   commands.get(businessRuleCd.toUpperCase()).run();
 				}
-			});
+		   	});
 		});		
-
 		return prorationValidationErrors;
 	}
 
@@ -536,7 +469,7 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 				if(!(partialMonthStartDt.compareTo(finStartDt) == 0)) {
 					//create Error ER-045: incorrect value provided
 					prorationValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO(
-							"PartialMonthEffectiveStartDate",
+							PART_MNTH_EFFECT_DATE,
 							SBMErrorWarningCode.ER_045.getCode(),
 							ERROR_DESC_INCORRECT_VALUE + partialMonthStartDt));
 					
@@ -546,7 +479,7 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 				if(!(partialMonthEndDt.compareTo(finEndDt) == 0)) {
 					//create Error ER-045: incorrect value provided
 					prorationValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO(
-							"PartialMonthEffectiveEndDate",
+							PART_EFFECT_END_DATE,
 							SBMErrorWarningCode.ER_045.getCode(),
 							ERROR_DESC_INCORRECT_VALUE + partialMonthEndDt));
 					
@@ -582,30 +515,10 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 					if(!subsequentProratedAmounts.isEmpty()) {
 						subsequentPartialMonthAmt = subsequentProratedAmounts.get(0);
 					}
-					
-					if((endPartialMonthAmt.getPartialMonthAPTCAmount() != null 
-							&& endPartialMonthAmt.getPartialMonthAPTCAmount().compareTo(BigDecimal.ZERO) > 0
-							&& financialInformation.getMonthlyAPTCAmount() != null
-							&& financialInformation.getMonthlyAPTCAmount().compareTo(BigDecimal.ZERO) > 0
-							&& (subsequentPartialMonthAmt == null
-									|| subsequentPartialMonthAmt.getPartialMonthAPTCAmount() == null 
-									|| subsequentPartialMonthAmt.getPartialMonthAPTCAmount().compareTo(BigDecimal.ZERO) == 0))
-						|| (endPartialMonthAmt.getPartialMonthCSRAmount() != null 
-								&& endPartialMonthAmt.getPartialMonthCSRAmount().compareTo(BigDecimal.ZERO) > 0
-								&& financialInformation.getMonthlyCSRAmount() != null
-								&& financialInformation.getMonthlyCSRAmount().compareTo(BigDecimal.ZERO) > 0
-								&& (subsequentPartialMonthAmt == null
-										|| subsequentPartialMonthAmt.getPartialMonthCSRAmount() == null
-										|| subsequentPartialMonthAmt.getPartialMonthCSRAmount().compareTo(BigDecimal.ZERO) == 0))
-						|| (endPartialMonthAmt.getPartialMonthPremiumAmount() != null 
-								&& endPartialMonthAmt.getPartialMonthPremiumAmount().compareTo(BigDecimal.ZERO) > 0   
-								&& financialInformation.getMonthlyTotalPremiumAmount() != null
-								&& financialInformation.getMonthlyTotalPremiumAmount().compareTo(BigDecimal.ZERO) > 0
-								&& (subsequentPartialMonthAmt == null
-										|| subsequentPartialMonthAmt.getPartialMonthPremiumAmount() == null
-										|| subsequentPartialMonthAmt.getPartialMonthPremiumAmount().compareTo(BigDecimal.ZERO) == 0))) {
-						
-						//create Error ER-046: incorrect value provided
+					if(conditionOne(endPartialMonthAmt,financialInformation,subsequentPartialMonthAmt)||
+							conditionTwo(endPartialMonthAmt,financialInformation,subsequentPartialMonthAmt)||
+							conditionThree(endPartialMonthAmt,financialInformation,subsequentPartialMonthAmt)){
+					  //create Error ER-046: incorrect value provided
 						prorationValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO(
 								"FinancialInformation",
 								SBMErrorWarningCode.ER_046.getCode(),
@@ -614,11 +527,54 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 						LOG.info("ProratedAmount node missing for month {} ", financialStart);
 
 					}
+					
 				}
 			});
 		}
 	}
 	
+	private boolean conditionThree(ProratedAmountType endPartialMonthAmt, FinancialInformation financialInformation,
+		ProratedAmountType subsequentPartialMonthAmt) {
+		if (endPartialMonthAmt.getPartialMonthPremiumAmount() != null 
+				&& endPartialMonthAmt.getPartialMonthPremiumAmount().compareTo(BigDecimal.ZERO) > 0   
+				&& financialInformation.getMonthlyTotalPremiumAmount() != null
+				&& financialInformation.getMonthlyTotalPremiumAmount().compareTo(BigDecimal.ZERO) > 0
+				&& (subsequentPartialMonthAmt == null
+						|| subsequentPartialMonthAmt.getPartialMonthPremiumAmount() == null
+						|| subsequentPartialMonthAmt.getPartialMonthPremiumAmount().compareTo(BigDecimal.ZERO) == 0)){
+			return true;
+		}
+	return false;
+}
+private boolean conditionTwo(ProratedAmountType endPartialMonthAmt, FinancialInformation financialInformation,
+		ProratedAmountType subsequentPartialMonthAmt) {
+		if (endPartialMonthAmt.getPartialMonthCSRAmount() != null 
+				&& endPartialMonthAmt.getPartialMonthCSRAmount().compareTo(BigDecimal.ZERO) > 0
+				&& financialInformation.getMonthlyCSRAmount() != null
+				&& financialInformation.getMonthlyCSRAmount().compareTo(BigDecimal.ZERO) > 0
+				&& (subsequentPartialMonthAmt == null
+						|| subsequentPartialMonthAmt.getPartialMonthCSRAmount() == null
+						|| subsequentPartialMonthAmt.getPartialMonthCSRAmount().compareTo(BigDecimal.ZERO) == 0)){
+				return true;	
+				}
+	return false;
+}
+private boolean conditionOne(ProratedAmountType endPartialMonthAmt, FinancialInformation financialInformation,
+			ProratedAmountType subsequentPartialMonthAmt) {
+		if(endPartialMonthAmt.getPartialMonthAPTCAmount() != null 
+				&& endPartialMonthAmt.getPartialMonthAPTCAmount().compareTo(BigDecimal.ZERO) > 0
+				&& financialInformation.getMonthlyAPTCAmount() != null
+				&& financialInformation.getMonthlyAPTCAmount().compareTo(BigDecimal.ZERO) > 0
+				&& (subsequentPartialMonthAmt == null
+						|| subsequentPartialMonthAmt.getPartialMonthAPTCAmount() == null 
+						|| subsequentPartialMonthAmt.getPartialMonthAPTCAmount().compareTo(BigDecimal.ZERO) == 0)){
+				
+				return true;
+			     
+				}
+		return false;
+	}
+
 	/*
 	 * FR-FM-PP-SBMI-505, FR-FM-PP-SBMI-506: Validate for the first part of the prorated amount when the parent financial node has the monthly amount and the second part of the prorated node is provided on the subsequent parent financial node
 	 */
@@ -646,40 +602,63 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 					if(!precedingProratedAmounts.isEmpty()) {
 						precedingPartialMonthAmt = precedingProratedAmounts.get(precedingProratedAmounts.size()-1);
 					}
-
-					if((beginPartialMonthAmt.getPartialMonthAPTCAmount() != null 
-							&& beginPartialMonthAmt.getPartialMonthAPTCAmount().compareTo(BigDecimal.ZERO) > 0
-							&& financialInformation.getMonthlyAPTCAmount() != null
-							&& financialInformation.getMonthlyAPTCAmount().compareTo(BigDecimal.ZERO) > 0
-							&& (precedingPartialMonthAmt == null
-									|| precedingPartialMonthAmt.getPartialMonthAPTCAmount() == null 
-									|| precedingPartialMonthAmt.getPartialMonthAPTCAmount().compareTo(BigDecimal.ZERO) == 0))
-						|| (beginPartialMonthAmt.getPartialMonthCSRAmount() != null 
-								&& beginPartialMonthAmt.getPartialMonthCSRAmount().compareTo(BigDecimal.ZERO) > 0
-								&& financialInformation.getMonthlyCSRAmount() != null
-								&& financialInformation.getMonthlyCSRAmount().compareTo(BigDecimal.ZERO) > 0
-								&& (precedingPartialMonthAmt == null
-										|| precedingPartialMonthAmt.getPartialMonthCSRAmount() == null
-										|| precedingPartialMonthAmt.getPartialMonthCSRAmount().compareTo(BigDecimal.ZERO) == 0))
-						|| (beginPartialMonthAmt.getPartialMonthPremiumAmount() != null 
-								&& beginPartialMonthAmt.getPartialMonthPremiumAmount().compareTo(BigDecimal.ZERO) > 0
-								&& financialInformation.getMonthlyTotalPremiumAmount() != null
-								&& financialInformation.getMonthlyTotalPremiumAmount().compareTo(BigDecimal.ZERO) > 0
-								&& (precedingPartialMonthAmt == null
-										|| precedingPartialMonthAmt.getPartialMonthPremiumAmount() == null
-										|| precedingPartialMonthAmt.getPartialMonthPremiumAmount().compareTo(BigDecimal.ZERO) == 0))) {
-						
-						//create Error ER-046: incorrect value provided
+                    if(routOne(beginPartialMonthAmt,financialInformation,precedingPartialMonthAmt)||
+                       routTwo(beginPartialMonthAmt,financialInformation,precedingPartialMonthAmt)||
+                       routThree(beginPartialMonthAmt,financialInformation,precedingPartialMonthAmt)){
+                    	//create Error ER-046: incorrect value provided
 						prorationValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO(
 								"FinancialInformation",
 								SBMErrorWarningCode.ER_046.getCode(),
 								"Financial information node ending " + financialEnd + " is missing corresponding prorated amount node for month."));
 						
 						LOG.info("ProratedAmount node missing for month {} ", financialEnd);
-					}
+                    }
+					
 				}
 			});
 		}
+	}
+
+	private boolean routThree(ProratedAmountType beginPartialMonthAmt, FinancialInformation financialInformation,
+			ProratedAmountType precedingPartialMonthAmt) {
+		 if (beginPartialMonthAmt.getPartialMonthPremiumAmount() != null 
+					&& beginPartialMonthAmt.getPartialMonthPremiumAmount().compareTo(BigDecimal.ZERO) > 0
+					&& financialInformation.getMonthlyTotalPremiumAmount() != null
+					&& financialInformation.getMonthlyTotalPremiumAmount().compareTo(BigDecimal.ZERO) > 0
+					&& (precedingPartialMonthAmt == null
+							|| precedingPartialMonthAmt.getPartialMonthPremiumAmount() == null
+							|| precedingPartialMonthAmt.getPartialMonthPremiumAmount().compareTo(BigDecimal.ZERO) == 0)) {
+		     return true;						
+		 }
+		return false;
+	}
+
+	private boolean routTwo(ProratedAmountType beginPartialMonthAmt, FinancialInformation financialInformation,
+			ProratedAmountType precedingPartialMonthAmt) {
+		if(beginPartialMonthAmt.getPartialMonthCSRAmount() != null 
+				&& beginPartialMonthAmt.getPartialMonthCSRAmount().compareTo(BigDecimal.ZERO) > 0
+				&& financialInformation.getMonthlyCSRAmount() != null
+				&& financialInformation.getMonthlyCSRAmount().compareTo(BigDecimal.ZERO) > 0
+				&& (precedingPartialMonthAmt == null
+						|| precedingPartialMonthAmt.getPartialMonthCSRAmount() == null
+						|| precedingPartialMonthAmt.getPartialMonthCSRAmount().compareTo(BigDecimal.ZERO) == 0)){
+			return true;
+		}
+		return false;
+	}
+
+	private boolean routOne(ProratedAmountType beginPartialMonthAmt, FinancialInformation financialInformation,
+			ProratedAmountType precedingPartialMonthAmt) {
+		if(beginPartialMonthAmt.getPartialMonthAPTCAmount() != null 
+				&& beginPartialMonthAmt.getPartialMonthAPTCAmount().compareTo(BigDecimal.ZERO) > 0
+				&& financialInformation.getMonthlyAPTCAmount() != null
+				&& financialInformation.getMonthlyAPTCAmount().compareTo(BigDecimal.ZERO) > 0
+				&& (precedingPartialMonthAmt == null
+						|| precedingPartialMonthAmt.getPartialMonthAPTCAmount() == null 
+						|| precedingPartialMonthAmt.getPartialMonthAPTCAmount().compareTo(BigDecimal.ZERO) == 0)){
+			return true;
+		}
+		return false;
 	}
 
 	/*
@@ -697,13 +676,13 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 				
 				//create Error ER-047: incorrect value provided
 				prorationValidationErrors
-						.add(SbmValidationUtil.createErrorWarningLogDTO("PartialMonthEffectiveStartDate",
+						.add(SbmValidationUtil.createErrorWarningLogDTO(PART_MNTH_EFFECT_DATE,
 								SBMErrorWarningCode.ER_047.getCode(), ERROR_DESC_INCORRECT_VALUE,
 								ERROR_INFO_EXPECTED_VALUE_TXT
-										.concat("Must be greater than or equal to the FinancialEffectiveStartDate "
+										.concat("Must be greater than or equal to the "+FIN_EFFECT_DATE
 												+ finStartDt.toString())));
 				
-				LOG.info("PartialMonthEffectiveStartDate precedes FinancialEffectiveStartDate {}, {} ",
+				LOG.info(PART_MNTH_EFFECT_DATE+" precedes "+FIN_EFFECT_DATE+" {}, {} ",
 						partialMonthStartDt, finStartDt);
 			}
 		});
@@ -724,13 +703,13 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 				
 				//create Error ER-048: incorrect value provided
 				prorationValidationErrors
-						.add(SbmValidationUtil.createErrorWarningLogDTO("PartialMonthEffectiveEndDate",
+						.add(SbmValidationUtil.createErrorWarningLogDTO(PART_EFFECT_END_DATE,
 								SBMErrorWarningCode.ER_048.getCode(), ERROR_DESC_INCORRECT_VALUE,
 								ERROR_INFO_EXPECTED_VALUE_TXT
 										.concat("Must be less than or equal to the FinancialEffectiveEndDate "
 												+ finEndDt.toString())));
 				
-				LOG.info("PartialMonthEffectiveEndDate exceeds FinancialEffectiveEndDate {}, {} ",
+				LOG.info(PART_EFFECT_END_DATE+" exceeds FinancialEffectiveEndDate {}, {} ",
 						partialMonthEndDt, finEndDt);
 			}
 		});
@@ -772,7 +751,7 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 			if(proratedAmount.getPartialMonthEffectiveStartDate().getMonth() != proratedAmount.getPartialMonthEffectiveEndDate().getMonth()) {
 				//create Error ER-030: incorrect value provided
 				prorationValidationErrors
-						.add(SbmValidationUtil.createErrorWarningLogDTO("PartialMonthEffectiveEndDate",
+						.add(SbmValidationUtil.createErrorWarningLogDTO(PART_EFFECT_END_DATE,
 								SBMErrorWarningCode.ER_030.getCode(), ERROR_DESC_INCORRECT_VALUE));
 				
 				LOG.info("Prorated nodes cannot span multiple months {}, {} ",
@@ -916,19 +895,8 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 		BigDecimal multiplier = null;
 		
 		validateSilverPlan(variantId, metalLevel, prorationValidationErrors);
-		
-		if (VARIANT_ID_04.equals(variantId) || VARIANT_ID_05.equals(variantId) || VARIANT_ID_06.equals(variantId)) {
-			
-			multiplier = sbmDataService.getCsrMultiplierByVariant(variantId, planYear);
-		}
-		
-		if (metalLevel!= null && (VARIANT_ID_02.equals(variantId) || VARIANT_ID_03.equals(variantId))) {
-			
-			multiplier = sbmDataService.getCsrMultiplierByVariantAndMetal(variantId, metalLevel, planYear);
-		}
-		
-		LOG.info("CSR multiplier: " + multiplier);
-		
+		multiplier=retrieveMultiplier(variantId,multiplier,planYear,metalLevel);
+				
 		if (multiplier != null) {
 			
 			for(ProratedAmountType proratedAmount : proratedAmounts) {
@@ -958,6 +926,21 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 		}
 	}
 	
+	private BigDecimal retrieveMultiplier(String variantId, BigDecimal multiplier, String planYear, String metalLevel) {
+    
+		if (VARIANT_ID_04.equals(variantId) || VARIANT_ID_05.equals(variantId) || VARIANT_ID_06.equals(variantId)) {
+			
+			multiplier = sbmDataService.getCsrMultiplierByVariant(variantId, planYear);
+		}
+		if (metalLevel!= null && (VARIANT_ID_02.equals(variantId) || VARIANT_ID_03.equals(variantId))) {
+			
+			multiplier = sbmDataService.getCsrMultiplierByVariantAndMetal(variantId, metalLevel, planYear);
+		}
+		LOG.info("CSR multiplier: " + multiplier);
+		
+		return multiplier;
+	}
+
 	/*
 	 * Perform state specific validations configured in database
 	 */
@@ -1028,71 +1011,34 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 		
 		String metalLevel = sbmDataService.getMetalLevelByQhpid(qhpId, planYear);
 		
+       Map<String, Runnable> commands = new HashMap<>();
+		
 		financialInfoList.forEach(financialInfo -> {
 			
+			LocalDate finStartDt = DateTimeUtil.getLocalDateFromXmlGC(financialInfo.getFinancialEffectiveStartDate());
+			commands.put("R008", () -> validateFinStartAfterPolicyEnd(finStartDt, policyEndDt, financialValidationErrors));
+			commands.put("R009", () -> validateMonthlyAPTC(financialInfo, financialValidationErrors));
+			commands.put("R010", () -> validateMonthlyTPA(financialInfo, financialValidationErrors));
+			commands.put("R012", () -> validateCSRMissing(financialInfo, financialValidationErrors));
+			commands.put("R011", () -> validateCSRVariant(financialInfo, financialValidationErrors));
+			commands.put("R013", () -> validateNonCSRVariant(financialInfo, financialValidationErrors));
+			commands.put("R014", () -> validateSilverPlan(financialInfo.getCSRVariantId(), metalLevel, financialValidationErrors));
+			commands.put("R068", () -> validateMetalLevelForCsr0203(financialInfo.getCSRVariantId(), metalLevel, financialValidationErrors));
+			commands.put("R015", () -> calculateCsr(financialInfo, metalLevel, planYear, financialValidationErrors));
+			commands.put("R067", () -> validateRatingArea(financialInfo, financialValidationErrors));
 			sbmBusinessRules.forEach(businessRuleCd -> {
-				
-				switch(businessRuleCd.toUpperCase()) {
-				
-				case "R008":
-					//FR-FM-PP-SBMI-242: R008	Validate for financial start date to be less than or equal to the policy end date for effectuated policies
-					if (effectuationInd != null && effectuationInd.equalsIgnoreCase(Y)) {
-						
-						LocalDate finStartDt = DateTimeUtil.getLocalDateFromXmlGC(financialInfo.getFinancialEffectiveStartDate());
-						validateFinStartAfterPolicyEnd(finStartDt, policyEndDt, financialValidationErrors);
+				LOG.info("Commands size "+commands.size());
+				if(commands.containsKey(businessRuleCd.toUpperCase())){
+					if(!businessRuleCd.toUpperCase().equals("R008"))
+					   commands.get(businessRuleCd.toUpperCase()).run();
+					else if(businessRuleCd.toUpperCase().equals("R008")&&effectuationInd != null && effectuationInd.equalsIgnoreCase(Y)){
+						commands.get(businessRuleCd.toUpperCase()).run();
 					}
-					break;
-					
-				case "R009":
-					//FR-FM-PP-SBMI-245: R009	Validate that the Monthly APTC amount does not exceed the Monthly Total Premium amount
-					validateMonthlyAPTC(financialInfo, financialValidationErrors);
-					break;
-					
-				case "R010":
-					//FR-FM-PP-SBMI-247: R009	Validate that the Total Premium amount is equal to the sum of MTIRA + MAPTC + MOP1 + MOP2
-					validateMonthlyTPA(financialInfo, financialValidationErrors);
-					break;
-					
-				case "R012":
-					//FR-FM-PP-SBMI-250: R012	Validate that the Variant ID is 01 when Monthly CSR amount is not provided
-					validateCSRMissing(financialInfo, financialValidationErrors);
-					break;
-					
-				case "R011":
-					//FR-FM-PP-SBMI-251: R011	Validate that the Variant ID is 02-06 when Monthly CSR amount is provided
-					validateCSRVariant(financialInfo, financialValidationErrors);
-					break;
-					
-				case "R013":
-					//FR-FM-PP-SBMI-484: R013	Validate that the amount is equal to 0 if the Variant ID is 01 and the Monthly CSR amount is present
-					validateNonCSRVariant(financialInfo, financialValidationErrors);
-					break;
-					
-				case "R014":
-					//FR-FM-PP-SBMI-255: R014	Validate that the QHPID is valid for silver plan when CSR variant id is 04-06
-					validateSilverPlan(financialInfo.getCSRVariantId(), metalLevel, financialValidationErrors);
-					break;
-					
-				case "R068":
-					//FR-FM-PP-SBMI-546
-					validateMetalLevelForCsr0203(financialInfo.getCSRVariantId(), metalLevel, financialValidationErrors);
-					break;
-					
-				case "R015":
-					//FR-FM-PP-SBMI-259, 261, 262: R015	Validate the provided Monthly CSR amount matches the system calculated Monthly CSR Amount
-					calculateCsr(financialInfo, metalLevel, planYear, financialValidationErrors);
-					break;
-					
-				case "R067":	
-					//FR-FM-PP-SBMI-265 Validate rating area
-					validateRatingArea(financialInfo, financialValidationErrors);
-					break;
-					
-				default:
-					break;
-				
 				}
+					
+				
 			});
+			
 		});		
 	}
 
@@ -1106,7 +1052,7 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 		if(!finStartDt.isEqual(policyStartDt)) {
 			
 			//create Error ER-035: incorrect value provided
-			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO("FinancialEffectiveStartDate",
+			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO(FIN_EFFECT_DATE,
 					SBMErrorWarningCode.ER_035.getCode(),
 					ERROR_DESC_INCORRECT_VALUE.concat(finStartDt.toString()), 
 					ERROR_INFO_EXPECTED_VALUE_TXT.concat("Must be equal to the PolicyStartDate " + policyStartDt.toString())));
@@ -1124,7 +1070,7 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 
 		if(finStartDt.isAfter(policyStartDt.plusMonths(1).with(TemporalAdjusters.lastDayOfMonth()))) {
 			//create Error ER-058: incorrect value provided
-			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO("FinancialEffectiveStartDate",
+			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO(FIN_EFFECT_DATE,
 					SBMErrorWarningCode.ER_058.getCode(),
 					ERROR_DESC_INCORRECT_VALUE.concat(finStartDt.toString()), 
 					ERROR_INFO_EXPECTED_VALUE_TXT.concat("No more than one month of PolicyStartDate " + policyStartDt.toString())));
@@ -1142,12 +1088,12 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 
 		if(finStartDt.isBefore(policyStartDt)) {
 			//create Error ER-059: incorrect value provided
-			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO("FinancialEffectiveStartDate",
+			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO(FIN_EFFECT_DATE,
 					SBMErrorWarningCode.ER_059.getCode(),
 					ERROR_DESC_INCORRECT_VALUE.concat(finStartDt.toString()), 
 					ERROR_INFO_EXPECTED_VALUE_TXT.concat("Must be equal to or no more than one month of PolicyStartDate " + policyStartDt.toString())));
 			
-			LOG.info("Earliest FinancialEffectiveStartDate less than PolicyStartDate {}, {} ", 
+			LOG.info("Earliest "+FIN_EFFECT_DATE+" less than PolicyStartDate {}, {} ", 
 					finStartDt, policyStartDt);
 		}
 	}
@@ -1180,7 +1126,7 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 		if(finStartDt.isAfter(policyEndDt)) {
 			
 			//create Error ER-037: incorrect value provided
-			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO("FinancialEffectiveStartDate",
+			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO(FIN_EFFECT_DATE,
 					SBMErrorWarningCode.ER_037.getCode(),
 					ERROR_DESC_INCORRECT_VALUE, 
 					ERROR_INFO_EXPECTED_VALUE_TXT.concat("Must be less than or equal to the PolicyEndDate " + policyEndDt.toString())));
@@ -1245,10 +1191,10 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 		if(financialInfo.getMonthlyCSRAmount() == null && !SbmDataUtil.isNonCsrVariant(financialInfo.getCSRVariantId())) {
 			
 			//create Error ER-040: MonthlyCSRAmount must be provided
-			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO("MonthlyCSRAmount",
-					SBMErrorWarningCode.ER_040.getCode(), "MonthlyCSRAmount must be provided"));
+			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO(MNTH_CSR_AMT,
+					SBMErrorWarningCode.ER_040.getCode(), MNTH_CSR_AMT+" must be provided"));
 			
-			LOG.info("MonthlyCSRAmount Missing");
+			LOG.info(MNTH_CSR_AMT+" Missing");
 		}
 	}
 	
@@ -1263,10 +1209,10 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 				&& !SbmDataUtil.isCsrVariant(financialInfo.getCSRVariantId())) {
 			
 			//create Error ER-041: MonthlyCSRAmount Not Expected
-			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO("MonthlyCSRAmount",
-					SBMErrorWarningCode.ER_041.getCode(), "MonthlyCSRAmount should not be provided"));
+			financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO(MNTH_CSR_AMT,
+					SBMErrorWarningCode.ER_041.getCode(), MNTH_CSR_AMT+" should not be provided"));
 			
-			LOG.info("MonthlyCSRAmount Not Expected");
+			LOG.info(MNTH_CSR_AMT+" Not Expected");
 		}
 	}
 	
@@ -1280,10 +1226,10 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 			
 			if(financialInfo.getMonthlyCSRAmount().compareTo(BigDecimal.ZERO) == 0) {
 				//create Warning WR-006: MonthlyCSRAmount sent as 0 for 01 variant
-				financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO("MonthlyCSRAmount",
+				financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO(MNTH_CSR_AMT,
 						SBMErrorWarningCode.WR_006.getCode()));
 				
-				LOG.info("MonthlyCSRAmount sent as 0 for 01 variant");
+				LOG.info(MNTH_CSR_AMT+" sent as 0 for 01 variant");
 			}
 		}
 	}
@@ -1365,10 +1311,10 @@ public class SbmFinancialValidatorImpl implements SbmFinancialValidator {
 				financialInfo.setMonthlyCSRAmount(calculatedCsr);
 				
 				//create Warning WR-007: MonthlyCSRAmount corrected by CMS
-				financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO("MonthlyCSRAmount",
+				financialValidationErrors.add(SbmValidationUtil.createErrorWarningLogDTO(MNTH_CSR_AMT,
 						SBMErrorWarningCode.WR_007.getCode(), "System calculated Monthly CSRAmount: " + calculatedCsr));
 				
-				LOG.info("MonthlyCSRAmount corrected by CMS");
+				LOG.info(MNTH_CSR_AMT+" corrected by CMS");
 			}
 		}
 	}

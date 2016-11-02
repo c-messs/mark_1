@@ -42,50 +42,10 @@ public class SBMFileStatusHandler {
 		LocalDate today = LocalDate.now();
 		LocalDateTime fileLastModifiedDateTime = fileProcDto.getSbmFileInfo().getFileLastModifiedDateTime();
 		LocalDateTime freezeStartDateTime =  LocalDate.now().withDayOfMonth(freezePeriodStartDay).atStartOfDay();
-		
-		//check is in freeze period
-		if((freezePeriodStartDay <= today.getDayOfMonth()) && (today.getDayOfMonth() <= freezePeriodEndDay)) {
-			//If a file is received before freeze period then that file should be processed regardless of freeze period
-			if(fileLastModifiedDateTime == null || freezeStartDateTime.isBefore(fileLastModifiedDateTime)) {
-				fileProcDto.setSbmFileStatusType(SBMFileStatus.FREEZE); 
-				LOG.info("fileId:{}, status set to FREEZE", fileInfoType.getFileId());
-				return;
-			}
+		if(!validateFileStatus(today,fileLastModifiedDateTime,freezeStartDateTime,fileProcDto,fileInfoType)){
+			return;
 		}
 		
-		//check if all files in fileset received
-		if(fileInfoType.getIssuerFileInformation() != null && fileInfoType.getIssuerFileInformation().getIssuerFileSet() != null
-				&& fileInfoType.getIssuerFileInformation().getIssuerFileSet().getTotalIssuerFiles() > 1) {
-			
-			//set default status
-			fileProcDto.setSbmFileStatusType(SBMFileStatus.PENDING_FILES); 
-						
-			if(fileProcDto.getFileProcSummaryFromDB() != null) {
-				// check if all file received		
-				int totalFiles = fileInfoType.getIssuerFileInformation().getIssuerFileSet().getTotalIssuerFiles();
-				int count = totalFiles - 1; //decrease by one for the current file
-
-				for(SBMFileInfo fileInfo: fileProcDto.getFileProcSummaryFromDB().getSbmFileInfoList()) { 
-					if( ! fileInfo.isRejectedInd()) {							
-						count = count - 1;
-					}
-				}
-				
-				if(count == 0) {
-					//All files received					
-					LOG.info("All files received for SbmFileProcSumId:{}", fileProcDto.getFileProcSummaryFromDB().getSbmFileProcSumId());
-				}
-				else {
-					//create warning 
-					LOG.info("All files in fileset not received; SbmFileProcSumId {} : {} files not received.", fileProcDto.getFileProcSummaryFromDB().getSbmFileProcSumId(), count);
-					return;
-				}
-			}
-			else {
-				LOG.info("fileId:{}, status set to PENDING_FILES", fileInfoType.getFileId());
-				return;
-			}
-		}
 		
 		//check if there are pre-existing SBMI file in Accepted or InProcess status for the SBM state
 		List<SBMSummaryAndFileInfoDTO> currentlyProcessing = fileCompositeDao.getAllInProcessOrPendingApprovalForState(getStateCd(fileInfoType));
@@ -100,6 +60,66 @@ public class SBMFileStatusHandler {
 		fileProcDto.setSbmFileStatusType(SBMFileStatus.IN_PROCESS); 
 	}
 	
+	private boolean validateFileStatus(LocalDate today, LocalDateTime fileLastModifiedDateTime,
+			LocalDateTime freezeStartDateTime, SBMFileProcessingDTO fileProcDto, FileInformationType fileInfoType) {
+		//check is in freeze period
+				if((freezePeriodStartDay <= today.getDayOfMonth()) && (today.getDayOfMonth() <= freezePeriodEndDay)) {
+					//If a file is received before freeze period then that file should be processed regardless of freeze period
+					if(fileLastModifiedDateTime == null || freezeStartDateTime.isBefore(fileLastModifiedDateTime)) {
+						fileProcDto.setSbmFileStatusType(SBMFileStatus.FREEZE); 
+						LOG.info("fileId:{}, status set to FREEZE", fileInfoType.getFileId());
+						return false;
+					}
+				}
+				
+				//check if all files in fileset received
+				
+				if(fileInfoType.getIssuerFileInformation() != null && fileInfoType.getIssuerFileInformation().getIssuerFileSet() != null
+						&& fileInfoType.getIssuerFileInformation().getIssuerFileSet().getTotalIssuerFiles() > 1) {
+					return restOfcheck(fileProcDto,fileInfoType);
+					//set default status
+					
+				}
+		return true;
+	}
+
+	private boolean restOfcheck(SBMFileProcessingDTO fileProcDto, FileInformationType fileInfoType) {
+		fileProcDto.setSbmFileStatusType(SBMFileStatus.PENDING_FILES); 
+		
+		if(fileProcDto.getFileProcSummaryFromDB() != null) {
+			// check if all file received
+			return fileInfoCondition(fileInfoType,fileProcDto);
+			
+		}
+		else {
+			LOG.info("fileId:{}, status set to PENDING_FILES", fileInfoType.getFileId());
+			
+		}
+		return false;
+	}
+
+	private boolean fileInfoCondition(FileInformationType fileInfoType, SBMFileProcessingDTO fileProcDto) {
+		int totalFiles = fileInfoType.getIssuerFileInformation().getIssuerFileSet().getTotalIssuerFiles();
+		int count = totalFiles - 1; //decrease by one for the current file
+
+		for(SBMFileInfo fileInfo: fileProcDto.getFileProcSummaryFromDB().getSbmFileInfoList()) { 
+			if( ! fileInfo.isRejectedInd()) {							
+				count = count - 1;
+			}
+		}
+		
+		if(count == 0) {
+			//All files received					
+			LOG.info("All files received for SbmFileProcSumId:{}", fileProcDto.getFileProcSummaryFromDB().getSbmFileProcSumId());
+		}
+		else {
+			//create warning 
+			LOG.info("All files in fileset not received; SbmFileProcSumId {} : {} files not received.", fileProcDto.getFileProcSummaryFromDB().getSbmFileProcSumId(), count);
+			return false;
+		}
+		return true;
+	}
+
 	/**
 	 * @param freezePeriodStartDay the freezePeriodStartDay to set
 	 */

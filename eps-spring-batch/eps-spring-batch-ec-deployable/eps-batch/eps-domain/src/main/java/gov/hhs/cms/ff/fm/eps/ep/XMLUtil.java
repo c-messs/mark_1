@@ -46,26 +46,10 @@ public class XMLUtil {
 						isFileInfoEndTag = true;
 						break;
 					}				
-					if ("GroupSenderID".equals(xmlr.getLocalName())) {
-						fileInformationType.setGroupSenderID(tagContent);
+					if(localNameFound(tagContent,xmlr,fileInformationType)){
 						break;
 					}
-					if ("GroupReceiverID".equals(xmlr.getLocalName())) {
-						fileInformationType.setGroupReceiverID(tagContent);
-						break;
-					}
-					if ("GroupControlNumber".equals(xmlr.getLocalName())) {
-						fileInformationType.setGroupControlNumber(tagContent);
-						break;
-					}				
-					if ("VersionNumber".equals(xmlr.getLocalName())) {
-						fileInformationType.setVersionNumber(tagContent);
-						break;
-					}
-					break;
-				default:
-					// Need to put code for default case
-					break;
+					
 				}
 			}			
 			
@@ -75,6 +59,28 @@ public class XMLUtil {
 			}
 		}
 		return fileInformationType;
+	}
+
+	private static boolean localNameFound(String tagContent, XMLStreamReader xmlr,
+			FileInformationType fileInformationType) {
+		if ("GroupSenderID".equals(xmlr.getLocalName())) {
+			fileInformationType.setGroupSenderID(tagContent);
+			return true;
+		}
+		if ("GroupReceiverID".equals(xmlr.getLocalName())) {
+			fileInformationType.setGroupReceiverID(tagContent);
+			return true;
+		}
+		if ("GroupControlNumber".equals(xmlr.getLocalName())) {
+			fileInformationType.setGroupControlNumber(tagContent);
+			return true;
+		}				
+		if ("VersionNumber".equals(xmlr.getLocalName())) {
+			fileInformationType.setVersionNumber(tagContent);
+			return true;
+		}
+	
+		return false;
 	}
 
 }

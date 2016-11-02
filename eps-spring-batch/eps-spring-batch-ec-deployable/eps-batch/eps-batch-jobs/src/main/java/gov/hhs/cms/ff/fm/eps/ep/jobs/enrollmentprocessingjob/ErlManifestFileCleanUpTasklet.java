@@ -71,6 +71,13 @@ public class ErlManifestFileCleanUpTasklet implements Tasklet {
 		}
 		
 		//Delete the empty extract directory
+		deleteEmptyPth(chunkContext);
+		
+		LOG.debug("EXIT execute()");
+		return RepeatStatus.FINISHED;
+	}
+
+	private void deleteEmptyPth(ChunkContext chunkContext) throws IOException {
 		File extractFilesPath = (File)chunkContext.getStepContext()
 				.getJobExecutionContext().get(ERL_EXTRACT_FILE_PATH);
 		try {
@@ -82,8 +89,6 @@ public class ErlManifestFileCleanUpTasklet implements Tasklet {
 			throw e;
 		}		
 		
-		LOG.debug("EXIT execute()");
-		return RepeatStatus.FINISHED;
 	}
 
 	/**

@@ -96,16 +96,8 @@ public class SbmXprServiceImpl implements SbmXprService {
 
 			// PVID, if exists, from policyMatch.
 			Long epsPvId = policyDTO.getPolicyVersionId();
-
-			// Retrieve "latest" SBM policy and members.
-			if (epsPvId != null) {
-
-				epsPvPO = (SbmPolicyVersionPO) sbmPolicyVersionDao.getPolicyVersionById(epsPvId, stateCd);
-				epsPremiumList = premiumDao.selectPolicyPremiumList(epsPvId);
-				epsStatusList =  statusDao.getPolicyStatusListAsSbm(epsPvId);
-				epsPMVList = pmvDao.getPolicyMemberVersions(stateCd, epsPvId);
-				epsDateList = dateDao.getPolicyMemberDate(epsPvId);			
-			}
+            updateSelectRoutine(epsPvId,epsPvPO,epsPremiumList,epsPMVList,epsDateList,epsStatusList,stateCd); 
+			
 
 			inboundPvPO = policyVersionMapper.mapSbmToStaging(policyDTO, epsPvPO);
 			inboundPremiumList = premiumMapper.mapSbmToStaging(policyDTO.getSbmPremiums(), epsPremiumList);
@@ -168,10 +160,8 @@ public class SbmXprServiceImpl implements SbmXprService {
 						inboundPMList.add(createPolicyMemberPO(pvId, pmvId, stateCd));
 
 						setPolicyMemberVersionIdForAllMemberPOs(genMemPOList, pmvId);
-
-						if (memberDateList != null) {
-							inboundDateList.addAll(memberDateList);
-						}
+                        performAddToInboundList(memberDateList,inboundDateList);
+						
 
 					} else {
 
@@ -199,6 +189,28 @@ public class SbmXprServiceImpl implements SbmXprService {
 			// Save SbmTransMsg (and errors) since there were errors.
 			sbmTransMsgCompositeDao.saveSbmTransMsg(policyDTO);
 		}
+	}
+
+	private void performAddToInboundList(List<SbmPolicyMemberDatePO> memberDateList,
+			List<SbmPolicyMemberDatePO> inboundDateList) {
+		if (memberDateList != null) {
+			inboundDateList.addAll(memberDateList);
+		}
+		
+	}
+
+	private void updateSelectRoutine(Long epsPvId, SbmPolicyVersionPO epsPvPO, List<SbmPolicyPremiumPO> epsPremiumList,
+			List<SbmPolicyMemberVersionPO> epsPMVList, List<SbmPolicyMemberDatePO> epsDateList, List<SbmPolicyStatusPO> epsStatusList, String stateCd) {
+		// Retrieve "latest" SBM policy and members.
+			if (epsPvId != null) {
+
+						epsPvPO = (SbmPolicyVersionPO) sbmPolicyVersionDao.getPolicyVersionById(epsPvId, stateCd);
+						epsPremiumList = premiumDao.selectPolicyPremiumList(epsPvId);
+						epsStatusList =  statusDao.getPolicyStatusListAsSbm(epsPvId);
+						epsPMVList = pmvDao.getPolicyMemberVersions(stateCd, epsPvId);
+						epsDateList = dateDao.getPolicyMemberDate(epsPvId);			
+			}
+		
 	}
 
 	@Override

@@ -39,6 +39,8 @@ import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmBusinessValidatorImpl.class);
+
+	private static final String MEMBER_START_DATE = "MemberStartDate";
 	
 	private SBMDataService sbmDataService;
 	private List<String> sbmBusinessRules;
@@ -318,16 +320,9 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 	private List<SbmErrWarningLogDTO> validateMemberLevelFieldLength(PolicyMemberType member) {
 		
 		List<SbmErrWarningLogDTO> fieldLengthWarnings = new ArrayList<SbmErrWarningLogDTO>();
-		
+		performUpdateMember( member,fieldLengthWarnings);
 		//FR-FM-PP-SBMI-214: R048 - Issuer Assigned Member Id database character length truncation warning
-		if(sbmBusinessRules.contains("R048")) {
-			
-			String truncatedIssuerMemberId = SbmValidationUtil.truncateField(
-					"IssuerAssignedMemberId", member.getIssuerAssignedMemberId(), 50, fieldLengthWarnings);
-			if(truncatedIssuerMemberId != null) {
-				member.setIssuerAssignedMemberId(truncatedIssuerMemberId);
-			}
-		}
+		
 		
 		//FR-FM-PP-SBMI-215: R049 - Name Prefix database character length truncation warning
 		if(sbmBusinessRules.contains("R049")) {
@@ -372,6 +367,17 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 		return fieldLengthWarnings;
 	}
 	
+	private void performUpdateMember(PolicyMemberType member, List<SbmErrWarningLogDTO> fieldLengthWarnings) {
+        if(sbmBusinessRules.contains("R048")) {
+			
+			String truncatedIssuerMemberId = SbmValidationUtil.truncateField(
+					"IssuerAssignedMemberId", member.getIssuerAssignedMemberId(), 50, fieldLengthWarnings);
+			if(truncatedIssuerMemberId != null) {
+				member.setIssuerAssignedMemberId(truncatedIssuerMemberId);
+			}
+		}
+	}
+
 	/*
 	 * FR-FM-PP-SBMI-220
 	 */
@@ -597,15 +603,11 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 		
 		if(CollectionUtils.isEmpty(memberDates)) {
 			
-			//memberDates.forEach(memberDate -> { 
-				//if(memberDate.getMemberStartDate() == null) {
 					
 					//FR-FM-PP-SBMI-229, FR-FM-PP-SBMI-230, FR-FM-PP-SBMI-231
 					validateMemberStartDateMissing(member, memberDatesErrors);
 					
-				//} else {
-				//}
-			//});
+			
 		} else {
 			memberDates.forEach(memberDate -> { 
 				
@@ -618,45 +620,16 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 						
 						//create error ER-031: incorrect value provided
 						memberDatesErrors.add(SbmValidationUtil.createMemberErrorWarningLogDTO(
-								"MemberStartDate", SBMErrorWarningCode.ER_031.getCode(), exchangeMemberId, 
+								MEMBER_START_DATE, SBMErrorWarningCode.ER_031.getCode(), exchangeMemberId, 
 								ERROR_DESC_INCORRECT_VALUE, ERROR_INFO_EXPECTED_VALUE_TXT
 									.concat("Greater than or equal to the PolicyStartDate ").concat(String.valueOf(policyStartDate))));
 						
 						LOG.info("Member Start less than Policy Start");
 					}
 				}
+				rule069andr063routine(memberStartDate,memberDatesErrors,policyEndDate,exchangeMemberId,memberDate,effectuationInd,
+						exchangeMemberId);
 				
-				//FR-FM-PP-SBMI-543,544 : R069 - Member Start Date to Policy End Date validation
-				if(sbmBusinessRules.contains("R069")) {
-					
-					if(memberStartDate.isAfter(policyEndDate)) {
-						
-						//create error ER-64: incorrect value provided
-						memberDatesErrors.add(SbmValidationUtil.createMemberErrorWarningLogDTO(
-								"MemberStartDate", SBMErrorWarningCode.ER_064.getCode(), exchangeMemberId, 
-								ERROR_DESC_INCORRECT_VALUE, ERROR_INFO_EXPECTED_VALUE_TXT
-									.concat("Less than or equal to the PolicyEndDate ").concat(String.valueOf(policyEndDate))));
-						
-						LOG.info("Member Start greater than Policy End");
-					}
-				}
-				
-				LocalDate memberEndDate = DateTimeUtil.getLocalDateFromXmlGC(memberDate.getMemberEndDate());
-				
-				//FR-FM-PP-SBMI-235 : R063 - Member End Date to Policy End Date validation
-				if(sbmBusinessRules.contains("R063")) {
-					
-					if(memberEndDate != null && (memberEndDate.isAfter(policyEndDate) && effectuationInd.equalsIgnoreCase(Y))) {
-						
-						//create error ER-032: incorrect value provided
-						memberDatesErrors.add(SbmValidationUtil.createMemberErrorWarningLogDTO(
-								"MemberEndDate", SBMErrorWarningCode.ER_032.getCode(), exchangeMemberId,
-								ERROR_DESC_INCORRECT_VALUE, ERROR_INFO_EXPECTED_VALUE_TXT
-									.concat("Less than or equal to the PolicyEndDate ").concat(String.valueOf(policyEndDate))));
-						
-						LOG.info("Member End exceeds Policy End");
-					}
-				}
 			});
 			
 			if(memberDates.size() > 1) {
@@ -677,6 +650,42 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 		return memberDatesErrors;
 	}
 
+	private void rule069andr063routine(LocalDate memberStartDate, List<SbmErrWarningLogDTO> memberDatesErrors,
+			LocalDate policyEndDate, String exchangeMemberId, MemberDates memberDate, String effectuationInd, String exchangeMemberId2) {
+		//FR-FM-PP-SBMI-543,544 : R069 - Member Start Date to Policy End Date validation
+		if(sbmBusinessRules.contains("R069")) {
+			
+			if(memberStartDate.isAfter(policyEndDate)) {
+				
+				//create error ER-64: incorrect value provided
+				memberDatesErrors.add(SbmValidationUtil.createMemberErrorWarningLogDTO(
+						MEMBER_START_DATE, SBMErrorWarningCode.ER_064.getCode(), exchangeMemberId, 
+						ERROR_DESC_INCORRECT_VALUE, ERROR_INFO_EXPECTED_VALUE_TXT
+							.concat("Less than or equal to the PolicyEndDate ").concat(String.valueOf(policyEndDate))));
+				
+				LOG.info("Member Start greater than Policy End");
+			}
+		}
+		
+		LocalDate memberEndDate = DateTimeUtil.getLocalDateFromXmlGC(memberDate.getMemberEndDate());
+		
+		//FR-FM-PP-SBMI-235 : R063 - Member End Date to Policy End Date validation
+		if(sbmBusinessRules.contains("R063")) {
+			
+			if(memberEndDate != null && (memberEndDate.isAfter(policyEndDate) && effectuationInd.equalsIgnoreCase(Y))) {
+				
+				//create error ER-032: incorrect value provided
+				memberDatesErrors.add(SbmValidationUtil.createMemberErrorWarningLogDTO(
+						"MemberEndDate", SBMErrorWarningCode.ER_032.getCode(), exchangeMemberId,
+						ERROR_DESC_INCORRECT_VALUE, ERROR_INFO_EXPECTED_VALUE_TXT
+							.concat("Less than or equal to the PolicyEndDate ").concat(String.valueOf(policyEndDate))));
+				
+				LOG.info("Member End exceeds Policy End");
+			}
+		}
+		
+	}
+
 	/*
 	 * Member Start Date Missing Validations
 	 */
@@ -694,9 +703,9 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 			if(sbmBusinessRules.contains("R060")) {
 				//create error ER-028: incorrect value provided
 				mamberDatesErrors.add(SbmValidationUtil.createMemberErrorWarningLogDTO(
-						"MemberStartDate", SBMErrorWarningCode.ER_028.getCode(), exchangeMemberId));
+						MEMBER_START_DATE, SBMErrorWarningCode.ER_028.getCode(), exchangeMemberId));
 				
-				LOG.info("MemberStartDate Missing for non-subscriber ");
+				LOG.info(MEMBER_START_DATE+" Missing for non-subscriber ");
 			}
 			
 		} else if(subscriberInd.equalsIgnoreCase(Y)) {
@@ -708,9 +717,9 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 				if(sbmBusinessRules.contains("R061")) {	
 					//create error ER-028: incorrect value provided
 					mamberDatesErrors.add(SbmValidationUtil.createMemberErrorWarningLogDTO(
-							"MemberStartDate", SBMErrorWarningCode.ER_028.getCode(), exchangeMemberId));
+							MEMBER_START_DATE, SBMErrorWarningCode.ER_028.getCode(), exchangeMemberId));
 					
-					LOG.info("MemberStartDate Missing for subscriber when nonCoveredSubscriberInd doesnt exist");
+					LOG.info(MEMBER_START_DATE+" Missing for subscriber when nonCoveredSubscriberInd doesnt exist");
 				}
 			
 			} else {
@@ -721,9 +730,9 @@ public class SbmBusinessValidatorImpl implements SbmBusinessValidator {
 						
 						//create error ER-028: incorrect value provided
 						mamberDatesErrors.add(SbmValidationUtil.createMemberErrorWarningLogDTO(
-								"MemberStartDate", SBMErrorWarningCode.ER_028.getCode(), exchangeMemberId));
+								MEMBER_START_DATE, SBMErrorWarningCode.ER_028.getCode(), exchangeMemberId));
 						
-						LOG.info("MemberStartDate Missing for subscriber when nonCoveredSubscriberInd != Y");
+						LOG.info(MEMBER_START_DATE+" Missing for subscriber when nonCoveredSubscriberInd != Y");
 					}
 				}
 			}

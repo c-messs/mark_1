@@ -60,7 +60,7 @@ public class SBMResponseGenerator {
 	private EFTDispatchDriver eftDispatcher;
 	private String environmentCodeSuffix;
 	private SbmUpdateStatusDataService updateStatusDataService;
-	
+	private SBMResponseGenHandler responseGenHandler;
 	/**
 	 * Constructor.
 	 */
@@ -75,7 +75,7 @@ public class SBMResponseGenerator {
 			sbmsMarshaller = JAXBContext.newInstance(SBMS.class).createMarshaller();
 			 // format the XML output
 			sbmsMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-			
+			responseGenHandler = new SBMResponseGenHandler();
 		} catch (JAXBException e) {
 			LOG.error("JAXB error.", e);
 			throw new EnvironmentException("JAXB error.", e);
@@ -110,7 +110,7 @@ public class SBMResponseGenerator {
 			// percentRejected exceeded threshold so reject file/fileset 			
 			fileStatus = SBMFileStatus.REJECTED;
 			//create fileError ER-057
-			generateErrorThresholdExceeded(sbmrDto);  
+			responseGenHandler.generateErrorThresholdExceeded(sbmrDto,fileCompositeDao);  
 		}
 		else if(sbmrDto.isXprErrorsExist()) {
 			fileStatus = SBMFileStatus.ACCEPTED_WITH_ERRORS;
@@ -140,13 +140,12 @@ public class SBMResponseGenerator {
 		}
 		
 		LOG.info("Setting file status sbmFileProcSumId:{} FileStatus:{}", sbmFileProcSumId, fileStatus);		
-		setFileSatus(sbmrDto, fileStatus);
+		responseGenHandler.setFileSatus(sbmrDto, fileStatus);
 		fileCompositeDao.updateFileStatus(sbmFileProcSumId, fileStatus, jobId);
 		
 		String sbmrXMLString = marshallSBMR(sbmrDto.getSbmr());
-		//TODO perform schema check on generated xml
 		String filename = EFTDispatchDriver.getFileID(SBMConstants.FUNCTION_CODE_SBMR);
-		Long physicalDocId = eftDispatcher.saveDispatchContent(sbmrXMLString.getBytes(), filename, SBMConstants.FUNCTION_CODE_SBMR, environmentCodeSuffix, tradingPartnerId, 0, null, TARGET_EFT_APPLICATION_TYPE); 
+		Long physicalDocId = eftDispatcher.saveDispatchContent(sbmrXMLString.getBytes(), filename, SBMConstants.FUNCTION_CODE_SBMR, environmentCodeSuffix, tradingPartnerId, 0, null); 
 		LOG.info("SBMR PhysicalDocumentId: {} for sbmFileProcSumId: {}", physicalDocId, sbmFileProcSumId);	
 		
 		//create entries in SBMResponse	table		
@@ -178,13 +177,13 @@ public class SBMResponseGenerator {
 		}
 		
 		LOG.info("Setting file status sbmFileProcSumId:{} FileStatus:{}", sbmFileProcSumId, fileStatus);		
-		setFileSatus(sbmrDto, fileStatus);
+		responseGenHandler.setFileSatus(sbmrDto, fileStatus);
 		fileCompositeDao.updateFileStatus(sbmFileProcSumId, fileStatus, jobId);
 		
 		String sbmrXMLString = marshallSBMR(sbmrDto.getSbmr());
 		
 		String filename = EFTDispatchDriver.getFileID(SBMConstants.FUNCTION_CODE_SBMR);
-		Long physicalDocId = eftDispatcher.saveDispatchContent(sbmrXMLString.getBytes(), filename, SBMConstants.FUNCTION_CODE_SBMR, environmentCodeSuffix, tradingPartnerId, 0, null, TARGET_EFT_APPLICATION_TYPE); 
+		Long physicalDocId = eftDispatcher.saveDispatchContent(sbmrXMLString.getBytes(), filename, SBMConstants.FUNCTION_CODE_SBMR, environmentCodeSuffix, tradingPartnerId, 0, null); 
 		LOG.info("SBMR PhysicalDocumentId: {} for sbmFileProcSumId: {}", physicalDocId, sbmFileProcSumId);	
 		
 		//create entries in SBMResponse	table		
@@ -202,11 +201,11 @@ public class SBMResponseGenerator {
 
 		LOG.info("Genrating SBMS for sbmFileInfoId:{}", fileProcDto.getSbmFileInfo().getSbmFileInfoId());
 
-		String sbmsXML = createSbmsXml(fileProcDto.getSbmFileInfo(), fileProcDto.getErrorList(), fileProcDto.getSbmFileStatusType());
+		String sbmsXML = responseGenHandler.createSbmsXml(fileProcDto.getSbmFileInfo(), fileProcDto.getErrorList(), fileProcDto.getSbmFileStatusType());
 
 		//dispatch sbms to eft
 		String filename = EFTDispatchDriver.getFileID(SBMConstants.FUNCTION_CODE_SBMS);
-		Long physicalDocId = eftDispatcher.saveDispatchContent(sbmsXML.getBytes(), filename, SBMConstants.FUNCTION_CODE_SBMS, environmentCodeSuffix, fileProcDto.getSbmFileInfo().getTradingPartnerId(), 0, null, TARGET_EFT_APPLICATION_TYPE);
+		Long physicalDocId = eftDispatcher.saveDispatchContent(sbmsXML.getBytes(), filename, SBMConstants.FUNCTION_CODE_SBMS, environmentCodeSuffix, fileProcDto.getSbmFileInfo().getTradingPartnerId(), 0, null);
 		LOG.info("SBMS PhysicalDocumentId: {} for sbmFileInfoId: {}", physicalDocId, fileProcDto.getSbmFileInfo().getSbmFileInfoId());	
 
 		//create entries in SBMResponse	table		
@@ -234,55 +233,18 @@ public class SBMResponseGenerator {
 						
 			LOG.info("Genrating SBMS for sbmFileInfoId:{}", fileInfo.getSbmFileInfoId());
 
-			String sbmsXML = createSbmsXml(fileInfo, errorList, summaryDto.getSbmFileStatusType());
+			String sbmsXML = responseGenHandler.createSbmsXml(fileInfo, errorList, summaryDto.getSbmFileStatusType());
 
 			//dispatch sbms to eft
 			String filename = EFTDispatchDriver.getFileID(SBMConstants.FUNCTION_CODE_SBMS);
-			Long physicalDocId = eftDispatcher.saveDispatchContent(sbmsXML.getBytes(), filename, SBMConstants.FUNCTION_CODE_SBMS, environmentCodeSuffix, fileInfo.getTradingPartnerId(), 0, null, TARGET_EFT_APPLICATION_TYPE);
+			Long physicalDocId = eftDispatcher.saveDispatchContent(sbmsXML.getBytes(), filename, SBMConstants.FUNCTION_CODE_SBMS, environmentCodeSuffix, fileInfo.getTradingPartnerId(), 0, null);
 			LOG.info("SBMS PhysicalDocumentId: {} for sbmFileInfoId: {}", physicalDocId, fileInfo.getSbmFileInfoId());	
 
 			//create entries in SBMResponse	table
 			sbmResponseDao.createSBMResponseRecord(summaryDto.getSbmFileProcSumId(), fileInfo.getSbmFileInfoId(), physicalDocId, STATUS);
 		}
 	}
-	
-	private String createSbmsXml(SBMFileInfo sbmFileInfo, List<SBMErrorDTO> errorList, SBMFileStatus fileStatus) throws JAXBException  {
 		
-		SBMS sbms = new SBMS();
-		sbms.setFileName(sbmFileInfo.getSbmFileNm());
-		
-		if(EXPIRED.equals(fileStatus)) {
-			fileStatus = REJECTED;  // SBMR/SBMS schema does not have EXPIERED status so map it to REJECTED status
-		}
-		
-		sbms.setStatus(fileStatus.getName()); 
-		
-		if(CollectionUtils.isNotEmpty(errorList)) {
-			
-			for(SBMErrorDTO error: errorList) {
-
-				gov.cms.dsh.sbms.ErrorType errorType = new gov.cms.dsh.sbms.ErrorType();
-				errorType.setErrorCode(error.getSbmErrorWarningTypeCd());
-				errorType.setElementInError(error.getElementInErrorNm());
-				errorType.setErrorDescription(SBMCache.getErrorDescription(error.getSbmErrorWarningTypeCd()));
-				
-				if(CollectionUtils.isNotEmpty(error.getAdditionalErrorInfoList())) {
-					
-					for(String additionalInfo: error.getAdditionalErrorInfoList()) {
-						errorType.getAdditionalErrorInfo().add(additionalInfo);
-					}
-				}
-				sbms.getError().add(errorType);
-			}
-		}
-		
-		StringWriter writer = new StringWriter();	
-		sbmsMarshaller.marshal(sbms, writer);
-		LOG.debug("SBMS:\n{}", writer.toString());
-		
-		return writer.toString();
-	}
-	
 	private BigDecimal getPercentRejected(SbmResponseDTO sbmrDto) {
 		
 		BigDecimal totalRecordsProcessed = sbmrDto.getTotalRecordsProcessed();
@@ -297,12 +259,6 @@ public class SBMResponseGenerator {
 		return totalRecordsRejected.multiply(new BigDecimal(100)).divide(totalRecordsProcessed, 2, RoundingMode.HALF_UP);
 	}
 	
-	private void setFileSatus(SbmResponseDTO sbmrDto, SBMFileStatus fileStatus) {
-		
-		for( FileInformationType fileInfo: sbmrDto.getSbmr().getSBMIFileInfo()) {
-			fileInfo.setFileProcessingStatus(fileStatus.getName());
-		}
-	}
 	
 	private String marshallSBMR(FileAcceptanceRejection far) throws JAXBException {
 		
@@ -314,36 +270,6 @@ public class SBMResponseGenerator {
 		return writer.toString();
 	}
 	
-	private void generateErrorThresholdExceeded(SbmResponseDTO sbmrDto) {
-		
-		List<SBMErrorDTO> errorList = new ArrayList<>();
-		String issuerFileSetId = sbmrDto.getSbmSummaryAndFileInfo().getIssuerFileSetId();
-		for(SBMFileInfo fileInfo : sbmrDto.getSbmSummaryAndFileInfo().getSbmFileInfoList()) {
-			
-			if(fileInfo.isRejectedInd()) {
-				//Skip rejected files
-				continue;
-			}
-			
-			SBMErrorDTO error = SbmHelper.createErrorLog(null, SBMErrorWarningCode.ER_057.getCode());
-			error.setAdditionalErrorInfoText(issuerFileSetId != null ? issuerFileSetId : fileInfo.getSbmFileId());
-			error.setSbmFileInfoId(fileInfo.getSbmFileInfoId());			
-			errorList.add(error);
-		}
-		//Save error to database
-		fileCompositeDao.saveSBMFileErrors(errorList);
-		
-		FileAcceptanceRejection sbmr = sbmrDto.getSbmr();
-		String errorText = SBMCache.getErrorDescription(SBMErrorWarningCode.ER_057.getCode());
-		for( FileInformationType sbmrFileInfo: sbmr.getSBMIFileInfo()) {
-			ErrorType error = new ErrorType();
-			error.setErrorCode(SBMErrorWarningCode.ER_057.getCode());
-			error.setErrorDescription(errorText);
-			sbmrFileInfo.setFileError(error);			
-		}
-		
-	}
-
 	/**
 	 * @param fileCompositeDao the fileCompositeDao to set
 	 */

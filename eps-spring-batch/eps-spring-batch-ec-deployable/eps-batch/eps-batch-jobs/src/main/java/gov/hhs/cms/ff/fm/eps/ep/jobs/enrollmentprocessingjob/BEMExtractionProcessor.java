@@ -7,6 +7,7 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.ExchangeType;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
 
@@ -18,6 +19,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.apache.commons.io.IOUtils;
@@ -39,7 +41,7 @@ public class BEMExtractionProcessor implements ItemProcessor<BenefitEnrollmentRe
 
 	private Marshaller marshaller;
 	private JAXBIntrospector introspector;
-
+    private boolean isFileInfoEndTag = false;
 	String filePath;
 	String fileInfoXml;
 	String berXML;
@@ -93,7 +95,6 @@ public class BEMExtractionProcessor implements ItemProcessor<BenefitEnrollmentRe
 		FileInputStream fis = new FileInputStream(filePath+file);
 		String tagContent = null;
 		XMLStreamReader xmlr=null;
-		boolean isFileInfoEndTag = false;
 		try {
 			xmlr = xmlif.createXMLStreamReader(fis);
 
@@ -110,69 +111,81 @@ public class BEMExtractionProcessor implements ItemProcessor<BenefitEnrollmentRe
 						isFileInfoEndTag = true;
 						break;
 					}
-					if ("GroupSenderID".equals(xmlr.getLocalName())) {
-						fileInformationType.setGroupSenderID(tagContent);
-						break;
-					}
-					if ("GroupReceiverID".equals(xmlr.getLocalName())) {
-						fileInformationType.setGroupReceiverID(tagContent);
-						break;
-					}
-					if ("GroupControlNumber".equals(xmlr.getLocalName())) {
-						fileInformationType.setGroupControlNumber(tagContent);
-						break;
-					}
-					if ("GroupTimeStamp".equals(xmlr.getLocalName())) {
-						fileInformationType.setGroupTimeStamp(DateTimeUtil.getXMLGregorianCalendar(tagContent));
-						break;
-					}					
-					if ("VersionNumber".equals(xmlr.getLocalName())) {
-						fileInformationType.setVersionNumber(tagContent);
-						break;
-					}
+					fillInFileInfo(fileInformationType,tagContent,xmlr);
 					break;
-				default:
-					;
 				}
 			}
-
-			StringWriter fileInfoStr = new StringWriter();
-
-			if (introspector.getElementName(fileInformationType) == null) {
-				JAXBElement<FileInformationType> jaxbElement = 
-						new JAXBElement<FileInformationType>(new QName("FileInformation"), FileInformationType.class, fileInformationType);
-				marshaller.marshal(jaxbElement, fileInfoStr);
-			} else {
-				marshaller.marshal(fileInformationType, fileInfoStr);
-			}
-			fileInfoXml = fileInfoStr.toString();
-
-			berDTO.setFileInformation(fileInformationType);
-			berDTO.setFileInfoXml(fileInfoXml);
-            berDTO.setBerXml(berXML);
-			berDTO.setSubscriberStateCd(setStateCode(berDTO));
-
-			qhpId = fileInformationType.getGroupSenderID();
-			berDTO.setPlanId(qhpId);
-			LOG.debug("qhpId: "+qhpId);
-
-			if(StringUtils.isNotBlank(source) && source.equalsIgnoreCase(EPSConstants.JOBPARAMETER_SOURCE_FFM)) {
-				exchangeType = ExchangeType.FFM.getValue();
-				berDTO.setExchangeTypeCd(exchangeType);
-			} 
-			
+			return  performUpdateBenefit(berDTO,fileInformationType); 
 		} finally {
-			if(fisxml != null) {
-				fisxml.close();
-			}
-			if(fis != null) {
-				fis.close();
-			}
-			if(xmlr != null) {
-				xmlr.close();
-			}
+			performCloseResource(fisxml,fis,xmlr);
+			
 		}
+	}
+
+	private void performCloseResource(FileInputStream fisxml, FileInputStream fis, XMLStreamReader xmlr)
+			throws IOException,XMLStreamException{
+		if(fisxml != null) {
+			fisxml.close();
+		}
+		if(fis != null) {
+			fis.close();
+		}
+		if(xmlr != null) {
+			xmlr.close();
+		}
+		
+	}
+
+	private BenefitEnrollmentRequestDTO performUpdateBenefit(
+			BenefitEnrollmentRequestDTO berDTO, FileInformationType fileInformationType) throws JAXBException{
+		StringWriter fileInfoStr = new StringWriter();
+        
+		if (introspector.getElementName(fileInformationType) == null) {
+			JAXBElement<FileInformationType> jaxbElement = 
+					new JAXBElement<FileInformationType>(new QName("FileInformation"), FileInformationType.class, fileInformationType);
+			marshaller.marshal(jaxbElement, fileInfoStr);
+		} else {
+			marshaller.marshal(fileInformationType, fileInfoStr);
+		}
+		fileInfoXml = fileInfoStr.toString();
+
+		berDTO.setFileInformation(fileInformationType);
+		berDTO.setFileInfoXml(fileInfoXml);
+        berDTO.setBerXml(berXML);
+		berDTO.setSubscriberStateCd(setStateCode(berDTO));
+
+		qhpId = fileInformationType.getGroupSenderID();
+		berDTO.setPlanId(qhpId);
+		LOG.debug("qhpId: "+qhpId);
+
+		if(StringUtils.isNotBlank(source) && source.equalsIgnoreCase(EPSConstants.JOBPARAMETER_SOURCE_FFM)) {
+			exchangeType = ExchangeType.FFM.getValue();
+			berDTO.setExchangeTypeCd(exchangeType);
+		} 
 		return berDTO;
+	
+	}
+
+	private void fillInFileInfo(FileInformationType fileInformationType, String tagContent, XMLStreamReader xmlr) {
+		if ("GroupSenderID".equals(xmlr.getLocalName())) {
+			fileInformationType.setGroupSenderID(tagContent);
+		}	
+		else if ("GroupReceiverID".equals(xmlr.getLocalName())) {
+			fileInformationType.setGroupReceiverID(tagContent);
+			
+		}
+		else if ("GroupControlNumber".equals(xmlr.getLocalName())) {
+			fileInformationType.setGroupControlNumber(tagContent);
+			
+		}
+		else if ("GroupTimeStamp".equals(xmlr.getLocalName())) {
+			fileInformationType.setGroupTimeStamp(DateTimeUtil.getXMLGregorianCalendar(tagContent));
+			
+		}					
+		else if ("VersionNumber".equals(xmlr.getLocalName())) {
+			fileInformationType.setVersionNumber(tagContent);
+		}
+		
 	}
 
 	/*

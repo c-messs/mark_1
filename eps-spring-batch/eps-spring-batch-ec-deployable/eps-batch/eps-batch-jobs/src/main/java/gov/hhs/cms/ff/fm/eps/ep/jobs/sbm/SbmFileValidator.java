@@ -92,7 +92,7 @@ public class SbmFileValidator {
 		
 		LocalDate today = LocalDate.now();
 		if(coverageYearFromFile == (today.getYear() + 1)) {
-			if( (today.getMonthValue() != 11) || (today.getMonthValue() != 12) ) {
+			if( (today.getMonthValue() != 11) && (today.getMonthValue() != 12) ) {
 				dto.getErrorList().add(createErrorLog(COVERAGE_YEAR.getElementNm(), ER_017.getCode(), ""+coverageYearFromFile));
 			}
 		}

@@ -79,28 +79,9 @@ public class ErlManifestFileReader implements ItemReader<BatchRunControl> {
 		if(manifestFile != null && !isManifestRead) {	
 			
 			manifestDataMap.clear();
-			
-			try {
-				for (String line : FileUtils.readLines(manifestFile)) {
-					LOG.info("line: " + line);
-					String[] manifestEntry = line.split(SEPARATOR_CHAR);
-					manifestDataMap.put(manifestEntry[0].toUpperCase(Locale.ENGLISH), manifestEntry[1].trim());
-				}
-			} catch (IOException e) {
-				LOG.warn("EPROD-01: Service Access Failure. Unable to read manifest file " 
-						+ manifestFile.getCanonicalPath());
-				throw e;
-			}
-			
-			if (!(manifestDataMap.containsKey(EPSConstants.JOB_STATUS) && manifestDataMap
-					.get(EPSConstants.JOB_STATUS).equalsIgnoreCase(EPSConstants.JOB_STATUS_SUCCESS))) {
-				
-				LOG.info("EPROD-99: Ending ERL File Ingest Job Due to Incomplete Manifest file");
-				
-				jobExecutionContext.getExecutionContext().putString(CONTINUE_INGEST, N);
+			if(notHasKey(manifestFile)){
 				return null;
 			}
-			
 			manifestInfo = new BatchRunControl();
 			manifestInfo.setBatchRunControlId(manifestDataMap.get(EPSConstants.JOB_ID));
 			
@@ -134,6 +115,30 @@ public class ErlManifestFileReader implements ItemReader<BatchRunControl> {
 		return manifestInfo;
 	}
 	
+	private boolean notHasKey(File manifestFile) throws IOException {
+		try {
+			for (String line : FileUtils.readLines(manifestFile)) {
+				LOG.info("line: " + line);
+				String[] manifestEntry = line.split(SEPARATOR_CHAR);
+				manifestDataMap.put(manifestEntry[0].toUpperCase(Locale.ENGLISH), manifestEntry[1].trim());
+			}
+		} catch (IOException e) {
+			LOG.warn("EPROD-01: Service Access Failure. Unable to read manifest file " 
+					+ manifestFile.getCanonicalPath());
+			throw e;
+		}
+		
+		if (!(manifestDataMap.containsKey(EPSConstants.JOB_STATUS) && manifestDataMap
+				.get(EPSConstants.JOB_STATUS).equalsIgnoreCase(EPSConstants.JOB_STATUS_SUCCESS))) {
+			
+			LOG.info("EPROD-99: Ending ERL File Ingest Job Due to Incomplete Manifest file");
+			
+			jobExecutionContext.getExecutionContext().putString(CONTINUE_INGEST, N);
+			return true;
+		}
+		return false;
+	}
+
 	/*
 	 * Get Pre-Audit Ingest status
 	 */

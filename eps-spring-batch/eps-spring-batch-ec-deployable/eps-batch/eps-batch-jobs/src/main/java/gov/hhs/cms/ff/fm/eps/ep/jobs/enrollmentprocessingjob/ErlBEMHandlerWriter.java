@@ -12,6 +12,7 @@ import gov.hhs.cms.ff.fm.eps.ep.services.PolicyDataService;
 import gov.hhs.cms.ff.fm.eps.ep.services.TransMsgCompositeDAO;
 import gov.hhs.cms.ff.fm.eps.ep.validation.EPSValidationService;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import org.apache.commons.beanutils.BeanUtils;
@@ -59,55 +60,61 @@ public class ErlBEMHandlerWriter implements ItemWriter<BenefitEnrollmentMaintena
 				//Process the Bem by passing it to validator
 				bemProcessorHelper.setEpsValidationService(epsValidationService);
 				bemProcessorHelper.process(benefitEnrollment);
+				updateTxnMsg(benefitEnrollment);
 				
-				if (benefitEnrollment.isIgnore()) {
-					LOG.warn(EProdEnum.EPROD_35.getLogMsg() + ". Ignoring Policy. " + benefitEnrollment.getBemLogInfo());
-					txnMsgService.updateBatchTransMsg(benefitEnrollment, ProcessedToDbInd.I, EProdEnum.EPROD_35);
-					
-				} else if (benefitEnrollment.isVersionSkippedInPast()) {
-					LOG.debug("ERL Policy version found in 'Skipped' status in an earlier processing. Setting status to Reprocess");
-
-					//Set existing records status to 'D'
-					txnMsgService.updateSkippedVersion(benefitEnrollment, ProcessedToDbInd.D);
-					//Set inbound policy status to 'R'
-					txnMsgService.updateBatchTransMsg(benefitEnrollment, ProcessedToDbInd.R);
-					//Set later versions status to 'R'
-					txnMsgService.updateLaterVersions(benefitEnrollment, ProcessedToDbInd.R);
-					
-				} else {
-					// invoke Data Service API to save BEM
-					List <ErrorWarningLogDTO> errorList = benefitEnrollment.getErrorList();
-					
-					if(benefitEnrollment.getBatchId().longValue() != jobId.longValue()) { 
-						txnMsgService.updateBatchTransMsg(benefitEnrollment, ProcessedToDbInd.D);
-						//Cloning the item to accommodate Spring retry upon failure so that item retains the old batch id upon a retry
-						benefitEnrollment = (BenefitEnrollmentMaintenanceDTO) BeanUtils.cloneBean(benefitEnrollment);
-						benefitEnrollment.setBatchId(jobId);
-					}
-					
-					if(CollectionUtils.isEmpty(errorList)) {
-						LOG.info("Saving Policy. " + benefitEnrollment.getBemLogInfo());
-						policyDataService.saveBEM(benefitEnrollment);
-						txnMsgService.updateBatchTransMsg(benefitEnrollment, ProcessedToDbInd.Y);
-						
-					} else {
-						LOG.info("Saving Validation errors. "+ benefitEnrollment.getBemLogInfo());
-						txnMsgService.updateBatchTransMsg(benefitEnrollment, ProcessedToDbInd.N);
-	
-						// If this bem is being reprocessed from a previous failed job, update the BatchIds in the errorList.  Method updateProcessedToDbIndicator
-						// will insert a new BatchTrangMsg record relating this transMsgId to this batchId.
-						if (errorList.get(0).getBatchId() != null && !errorList.get(0).getBatchId().equals(jobId)) {
-							for (ErrorWarningLogDTO error : errorList) {
-								error.setBatchId(benefitEnrollment.getBatchId());
-							}
-						}
-						errorWarningLogService.saveErrorWarningLogs(errorList);
-					}
-				}
 			}
 		}
 	}
 	
+	private void updateTxnMsg(BenefitEnrollmentMaintenanceDTO benefitEnrollment) 
+			throws NoSuchMethodException,InvocationTargetException,InstantiationException,IllegalAccessException{
+		if (benefitEnrollment.isIgnore()) {
+			LOG.warn(EProdEnum.EPROD_35.getLogMsg() + ". Ignoring Policy. " + benefitEnrollment.getBemLogInfo());
+			txnMsgService.updateBatchTransMsg(benefitEnrollment, ProcessedToDbInd.I, EProdEnum.EPROD_35);
+			
+		} else if (benefitEnrollment.isVersionSkippedInPast()) {
+			LOG.debug("ERL Policy version found in 'Skipped' status in an earlier processing. Setting status to Reprocess");
+
+			//Set existing records status to 'D'
+			txnMsgService.updateSkippedVersion(benefitEnrollment, ProcessedToDbInd.D);
+			//Set inbound policy status to 'R'
+			txnMsgService.updateBatchTransMsg(benefitEnrollment, ProcessedToDbInd.R);
+			//Set later versions status to 'R'
+			txnMsgService.updateLaterVersions(benefitEnrollment, ProcessedToDbInd.R);
+			
+		} else {
+			// invoke Data Service API to save BEM
+			List <ErrorWarningLogDTO> errorList = benefitEnrollment.getErrorList();
+			
+			if(benefitEnrollment.getBatchId().longValue() != jobId.longValue()) { 
+				txnMsgService.updateBatchTransMsg(benefitEnrollment, ProcessedToDbInd.D);
+				//Cloning the item to accommodate Spring retry upon failure so that item retains the old batch id upon a retry
+				benefitEnrollment = (BenefitEnrollmentMaintenanceDTO) BeanUtils.cloneBean(benefitEnrollment);
+				benefitEnrollment.setBatchId(jobId);
+			}
+			
+			if(CollectionUtils.isEmpty(errorList)) {
+				LOG.info("Saving Policy. " + benefitEnrollment.getBemLogInfo());
+				policyDataService.saveBEM(benefitEnrollment);
+				txnMsgService.updateBatchTransMsg(benefitEnrollment, ProcessedToDbInd.Y);
+				
+			} else {
+				LOG.info("Saving Validation errors. "+ benefitEnrollment.getBemLogInfo());
+				txnMsgService.updateBatchTransMsg(benefitEnrollment, ProcessedToDbInd.N);
+
+				// If this bem is being reprocessed from a previous failed job, update the BatchIds in the errorList.  Method updateProcessedToDbIndicator
+				// will insert a new BatchTrangMsg record relating this transMsgId to this batchId.
+				if (errorList.get(0).getBatchId() != null && !errorList.get(0).getBatchId().equals(jobId)) {
+					for (ErrorWarningLogDTO error : errorList) {
+						error.setBatchId(benefitEnrollment.getBatchId());
+					}
+				}
+				errorWarningLogService.saveErrorWarningLogs(errorList);
+			}
+		}
+		
+	}
+
 	/**
 	 * @param epsValidationService the epsValidationService to set
 	 */

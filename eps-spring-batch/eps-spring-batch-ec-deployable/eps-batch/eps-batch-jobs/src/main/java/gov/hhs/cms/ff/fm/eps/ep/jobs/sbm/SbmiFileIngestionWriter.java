@@ -1,11 +1,12 @@
 package gov.hhs.cms.ff.fm.eps.ep.jobs.sbm;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
+import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
@@ -33,34 +34,18 @@ public class SbmiFileIngestionWriter {
 	 * The write method to update data
 	 * 
 	 * @param dto
+	 * @throws IOException 
+	 * @throws SQLException 
+	 * @throws JAXBException 
 	 * @throws Exception
 	 */
-	public void write(SBMFileProcessingDTO dto) throws Exception {
+	public void write(SBMFileProcessingDTO dto) throws IOException, JAXBException, SQLException  {
 
 		if(dto == null) {
 			return;
 		}
-
-		if(dto.getFileProcSummaryFromDB() == null) {
-			// write SBMFileProcessingSummary 
-			LOG.info("Creating SbmFileProcessingSummary");
-			Long sbmFileProcSumId = fileCompositeDao.saveSbmFileProcessingSummary(dto);
-			dto.setSbmFileProcSumId(sbmFileProcSumId);
-			dto.getSbmFileInfo().setSbmFileProcessingSummaryId(sbmFileProcSumId);
-		}
-		else {
-			//set summaryId from the one found in DB
-			dto.getSbmFileInfo().setSbmFileProcessingSummaryId(dto.getFileProcSummaryFromDB().getSbmFileProcSumId());
-			dto.setSbmFileProcSumId(dto.getFileProcSummaryFromDB().getSbmFileProcSumId()); 
-			LOG.info("File associated to SbmFileProcSumId: {}", dto.getFileProcSummaryFromDB().getSbmFileProcSumId());
-			//update fileStatus only if file is not rejected and new status is set for the summary record
-			if( ! (dto.getSbmFileInfo().isRejectedInd() 
-					|| dto.getSbmFileStatusType().equals(dto.getFileProcSummaryFromDB().getSbmFileStatusType()))) {
-				fileCompositeDao.updateFileStatus(dto.getFileProcSummaryFromDB().getSbmFileProcSumId(), dto.getSbmFileStatusType(), dto.getBatchId());
-				LOG.info("SbmFileProcSumId: {}, status updated to {}", dto.getFileProcSummaryFromDB().getSbmFileProcSumId(), dto.getSbmFileStatusType().getValue());
-				dto.getFileProcSummaryFromDB().setSbmFileStatusType(dto.getSbmFileStatusType());
-			}
-		}
+        manipulateDto(dto);
+		
 		
 		//insert record into StagingSbmGroupLock for extract process only if the status is set to IN_PROCESS
 		if(SBMFileStatus.IN_PROCESS.equals(dto.getSbmFileStatusType())) {
@@ -75,11 +60,8 @@ public class SbmiFileIngestionWriter {
 
 		//save StagingSBMFile
 		if(dto.isValidXML()) {
-			
-			InputStream in = new FileInputStream(dto.getSbmiFile());
-			InputStreamReader reader=new InputStreamReader(in);  
-			dto.setSbmFileXMLStream(reader);
-			
+			String xmlString = FileUtils.readFileToString(dto.getSbmiFile());
+			dto.setSbmFileXML(xmlString);
 			LOG.info("Saving SBMI file to StagingSBMFile");
 			fileCompositeDao.saveFileToStagingSBMFile(dto);
 		}
@@ -115,6 +97,30 @@ public class SbmiFileIngestionWriter {
 			FileUtils.moveFile(dto.getSbmiFile(), destFile);
 		}
 
+	}
+
+	private void manipulateDto(SBMFileProcessingDTO dto) {
+		if(dto.getFileProcSummaryFromDB() == null) {
+			// write SBMFileProcessingSummary 
+			LOG.info("Creating SbmFileProcessingSummary");
+			Long sbmFileProcSumId = fileCompositeDao.saveSbmFileProcessingSummary(dto);
+			dto.setSbmFileProcSumId(sbmFileProcSumId);
+			dto.getSbmFileInfo().setSbmFileProcessingSummaryId(sbmFileProcSumId);
+		}
+		else {
+			//set summaryId from the one found in DB
+			dto.getSbmFileInfo().setSbmFileProcessingSummaryId(dto.getFileProcSummaryFromDB().getSbmFileProcSumId());
+			dto.setSbmFileProcSumId(dto.getFileProcSummaryFromDB().getSbmFileProcSumId()); 
+			LOG.info("File associated to SbmFileProcSumId: {}", dto.getFileProcSummaryFromDB().getSbmFileProcSumId());
+			//update fileStatus only if file is not rejected and new status is set for the summary record
+			if( ! (dto.getSbmFileInfo().isRejectedInd() 
+					|| dto.getSbmFileStatusType().equals(dto.getFileProcSummaryFromDB().getSbmFileStatusType()))) {
+				fileCompositeDao.updateFileStatus(dto.getFileProcSummaryFromDB().getSbmFileProcSumId(), dto.getSbmFileStatusType(), dto.getBatchId());
+				LOG.info("SbmFileProcSumId: {}, status updated to {}", dto.getFileProcSummaryFromDB().getSbmFileProcSumId(), dto.getSbmFileStatusType().getValue());
+				dto.getFileProcSummaryFromDB().setSbmFileStatusType(dto.getSbmFileStatusType());
+			}
+		}
+		
 	}
 
 	/**

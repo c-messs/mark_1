@@ -63,27 +63,8 @@ public class RapJobExecutionListener extends BaseJobExecutionListener {
 		}
 		
         LOGGER.info("job id: " + jobExecution.getJobId());
-		
-        try {
-        	// Check JOB Instance status .
-        	if (RapConstants.JOBPARAMETER_TYPE_RAPSTAGE.equalsIgnoreCase(type)) {            	
-            	 //Check JOB Instance status in case of RAP .
-                String batchBusinessId = checkJobInstanceForBatchProcess();
-                
-                if(StringUtils.isNotBlank(batchBusinessId)) {
-                 throw new ApplicationException(getErrorMsgForJobInstanceRunning(jobExecution, batchBusinessId));
-                }
-            }
-        	
-            //check if this job should not execute concurrently with other jobs
-            List<BatchProcessLog> jobsCurrenltyRunning = getJobsCurrentRunning();
-            if(!jobsCurrenltyRunning.isEmpty()) {            	
-           		throw new ApplicationException(getErrorMsgForRunningJobs(jobsCurrenltyRunning));            	  
-            }       		
-
-       } catch (SQLException e) {
-            throw new EnvironmentException(RapConstants.ERRORCODE_E9004+": "+"Job Instance check failed ", e);
-       }
+		checkJob(jobExecution);
+       
 	
     	//Get max policy from the batch process log from RAP Process records if it is a stage run.
 		if (RapConstants.JOBPARAMETER_TYPE_RAPSTAGE.equalsIgnoreCase(type)) { 
@@ -102,6 +83,30 @@ public class RapJobExecutionListener extends BaseJobExecutionListener {
 		loadReferenceData();
 	}
 	
+	private void checkJob(JobExecution jobExecution) {
+		 try {
+	        	// Check JOB Instance status .
+	        	if (RapConstants.JOBPARAMETER_TYPE_RAPSTAGE.equalsIgnoreCase(type)) {            	
+	            	 //Check JOB Instance status in case of RAP .
+	                String batchBusinessId = checkJobInstanceForBatchProcess();
+	                
+	                if(StringUtils.isNotBlank(batchBusinessId)) {
+	                 throw new ApplicationException(getErrorMsgForJobInstanceRunning(jobExecution, batchBusinessId));
+	                }
+	            }
+	        	
+	            //check if this job should not execute concurrently with other jobs
+	            List<BatchProcessLog> jobsCurrenltyRunning = getJobsCurrentRunning();
+	            if(!jobsCurrenltyRunning.isEmpty()) {            	
+	           		throw new ApplicationException(getErrorMsgForRunningJobs(jobsCurrenltyRunning));            	  
+	            }       		
+
+	       } catch (SQLException e) {
+	            throw new EnvironmentException(RapConstants.ERRORCODE_E9004+": "+"Job Instance check failed ", e);
+	       }
+		
+	}
+
 	/*
 	 * Load any static reference data that may be required
 	 */

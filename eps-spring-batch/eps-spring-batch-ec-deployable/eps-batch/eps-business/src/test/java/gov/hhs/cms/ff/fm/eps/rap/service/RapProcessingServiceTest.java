@@ -16,6 +16,7 @@ import gov.hhs.cms.ff.fm.eps.rap.domain.RapConstants;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDataDTO;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyDetailDTO;
 import gov.hhs.cms.ff.fm.eps.rap.dto.PolicyPaymentTransDTO;
+import gov.hhs.cms.ff.fm.eps.rap.service.impl.RapProcessServiceHandler;
 import gov.hhs.cms.ff.fm.eps.rap.service.impl.RapProcessingServiceImpl;
 import gov.hhs.cms.ff.fm.eps.rap.util.CodeDecodesHelper;
 import gov.hhs.cms.ff.fm.eps.rap.util.RapProcessingHelper;
@@ -59,11 +60,13 @@ public class RapProcessingServiceTest extends TestCase {
 
 	private RapDao mockRapDao;
 	private CodeDecodesHelper mockCodeDecodesHelper;
-
+	RapProcessServiceHandler rapHandler;
+	RapProcessServiceHandler mapRapHandler;
 	@Before
 	public void setup() throws Exception {
 		rapProcesssingServiceTest = new RapProcessingServiceImpl();
-
+		rapHandler = new RapProcessServiceHandler();
+		mapRapHandler = EasyMock.createMock(RapProcessServiceHandler.class);
 		mockRapDao = EasyMock.createMock(RapDao.class);
 		mockCodeDecodesHelper = EasyMock.createMock(CodeDecodesHelper.class);
 
@@ -2264,7 +2267,7 @@ public class RapProcessingServiceTest extends TestCase {
 		replay(mockCodeDecodesHelper);
 
 		try {
-			ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "getPaymentMonthERC");
+			ReflectionTestUtils.invokeMethod(rapHandler, "getPaymentMonthERC",mockCodeDecodesHelper);
 		} catch(ApplicationException appEx) {
 			assertTrue("ApplicationException thrown", true);
 		}
@@ -7249,9 +7252,11 @@ public class RapProcessingServiceTest extends TestCase {
 		payment.setMaintenanceStartDateTime(policyVersion.getMaintenanceStartDateTime());
 		payment.setPaymentCoverageStartDate(coverageDate);
 		pmtTransList.add(payment);
-
-		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAdjustmentForMatchingDates", pmtTransList, 
-				coverageDate, programType, policyVersion, payment, policyPremium, epsAmount, proratedAmount, null);
+        List<Object>tempHolder = new ArrayList<>(); 
+        tempHolder.add(pmtTransList);
+        tempHolder.add(coverageDate);
+        tempHolder.add(programType);
+		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAdjustmentForMatchingDates", tempHolder, policyVersion, payment, policyPremium, epsAmount, proratedAmount, null);
 
 		assertEquals("PolicyPaymentTransList Size", 2, pmtTransList.size());
 
@@ -7296,9 +7301,11 @@ public class RapProcessingServiceTest extends TestCase {
 		payment.setMaintenanceStartDateTime(policyVersion.getMaintenanceStartDateTime());
 		payment.setPaymentCoverageStartDate(coverageDate);
 		pmtTransList.add(payment);
-
-		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAdjustmentForMatchingDates", pmtTransList, 
-				coverageDate, programType, policyVersion, payment, policyPremium, epsAmount, proratedAmount, null);
+		List<Object>tempHolder = new ArrayList<>(); 
+        tempHolder.add(pmtTransList);
+        tempHolder.add(coverageDate);
+        tempHolder.add(programType); 
+		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAdjustmentForMatchingDates", tempHolder, policyVersion, payment, policyPremium, epsAmount, proratedAmount, null);
 
 		assertEquals("PolicyPaymentTransList Size", 2, pmtTransList.size());
 
@@ -7354,9 +7361,11 @@ public class RapProcessingServiceTest extends TestCase {
 		payment.setLastPaymentProcStatusTypeCd(STATUS_PENDING_CYCLE);
 
 		pmtTransList.add(payment);
-
-		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAdjustmentForMatchingDates", pmtTransList, 
-				coverageDate, programType, policyVersion, payment, policyPremium, epsAmount, proratedAmount, ProrationType.NON_PRORATING);
+		List<Object>tempHolder = new ArrayList<>(); 
+        tempHolder.add(pmtTransList);
+        tempHolder.add(coverageDate);
+        tempHolder.add(programType); 
+		ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createAdjustmentForMatchingDates", tempHolder, policyVersion, payment, policyPremium, epsAmount, proratedAmount, ProrationType.NON_PRORATING);
 
 		assertEquals("PolicyPaymentTransList Size", 3, pmtTransList.size());
 
@@ -7482,7 +7491,8 @@ public class RapProcessingServiceTest extends TestCase {
 		records.setEffectiveEndDate(new DateTime(2015, 6, 6, 0, 0));
 		records.setTotalPremiumAmount(new BigDecimal(150));
 		premiumRecs.add(records);
-
+		expect(mapRapHandler.isUserFeeRateExists(coverageDate, policy,mockRapDao)).andReturn(true);
+        replay(mapRapHandler);
 		List<PolicyPaymentTransDTO> actual = ReflectionTestUtils.invokeMethod(rapProcesssingServiceTest, "createRetros", coverageDate,
 				policy, premiumRecs, ProrationType.NON_PRORATING);
 
