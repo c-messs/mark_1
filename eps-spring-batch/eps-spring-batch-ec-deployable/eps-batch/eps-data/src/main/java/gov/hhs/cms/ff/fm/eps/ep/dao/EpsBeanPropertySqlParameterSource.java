@@ -46,17 +46,19 @@ public class EpsBeanPropertySqlParameterSource extends BeanPropertySqlParameterS
 	public Object getValue(String paramName) {
 		
 		Object result = super.getValue(paramName);
-
-		if (result != null && result instanceof LocalDate) {
+        if(result !=null){
+		  if (result instanceof LocalDate) {
 			return Date.valueOf((LocalDate) result);
-		} else if (result != null && result instanceof LocalDateTime) {
+		  }
+		  else if (result instanceof LocalDateTime) {
 			return Timestamp.valueOf((LocalDateTime) result);
-		} else if (paramName.equalsIgnoreCase("CREATEBY")) {
+			
+		  }
+        }
+		if (paramName.equalsIgnoreCase("CREATEBY")||paramName.equalsIgnoreCase("LASTMODIFIEDBY")) {
 			return userVO.getUserId();
-		} else if (paramName.equalsIgnoreCase("LASTMODIFIEDBY")) {
-			return userVO.getUserId();
-		} else {
-			return result;
 		}
+		return result;
+		
 	}
 }

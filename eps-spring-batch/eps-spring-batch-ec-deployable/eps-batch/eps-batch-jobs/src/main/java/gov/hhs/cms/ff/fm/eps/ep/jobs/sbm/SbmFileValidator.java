@@ -18,6 +18,7 @@ import static gov.hhs.cms.ff.fm.eps.ep.enums.SBMPolicyEnum.TOT_ISS_FILES;
 import static gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmHelper.createErrorLog;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -75,9 +76,12 @@ public class SbmFileValidator {
 		int coverageYear = dto.getFileInfoType().getCoverageYear();
 		
 		StateProrationConfiguration stateConfig = SBMCache.getStateProrationConfiguration(coverageYear, stateCd);
+		//MF
+		LocalDate today = LocalDate.now();
 		
-		if(stateConfig == null) {
+		if(stateConfig == null && today.getMonthValue() !=11 && today.getMonthValue()==12) {
 			dto.getErrorList().add(createErrorLog(null, ER_997.getCode()));
+			
 		}		
 	}
 	

@@ -34,6 +34,8 @@ public class SbmPolicyMemberVersionDaoImpl extends GenericEpsDao<SbmPolicyMember
 	
 	private final static Logger LOG = LoggerFactory.getLogger(SbmPolicyMemberVersionDaoImpl.class);
 
+	protected static final String FAILED_TO_CLOSE_PREPARE = "Failed to close prepared statement in SbmPolicyMemberVersionDaoImpl caused by: ";
+
 	private String selectPMVListSql;
 	private String selectPMVListPolicyMatchSql;
 	
@@ -146,7 +148,7 @@ public class SbmPolicyMemberVersionDaoImpl extends GenericEpsDao<SbmPolicyMember
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement in SbmPolicyMemberVersionDaoImpl caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}
@@ -181,7 +183,7 @@ public class SbmPolicyMemberVersionDaoImpl extends GenericEpsDao<SbmPolicyMember
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement in SbmPolicyMemberVersionDaoImpl caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}
@@ -216,7 +218,7 @@ public class SbmPolicyMemberVersionDaoImpl extends GenericEpsDao<SbmPolicyMember
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement in SbmPolicyMemberVersionDaoImpl caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}
@@ -251,7 +253,7 @@ public class SbmPolicyMemberVersionDaoImpl extends GenericEpsDao<SbmPolicyMember
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement in SbmPolicyMemberVersionDaoImpl caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}
@@ -285,7 +287,7 @@ public class SbmPolicyMemberVersionDaoImpl extends GenericEpsDao<SbmPolicyMember
 							ps.close();
 						}
 					} catch (SQLException e1) {
-						LOG.error("Failed to close prepared statement in SbmPolicyMemberVersionDaoImpl caused by: " + e.toString());
+						LOG.error(FAILED_TO_CLOSE_PREPARE + e.toString());
 					}
 					throw new ApplicationException(EProdEnum.EPROD_10.getCode(), e);
 				}

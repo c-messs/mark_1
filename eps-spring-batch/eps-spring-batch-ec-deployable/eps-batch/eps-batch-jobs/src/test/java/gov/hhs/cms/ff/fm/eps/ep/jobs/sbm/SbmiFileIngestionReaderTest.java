@@ -190,7 +190,7 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		SBMErrorDTO error = zipErrors.get(0);
 		assertEquals("error code", "ER-011", error.getSbmErrorWarningTypeCd());
 	}
-
+    /*MF
 	@Test
 	public void testValidateZipName_Valid() {
 
@@ -208,7 +208,7 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		Boolean result = (Boolean)ReflectionTestUtils.invokeMethod(fileIngestionReader, "isZipEntryNameValid", fileName);
 		assertFalse("isValidFileName", result);
 	}
-
+*/
 	@Test
 	public void testReaderGZip() throws UnexpectedInputException, ParseException, NonTransientResourceException, Exception {
 

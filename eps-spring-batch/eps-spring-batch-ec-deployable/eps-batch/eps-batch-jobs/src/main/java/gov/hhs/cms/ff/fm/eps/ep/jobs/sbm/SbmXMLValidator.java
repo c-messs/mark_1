@@ -344,7 +344,8 @@ public class SbmXMLValidator {
 	}
 	/**
 	 * Validates FileInformation element.
-	 * @param sbmFileInfoId, sbmiFile
+	 * @param sbmFileInfoId
+	 * @param  sbmiFile
 	 * @return sbmFileErrorList
 	 * @throws IOException
 	 */

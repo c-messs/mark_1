@@ -2,7 +2,9 @@ package gov.hhs.cms.ff.fm.eps.ep.jobs.sbm;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -16,9 +18,11 @@ import org.slf4j.LoggerFactory;
 import gov.cms.dsh.sbmi.FileInformationType;
 import gov.cms.dsh.sbmi.FileInformationType.IssuerFileInformation;
 import gov.cms.dsh.sbmi.FileInformationType.IssuerFileInformation.IssuerFileSet;
+import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMPolicyEnum;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMCache;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
@@ -40,14 +44,14 @@ public class SbmFileValidatorTest extends TestCase {
 
 	private SbmFileValidator sbmFileValidator;
 	private SBMFileCompositeDAO fileCompositeDao;
+	private StateProrationConfiguration mockStateConfig;
 	
-		
 	@Before
 	public void setUp() {
-		
+		//mockStateConfig=EasyMock.create(StateProrationConfiguration.class);
 		sbmFileValidator = new SbmFileValidator();
 		fileCompositeDao = Mockito.mock(SBMFileCompositeDAO.class);
-		
+		//sbmCache = Mockito.mock(SBMCache.class);
 		sbmFileValidator.setFileCompositeDao(fileCompositeDao);
 		sbmFileValidator.setCoverageYear(LocalDate.now().getYear());
 		
@@ -61,8 +65,8 @@ public class SbmFileValidatorTest extends TestCase {
 	 */
 	@Test
 	public void testCoveragYear_invalid() {
-		SBMFileProcessingDTO dto = createSBMFileProcessingDTO();
 		
+		SBMFileProcessingDTO dto = createSBMFileProcessingDTO();
 		dto.getFileInfoType().setCoverageYear(1900);		
 		sbmFileValidator.setCoverageYear(2016);
 		
