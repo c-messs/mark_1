@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>gov.hhs.cms.ffe.fm.corb-batch</groupId>
   <artifactId>eps-corb-batch-config</artifactId>
-  <version>26.0.114-SNAPSHOT</version>
+  <version>26.0.114</version>
   <packaging>pom</packaging>
   <distributionManagement>
     <repository>
@@ -51,6 +51,6 @@
   <scm>
     <connection>scm:git:${git.repo.url}</connection>
     <developerConnection>scm:git:${git.repo.url}</developerConnection>
-    <tag>eps-25.0.2</tag>
+    <tag>eps-26.0.114</tag>
   </scm>
 </project>
