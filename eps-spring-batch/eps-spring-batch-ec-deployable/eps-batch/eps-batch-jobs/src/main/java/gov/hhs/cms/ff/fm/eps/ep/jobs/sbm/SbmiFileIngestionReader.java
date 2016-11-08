@@ -5,11 +5,8 @@ package gov.hhs.cms.ff.fm.eps.ep.jobs.sbm;
 
 import static gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode.ER_012;
 import static gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode.ER_013;
-import static gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus.DISAPPROVED;
 import static gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus.REJECTED;
 import static gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.SbmHelper.createErrorLog;
-import static gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants.N;
-import static gov.hhs.cms.ff.fm.eps.ep.sbm.SbmDataUtil.getStateCd;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -38,16 +35,13 @@ import org.springframework.batch.item.ParseException;
 import org.springframework.batch.item.UnexpectedInputException;
 
 import gov.cms.dsh.sbmi.FileInformationType;
-import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
 import gov.hhs.cms.ff.fm.eps.ep.jobs.CommonUtil;
-import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMCache;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
-import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 
 /**
  * @author rajesh.talanki
@@ -63,13 +57,13 @@ public class SbmiFileIngestionReader  {
 	
 	private File eftFolder;
 	private File privateFolder;
-	private File processedFolder;
+	private File processedFolder; 
 	private File zipFilesFolder;
 	private SbmXMLValidator xmlValidator;
 	private SBMFileCompositeDAO fileCompositeDao;
 	private SbmFileValidator fileValidator;
 	private SBMFileStatusHandler fileSatusHandler;
-
+    private SBMXMLValidatorHandle sbmxmlValidatorHandle;
 	private DateTimeFormatter zipFormatter = DateTimeFormatter.ofPattern(SBMConstants.FILENAME_ZIP_PATTERN);
 	private DateTimeFormatter gzipFormatter = DateTimeFormatter.ofPattern(SBMConstants.FILENAME_GZIP_PATTERN);
 	private SbmiFileIngestionReaderHelp fileIngestionReaderHelp;
@@ -129,7 +123,13 @@ public class SbmiFileIngestionReader  {
 
 	private SBMFileProcessingDTO updateFileProcDto(SBMFileProcessingDTO fileProcDto, List<SBMErrorDTO> errorList,
 			SBMFileInfo fileInfo) throws  IOException,ParserConfigurationException,XMLStreamException,JAXBException{
-		if( ! xmlValidator.isValidXML(fileProcDto.getSbmiFile())) {			
+		if(sbmxmlValidatorHandle == null){
+			sbmxmlValidatorHandle = new SBMXMLValidatorHandle();
+		}
+		if(fileIngestionReaderHelp==null){
+			fileIngestionReaderHelp = new SbmiFileIngestionReaderHelp(); 
+		}
+		if( ! sbmxmlValidatorHandle.isValidXML(fileProcDto.getSbmiFile())) {			
 			//create error - invalid xml
 			errorList.add(createErrorLog(null, ER_013.getCode()));
 			fileProcDto.setSbmFileStatusType(REJECTED); 
@@ -154,12 +154,12 @@ public class SbmiFileIngestionReader  {
 		}
 
 		//No schema errors, unmarshall FileInformationType
-		FileInformationType sbmiFileInfoType = xmlValidator.unmarshallSBMIFileInfo(fileProcDto.getSbmiFile());
+		FileInformationType sbmiFileInfoType = sbmxmlValidatorHandle.unmarshallSBMIFileInfo(fileProcDto.getSbmiFile());
 		fileProcDto.setFileInfoType(sbmiFileInfoType);
 		//Marshall FileInformationType to xml string to save to SBMFileInfo table
-		fileProcDto.setFileInfoXML(xmlValidator.marshallFileInfo(sbmiFileInfoType));		
+		fileProcDto.setFileInfoXML(sbmxmlValidatorHandle.marshallFileInfo(sbmiFileInfoType));		
 
-		updateAttributes(fileProcDto);
+		fileIngestionReaderHelp.updateAttributes(fileProcDto);
 
 		//perform file meta data validations & perform file level validations
 		fileValidator.validate(fileProcDto);
@@ -182,6 +182,8 @@ public class SbmiFileIngestionReader  {
 		LOG.info("SummaryId:{}, status:{}, File rejectedInd: {}", fileProcDto.getSbmFileProcSumId(), fileProcDto.getSbmFileStatusType(), fileInfo.isRejectedInd());  
 		return fileProcDto;
 	}
+
+	
 
 	private SBMFileProcessingDTO getAFileToProcessFromEFT() throws IOException {
 
@@ -338,63 +340,6 @@ public class SbmiFileIngestionReader  {
 		return newFile;
 	}
 
-	private void updateAttributes(SBMFileProcessingDTO sbmFileProcDto) {
-
-		FileInformationType fileInfoType = sbmFileProcDto.getFileInfoType();
-		SBMFileInfo sbmFileInfo = sbmFileProcDto.getSbmFileInfo();
-
-		//SBMFileInfo
-		sbmFileInfo.setSbmFileCreateDateTime(DateTimeUtil.getLocalDateTimeFromXmlGC(fileInfoType.getFileCreateDateTime()));
-
-		if(fileInfoType.getIssuerFileInformation() != null && fileInfoType.getIssuerFileInformation().getIssuerFileSet() != null) {	
-			//set issuer file set related attributes			
-			sbmFileInfo.setSbmFileNum(fileInfoType.getIssuerFileInformation().getIssuerFileSet().getFileNumber());	
-			//check if IssuerFileSetId already exists in DB
-			LOG.info("Checking if IssuerFileSet: {}, TenantId: {} already exists in DB?", fileInfoType.getIssuerFileInformation().getIssuerFileSet().getIssuerFileSetId(), fileInfoType.getTenantId());
-			List<SBMSummaryAndFileInfoDTO> summaryDtoList = fileCompositeDao.getSBMFileProcessingSummary(fileInfoType.getIssuerFileInformation().getIssuerId(), fileInfoType.getIssuerFileInformation().getIssuerFileSet().getIssuerFileSetId(), fileInfoType.getTenantId()); 	
-			for(SBMSummaryAndFileInfoDTO summaryFromDB: summaryDtoList) {
-				if( ! (REJECTED.equals(summaryFromDB.getSbmFileStatusType()) || DISAPPROVED.equals(summaryFromDB.getSbmFileStatusType()))) {
-					sbmFileProcDto.setFileProcSummaryFromDB(summaryFromDB);
-					break;
-				}
-			}
-
-			LOG.info("Found in DB: {}", sbmFileProcDto.getFileProcSummaryFromDB());
-
-		}
-
-		//new entry of SBMFileProccessingSummary will be created in DB so populate all attributes
-		sbmFileProcDto.setCoverageYear(fileInfoType.getCoverageYear());
-		sbmFileProcDto.setTenantId(fileInfoType.getTenantId());		
-		sbmFileProcDto.setCmsApprovedInd(N);
-		sbmFileProcDto.setCmsApprovalRequiredInd("Y");
-		StateProrationConfiguration stateConfig = SBMCache.getStateProrationConfiguration(fileInfoType.getCoverageYear(), getStateCd(fileInfoType.getTenantId()));
-		LOG.info("StateProrationConfiguration found: {}", stateConfig);
-		updateSbmFileProcDto(stateConfig,sbmFileProcDto,fileInfoType);
-	}
-
-	private SBMFileProcessingDTO updateSbmFileProcDto(StateProrationConfiguration stateConfig, SBMFileProcessingDTO sbmFileProcDto, FileInformationType fileInfoType) {
-		if(stateConfig != null) { 
-			LOG.info("Setting attributes from StateProrationConfiguration");
-			if( ! stateConfig.isCmsApprovalRequiredInd()) {
-				sbmFileProcDto.setCmsApprovalRequiredInd("N");
-			}
-
-			sbmFileProcDto.setErrorThresholdPercent(stateConfig.getErrorThresholdPercent());
-		}
-
-		if(fileInfoType.getIssuerFileInformation() != null){
-			sbmFileProcDto.setIssuerId(fileInfoType.getIssuerFileInformation().getIssuerId());
-		}
-
-		if(fileInfoType.getIssuerFileInformation() != null && fileInfoType.getIssuerFileInformation().getIssuerFileSet() != null) {
-			//IssuerFileSetId doesn't exists in database so new entry of SBMFileProccessingSummary will be created
-			sbmFileProcDto.setIssuerFileSetId(fileInfoType.getIssuerFileInformation().getIssuerFileSet().getIssuerFileSetId());
-			sbmFileProcDto.setTotalIssuerFileCount(fileInfoType.getIssuerFileInformation().getIssuerFileSet().getTotalIssuerFiles());
-
-		}
-		return sbmFileProcDto;
-	}
 
 	/*
 	 * Process Compressed files - Winzip and Gzip are the only supported compression formats.
@@ -569,6 +514,13 @@ public class SbmiFileIngestionReader  {
 	 */
 	public void setProcessedFolder(File processedFolder) {
 		this.processedFolder = processedFolder;
+	}
+	
+	/**
+	 * @param sbmxmlValidatorHandle
+	 */
+	public void setSbmxmlValidatorHandle(SBMXMLValidatorHandle sbmxmlValidatorHandle) {
+		this.sbmxmlValidatorHandle = sbmxmlValidatorHandle;
 	}
 
 }

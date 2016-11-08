@@ -348,7 +348,6 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 	 */
 	@Test
 	public void test_isSBMIJobRunning() {
-		
 		boolean expected = false;
 		boolean actual = sbmFileCompositeDao.isSBMIJobRunning();
 		

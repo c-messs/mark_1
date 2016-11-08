@@ -56,7 +56,7 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 	private SBMFileCompositeDAO mockFileCompositeDao;
 	private SbmFileValidator mockFileValidator;
 	private SBMFileStatusHandler mockFileStatusHandler;
-	
+	private SBMXMLValidatorHandle mockSBMXMLValidatorHandle;
 	private final DateTimeFormatter DTF_FILE = DateTimeFormatter.ofPattern("'D'yyMMdd'.T'HHmmssSSS");
 	private final DateTimeFormatter DTF_ZIP = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
 	
@@ -74,13 +74,13 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		mockFileCompositeDao = EasyMock.createMock(SBMFileCompositeDAO.class);
 		mockFileValidator = EasyMock.createMock(SbmFileValidator.class);
 		mockFileStatusHandler = EasyMock.createMock(SBMFileStatusHandler.class);
-
+		mockSBMXMLValidatorHandle = EasyMock.createMock(SBMXMLValidatorHandle.class);
 
 		fileIngestionReader.setXmlValidator(mockXmlValidator);
 		fileIngestionReader.setFileCompositeDao(mockFileCompositeDao);
 		fileIngestionReader.setFileValidator(mockFileValidator);
 		fileIngestionReader.setFileSatusHandler(mockFileStatusHandler);
-
+		fileIngestionReader.setSbmxmlValidatorHandle(mockSBMXMLValidatorHandle);
 		eftFolder.mkdirs();		
 		privateFolder.mkdirs();
 		zipFolder.mkdirs();
@@ -108,12 +108,13 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		expect(mockFileCompositeDao.getFileStatus(EasyMock.anyString())).andReturn(new ArrayList<SBMSummaryAndFileInfoDTO>());
 		replay(mockFileCompositeDao);
 
-		expect(mockXmlValidator.isValidXML(EasyMock.anyObject(File.class))).andReturn(true);
+		expect(mockSBMXMLValidatorHandle.isValidXML(EasyMock.anyObject(File.class))).andReturn(true);
 		expect(mockXmlValidator.validateSchemaForFileInfo(EasyMock.anyLong(), EasyMock.anyObject(File.class))).andReturn(new ArrayList<SBMErrorDTO>());
-		expect(mockXmlValidator.unmarshallSBMIFileInfo(EasyMock.anyObject(File.class))).andReturn(new FileInformationType());
+		expect(mockSBMXMLValidatorHandle.unmarshallSBMIFileInfo(EasyMock.anyObject(File.class))).andReturn(new FileInformationType());
 		String expectedFileInfoXML = "<XML>FileInfo</XML>";
-		expect(mockXmlValidator.marshallFileInfo(EasyMock.anyObject(FileInformationType.class))).andReturn(expectedFileInfoXML);
+		expect(mockSBMXMLValidatorHandle.marshallFileInfo(EasyMock.anyObject(FileInformationType.class))).andReturn(expectedFileInfoXML);
 		replay(mockXmlValidator);
+		replay(mockSBMXMLValidatorHandle);
 		mockFileStatusHandler.determineAndSetFileStatus(EasyMock.anyObject(SBMFileProcessingDTO.class));
 
 		Long batchId = 2123L;
@@ -138,12 +139,13 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		expect(mockFileCompositeDao.getFileStatus(EasyMock.anyString())).andReturn(new ArrayList<SBMSummaryAndFileInfoDTO>());
 		replay(mockFileCompositeDao);
 
-		expect(mockXmlValidator.isValidXML(EasyMock.anyObject(File.class))).andReturn(true);
+		expect(mockSBMXMLValidatorHandle.isValidXML(EasyMock.anyObject(File.class))).andReturn(true);
 		expect(mockXmlValidator.validateSchemaForFileInfo(EasyMock.anyLong(), EasyMock.anyObject(File.class))).andReturn(new ArrayList<SBMErrorDTO>());
-		expect(mockXmlValidator.unmarshallSBMIFileInfo(EasyMock.anyObject(File.class))).andReturn(new FileInformationType());
+		expect(mockSBMXMLValidatorHandle.unmarshallSBMIFileInfo(EasyMock.anyObject(File.class))).andReturn(new FileInformationType());
 		String expectedFileInfoXML = "<XML>FileInfo</XML>";
-		expect(mockXmlValidator.marshallFileInfo(EasyMock.anyObject(FileInformationType.class))).andReturn(expectedFileInfoXML);
+		expect(mockSBMXMLValidatorHandle.marshallFileInfo(EasyMock.anyObject(FileInformationType.class))).andReturn(expectedFileInfoXML);
 		replay(mockXmlValidator);
+		replay(mockSBMXMLValidatorHandle);
 		mockFileStatusHandler.determineAndSetFileStatus(EasyMock.anyObject(SBMFileProcessingDTO.class));
 
 		Long batchId = 2124L;
@@ -222,12 +224,13 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		expect(mockFileCompositeDao.getFileStatus(EasyMock.anyString())).andReturn(new ArrayList<SBMSummaryAndFileInfoDTO>());
 		replay(mockFileCompositeDao);
 
-		expect(mockXmlValidator.isValidXML(EasyMock.anyObject(File.class))).andReturn(true);
+		expect(mockSBMXMLValidatorHandle.isValidXML(EasyMock.anyObject(File.class))).andReturn(true);
 		expect(mockXmlValidator.validateSchemaForFileInfo(EasyMock.anyLong(), EasyMock.anyObject(File.class))).andReturn(new ArrayList<SBMErrorDTO>());
-		expect(mockXmlValidator.unmarshallSBMIFileInfo(EasyMock.anyObject(File.class))).andReturn(new FileInformationType());
+		expect(mockSBMXMLValidatorHandle.unmarshallSBMIFileInfo(EasyMock.anyObject(File.class))).andReturn(new FileInformationType());
 		String expectedFileInfoXML = "<XML>FileInfo</XML>";
-		expect(mockXmlValidator.marshallFileInfo(EasyMock.anyObject(FileInformationType.class))).andReturn(expectedFileInfoXML);
+		expect(mockSBMXMLValidatorHandle.marshallFileInfo(EasyMock.anyObject(FileInformationType.class))).andReturn(expectedFileInfoXML);
 		replay(mockXmlValidator);
+		replay(mockSBMXMLValidatorHandle);
 		mockFileStatusHandler.determineAndSetFileStatus(EasyMock.anyObject(SBMFileProcessingDTO.class));
 
 		Long batchId = 2123L;
@@ -316,8 +319,8 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		replay(mockFileCompositeDao);
 		
 		// Set isValid to return false.
-		expect(mockXmlValidator.isValidXML(EasyMock.anyObject(File.class))).andReturn(false);
-		replay(mockXmlValidator);
+		expect(mockSBMXMLValidatorHandle.isValidXML(EasyMock.anyObject(File.class))).andReturn(false);
+		replay(mockSBMXMLValidatorHandle);
 
 		Long batchId = 2222L;
 		SBMFileProcessingDTO actualDTO = fileIngestionReader.read(batchId);
@@ -355,10 +358,10 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		expect(mockFileCompositeDao.getFileStatus(EasyMock.anyString())).andReturn(dtoList);
 		replay(mockFileCompositeDao);
 		
-		expect(mockXmlValidator.isValidXML(EasyMock.anyObject(File.class))).andReturn(true);
+		expect(mockSBMXMLValidatorHandle.isValidXML(EasyMock.anyObject(File.class))).andReturn(true);
 		expect(mockXmlValidator.validateSchemaForFileInfo(EasyMock.anyLong(), EasyMock.anyObject(File.class))).andReturn(schemaErrors);
 		replay(mockXmlValidator);
-
+        replay(mockSBMXMLValidatorHandle);
 		Long batchId = 2222L;
 		SBMFileProcessingDTO actualDTO = fileIngestionReader.read(batchId);
 

@@ -32,10 +32,11 @@ public class SbmXMLValidatorTest extends TestCase {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SbmXMLValidatorTest.class);
 	private SbmXMLValidator sbmXMLValidator;
-		
+	private SBMXMLValidatorHandle sbmxmlLValidatorHandle;	
 		
 	@Before
 	public void setUp() throws ParserConfigurationException, SAXException, IOException {
+		sbmxmlLValidatorHandle = new SBMXMLValidatorHandle();
 		sbmXMLValidator = new SbmXMLValidator();		
 		sbmXMLValidator.setXsdFilePath("/xsd/SBMPolicy.xsd");
 		LOG.info("XSD File: {}", sbmXMLValidator.getXsdFilePath());
@@ -342,7 +343,7 @@ public class SbmXMLValidatorTest extends TestCase {
 		LOG.info("xmlString:\n{}", xmlString);
 
 		List<SBMErrorDTO> errors = sbmXMLValidator.validateSchemaForFileInfo(123L, xmlFile);
-		Assert.assertTrue("XML should be valid", sbmXMLValidator.isValidXML(xmlFile));
+		Assert.assertTrue("XML should be valid", sbmxmlLValidatorHandle.isValidXML(xmlFile));
 		
 	}
 	
@@ -515,7 +516,7 @@ public class SbmXMLValidatorTest extends TestCase {
 		String xmlString = readFile(xmlFile);
 		LOG.info("xmlString:\n{}", xmlString);
 		 
-		FileInformationType fileInfo = sbmXMLValidator.unmarshallSBMIFileInfo(xmlFile);
+		FileInformationType fileInfo = sbmxmlLValidatorHandle.unmarshallSBMIFileInfo(xmlFile);
 		Assert.assertTrue("Unmarshall should return FileInformationType object", fileInfo != null);
 		LOG.info("FileInformationType: {}", fileInfo);
 	}
@@ -527,8 +528,8 @@ public class SbmXMLValidatorTest extends TestCase {
 		String xmlString = readFile(xmlFile);
 		LOG.info("xmlString:\n{}", xmlString);
 		 
-		FileInformationType fileInfo = sbmXMLValidator.unmarshallSBMIFileInfo(xmlFile);
-		String fileInfoString = sbmXMLValidator.marshallFileInfo(fileInfo);
+		FileInformationType fileInfo = sbmxmlLValidatorHandle.unmarshallSBMIFileInfo(xmlFile);
+		String fileInfoString = sbmxmlLValidatorHandle.marshallFileInfo(fileInfo);
 		
 		Assert.assertTrue("Unmarshall should return FileInformationType object", fileInfoString != null);
 		
@@ -575,7 +576,7 @@ public class SbmXMLValidatorTest extends TestCase {
 		String xmlString = readFile(xmlFile);
 		LOG.info("xmlString:\n{}", xmlString);
 
-		boolean errorExist = sbmXMLValidator.isValidXML(xmlFile);
+		boolean errorExist = sbmxmlLValidatorHandle.isValidXML(xmlFile);
 		LOG.info("errorExist: {}", errorExist);
 
 		Assert.assertFalse("One error should exists", errorExist);
@@ -588,7 +589,7 @@ public class SbmXMLValidatorTest extends TestCase {
 		String xmlString = readFile(xmlFile);
 		LOG.info("xmlString:\n{}", xmlString);
 
-		boolean errorExist = sbmXMLValidator.isValidXML(xmlFile);
+		boolean errorExist = sbmxmlLValidatorHandle.isValidXML(xmlFile);
 		LOG.info("errorExist: {}", errorExist);
 
 		Assert.assertFalse("One error should exists", errorExist);
