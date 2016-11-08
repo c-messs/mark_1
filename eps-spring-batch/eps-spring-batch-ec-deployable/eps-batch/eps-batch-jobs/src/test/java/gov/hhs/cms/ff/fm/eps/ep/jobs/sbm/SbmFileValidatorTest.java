@@ -110,7 +110,7 @@ public class SbmFileValidatorTest extends TestCase {
 		sbmFileValidator.validate(dto);
 		LOG.info("Errors:{}", dto.getErrorList());
 				
-		if(now.getMonthValue() == 11 || now.getMonthValue() == 12) {
+		if(!(now.getMonthValue() == 11) && !(now.getMonthValue() == 12)) {
 			Assert.assertTrue("Errors expected", dto.getErrorList().size() == 0);
 		}
 		else {		
