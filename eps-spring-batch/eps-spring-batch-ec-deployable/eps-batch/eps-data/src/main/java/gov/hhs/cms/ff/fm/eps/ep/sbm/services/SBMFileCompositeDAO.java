@@ -5,6 +5,7 @@ import java.util.Map;
 
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 
@@ -116,7 +117,7 @@ public interface SBMFileCompositeDAO {
 	 * @param sbmFileProcSumId
 	 * @return
 	 */
-	public List<SBMSummaryAndFileInfoDTO> getAllSBMFileInfos(Long sbmFileProcSumId);
+	public List<SBMFileInfo> getSbmFileInfoList(Long sbmFileProcSumId);
 	
 	
 	/**

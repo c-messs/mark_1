@@ -13,6 +13,7 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.SbmPolicyPremiumDao;
 import gov.hhs.cms.ff.fm.eps.ep.dao.SbmPolicyStatusDao;
 import gov.hhs.cms.ff.fm.eps.ep.dao.SbmPolicyVersionDao;
 import gov.hhs.cms.ff.fm.eps.ep.dao.StagingSbmFileDao;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmFileReversalDao;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmUpdateStatusDataService;
 import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
@@ -36,7 +37,7 @@ public class SbmUpdateStatusDataServiceImpl implements SbmUpdateStatusDataServic
 
 	private StagingSbmFileDao stagingSbmFileDao;
 	private SbmFileReversalDao sbmFileReversalDao;
-	
+
 	private SbmFileProcessingSummaryDao sbmFileProcSumDao;
 
 	private UserVO userVO;
@@ -63,28 +64,25 @@ public class SbmUpdateStatusDataServiceImpl implements SbmUpdateStatusDataServic
 
 			BigInteger cntJoin = joinDao.mergePolicyMember(sbmFileProcSumId);
 
-			//TODO Remove or change to DEBUG after testing.
-			LOG.info("\n\nTotal approved policy and member records MERGED from Staging to EPS: batchId: " + batchId + ", sbmFileProcSumId: " +sbmFileProcSumId +
-					"\n     Policies: "  + cntPolicy + 
-					"\n     Premiums: " + cntPremium +
-					"\n     Statuses: " + cntStatus +
-					"\n     Members : " + cntMember +
-					"\n     Langs   : " + cntLang +
-					"\n     Races   : " + cntRace +
-					"\n     Addrs   : " + cntAddr +
-					"\n     Dates   : " + cntDate +
-					"\n     Joins   : " + cntJoin + "\n");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("\n\nTotal approved policy and member records MERGED from Staging to EPS: batchId: " + batchId + ", sbmFileProcSumId: " +sbmFileProcSumId +
+						"\n     Policies: "  + cntPolicy + 
+						"\n     Premiums: " + cntPremium +
+						"\n     Statuses: " + cntStatus +
+						"\n     Members : " + cntMember +
+						"\n     Langs   : " + cntLang +
+						"\n     Races   : " + cntRace +
+						"\n     Addrs   : " + cntAddr +
+						"\n     Dates   : " + cntDate +
+						"\n     Joins   : " + cntJoin + "\n");
+			}
+
+			sbmFileProcSumDao.updateCmsApproved(sbmFileProcSumId, SBMConstants.Y);
+
 		}
-		
-		boolean isCmsAppovalReq = sbmFileProcSumDao.verifyCmsApprovalRequired(sbmFileProcSumId);
-		
-		// If CMS Approval is required, staging data will be deleted in SbmResponseCompositeDao.
-		if (!isCmsAppovalReq) {
-			deleteStagingData(sbmFileProcSumId);
-		}		
 	}
-	
-	
+
+
 	@Override
 	public void executeDisapproval(Long batchId, Long sbmFileProcSumId) {
 
@@ -96,19 +94,19 @@ public class SbmUpdateStatusDataServiceImpl implements SbmUpdateStatusDataServic
 	public void executeFileReversal(Long batchId, Long sbmFileProcSumId) {
 
 		LOG.info("executeFileReversal(" + batchId + ", " + sbmFileProcSumId + ")");
-		
+
 		if (batchId != null) {
 
 			userVO.setUserId(batchId.toString());
 		} 
-		
+
 		if (sbmFileProcSumId != null) {
-			
+
 			sbmFileReversalDao.backOutFile(sbmFileProcSumId);
 		}
 
 	}
-	
+
 	/**
 	 * Delete File, Policy and Member data.
 	 * @param sbmFileProcSumId
@@ -121,11 +119,11 @@ public class SbmUpdateStatusDataServiceImpl implements SbmUpdateStatusDataServic
 		int cntStatus = statusDao.deleteStaging(sbmFileProcSumId);
 		int cntPremium = premiumDao.deleteStaging(sbmFileProcSumId);
 		int cntPolicy = policyDao.deleteStaging(sbmFileProcSumId);
-		
+
 		int countFile = stagingSbmFileDao.deleteStagingSbmFile(sbmFileProcSumId);
-		
-		//TODO Remove or change to DEBUG after testing.
-		LOG.info("\n\nTotal approved policy and member records DELETED from Staging.  sbmFileProcSumId: " + sbmFileProcSumId +
+
+		if (LOG.isDebugEnabled()) {
+		LOG.debug("\n\nTotal approved policy and member records DELETED from Staging.  sbmFileProcSumId: " + sbmFileProcSumId +
 				"\n     Policies: "  + cntPolicy + 
 				"\n     Premiums: " + cntPremium +
 				"\n     Statuses: " + cntStatus +
@@ -133,8 +131,9 @@ public class SbmUpdateStatusDataServiceImpl implements SbmUpdateStatusDataServic
 				"\n     Dates   : " + cntDate +
 				"\n     Joins   : " + cntJoin + "\n");
 
-		LOG.info("\nTotal files DELETED from StagingSbmFile.   sbmFileProcSumId: " + sbmFileProcSumId +
+		LOG.debug("\nTotal files DELETED from StagingSbmFile.   sbmFileProcSumId: " + sbmFileProcSumId +
 				"\n     Files: " + countFile + "\n");
+		}
 	}
 
 	/**
@@ -192,7 +191,7 @@ public class SbmUpdateStatusDataServiceImpl implements SbmUpdateStatusDataServic
 	public void setSbmFileReversalDao(SbmFileReversalDao sbmFileReversalDao) {
 		this.sbmFileReversalDao = sbmFileReversalDao;
 	}
-	
+
 	/**
 	 * @param sbmFileProcSumDao the sbmFileProcSumDao to set
 	 */

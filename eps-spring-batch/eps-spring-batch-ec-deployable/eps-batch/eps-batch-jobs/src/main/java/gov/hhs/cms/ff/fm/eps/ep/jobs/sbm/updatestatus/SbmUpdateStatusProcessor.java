@@ -169,7 +169,7 @@ public class SbmUpdateStatusProcessor {
 			if(STATUS_APPROVE.equalsIgnoreCase(dto.getStatus())) {
 				//perform approval 
 				updateStatusDataService.executeApproval(jobId, dto.getSbmFileProcSumId());
-				fileCompositeDao.updateCMSApprovedInd(dto.getSbmFileProcSumId(), SBMConstants.Y);
+				
 				if(ACCEPTED.equals(dto.getCurrentFileStatus())) {
 					dto.setNewFileSatus(SBMFileStatus.APPROVED);
 				}

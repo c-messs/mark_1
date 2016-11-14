@@ -310,17 +310,18 @@ public abstract class BaseSBMDaoTest  extends TestCase {
 	protected Long insertSBMFileProcessingSummary(String tenantId) {
 
 		Long sbmFileProcSumId = jdbc.queryForObject("SELECT SBMFILEPROCESSINGSUMMARYSEQ.NEXTVAL FROM DUAL", Long.class);
-		jdbc.execute("INSERT INTO SBMFILEPROCESSINGSUMMARY(SBMFILEPROCESSINGSUMMARYID, TENANTID, SBMFILESTATUSTYPECD) " +
-				"VALUES (" + sbmFileProcSumId + ", '" + tenantId + "', '" + SBMFileStatus.IN_PROCESS.getValue() + "')");
-
+		String sql = "INSERT INTO SBMFILEPROCESSINGSUMMARY(SBMFILEPROCESSINGSUMMARYID, TENANTID, SBMFILESTATUSTYPECD) " +
+				"VALUES (" + sbmFileProcSumId + ", '" + tenantId + "', '" + SBMFileStatus.IN_PROCESS.getValue() + "')";
+		jdbc.execute(sql);
 		return sbmFileProcSumId;
 	}
 
 	protected Long insertSBMFileInfo(Long sbmFileProcSumId, String fileId) {
 
 		Long sbmFileInfoId = jdbc.queryForObject("SELECT SBMFILEINFOSEQ.NEXTVAL FROM DUAL", Long.class);
-		jdbc.execute("INSERT INTO SBMFILEINFO (SBMFILEINFOID, SBMFILEPROCESSINGSUMMARYID, SBMFILEID) " +
-				"VALUES (" + sbmFileInfoId + ", " + sbmFileProcSumId + ", '" + fileId + "')");
+		String sql = "INSERT INTO SBMFILEINFO (SBMFILEINFOID, SBMFILEPROCESSINGSUMMARYID, SBMFILEID) " +
+				"VALUES (" + sbmFileInfoId + ", " + sbmFileProcSumId + ", '" + fileId + "')";
+		jdbc.execute(sql);
 		return sbmFileInfoId;
 	}
 

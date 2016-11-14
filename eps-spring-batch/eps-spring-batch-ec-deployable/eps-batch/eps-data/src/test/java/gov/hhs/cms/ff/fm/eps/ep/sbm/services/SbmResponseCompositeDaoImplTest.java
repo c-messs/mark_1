@@ -50,7 +50,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 
 		assertNotNull("SbmResponseCompositeDao is NOT null.", sbmResponseCompositeDao);
 
-		SBMCache.setJobExecutionId(TestDataSBMUtility.getRandomNumberAsLong(3));
+		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(3);
 
 		String state = TestDataSBMUtility.getRandomSbmState();
 		String sbmFileId = TestDataSBMUtility.getRandomNumberAsString(3);
@@ -67,7 +67,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		SBMErrorDTO fileErrorDTO = TestDataSBMUtility.makeSBMErrorDTO(1);
 		insertSbmTransMsgValidation(sbmTransMsgId, fileErrorDTO, 1);
 
-		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(fileDTO.getSbmFileProcSumId());
+		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(batchId, fileDTO.getSbmFileProcSumId());
 
 		assertNotNull("SbmResponseDTO", responseDTO);
 
@@ -77,8 +77,6 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 
 		assertEquals("ErrorThresholdPercent", fileDTO.getErrorThresholdPercent(), summaryDTO.getErrorThresholdPercent());
 
-		assertEquals("XprErrorExist", true, responseDTO.isXprErrorsExist());
-		assertEquals("XprWarningsExist", false, responseDTO.isXprWarningsExist());
 
 		/*
 		 * private SBMSummaryAndFileInfoDTO sbmSummaryAndFileInfo;
@@ -91,13 +89,15 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		 */
 
 	}
+	
+	//TODO
 
 	@Test
 	public void test_generateSBMR_Addl_Errors() {
 
 		assertNotNull("SbmResponseCompositeDao is NOT null.", sbmResponseCompositeDao);
 
-		SBMCache.setJobExecutionId(TestDataSBMUtility.getRandomNumberAsLong(3));
+		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(3);
 		userVO.setUserId(SBMCache.getJobExecutionId().toString());
 
 		String state = TestDataSBMUtility.getRandomSbmState();
@@ -115,7 +115,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		SBMErrorDTO fileErrorDTO = TestDataSBMUtility.makeSBMErrorDTO(1);
 		insertSbmTransMsgValidation(sbmTransMsgId, fileErrorDTO, 1);
 
-		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(fileDTO.getSbmFileProcSumId());
+		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(batchId, fileDTO.getSbmFileProcSumId());
 
 		assertNotNull("SbmResponseDTO", responseDTO);
 
@@ -143,7 +143,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 
 		assertNotNull("SbmResponseCompositeDao is NOT null.", sbmResponseCompositeDao);
 
-		SBMCache.setJobExecutionId(TestDataSBMUtility.getRandomNumberAsLong(3));
+		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(3);
 
 		String state = TestDataSBMUtility.getRandomSbmState();
 		String sbmFileId = TestDataSBMUtility.getRandomNumberAsString(3);
@@ -161,7 +161,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		SBMErrorDTO fileErrorDTO = TestDataSBMUtility.makeSBMErrorDTO(1);
 		insertSbmTransMsgValidation(sbmTransMsgId, fileErrorDTO, 1);
 
-		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateUpdateStatusSBMR(fileDTO.getSbmFileProcSumId());
+		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateUpdateStatusSBMR(batchId, fileDTO.getSbmFileProcSumId());
 
 		assertNotNull("SbmResponseDTO", responseDTO);
 
@@ -172,7 +172,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 
 		assertNotNull("SbmResponseCompositeDao is NOT null.", sbmResponseCompositeDao);
 
-		SBMCache.setJobExecutionId(TestDataSBMUtility.getRandomNumberAsLong(3));
+		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(3);
 
 		String state = TestDataSBMUtility.getRandomSbmState();
 		String sbmFileId = TestDataSBMUtility.getRandomNumberAsString(3);
@@ -190,7 +190,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		SBMErrorDTO fileErrorDTO = TestDataSBMUtility.makeSBMErrorDTO(1);
 		insertSbmTransMsgValidation(sbmTransMsgId, fileErrorDTO, 1);
 
-		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateUpdateStatusSBMR(fileDTO.getSbmFileProcSumId());
+		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateUpdateStatusSBMR(batchId, fileDTO.getSbmFileProcSumId());
 
 		assertNotNull("SbmResponseDTO", responseDTO);
 
@@ -258,7 +258,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 			insertSBMFileInfo(sbmFileProcSumId, sbmFileId + "00" + i , i);
 		} 
 
-		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(sbmFileProcSumId);
+		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(batchId, sbmFileProcSumId);
 
 		assertNotNull("SbmResponseDTO", responseDTO);
 
@@ -299,7 +299,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 			insertSbmTransMsg(sbmFileInfoId, stateCd, exchangePolicyId, statuses[i]);
 		}
 
-		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(sbmFileProcSumId);
+		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(batchId, sbmFileProcSumId);
 
 		assertNotNull("SbmResponseDTO", responseDTO);
 
@@ -354,7 +354,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 
 		jdbc.execute(sql);
 
-		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(sbmFileProcSumId);
+		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(batchId, sbmFileProcSumId);
 
 		assertNotNull("SbmResponseDTO", responseDTO);
 
@@ -444,8 +444,10 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 				", " + sbmFileInfoId2 + ")";
 
 		jdbc.execute(sql);
+		
+		sbmResponseCompositeDao.validateMissingPolicies(batchId, sbmFileProcSumId2);
 
-		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(sbmFileProcSumId2);
+		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateSBMR(batchId, sbmFileProcSumId2);
 
 		assertNotNull("SbmResponseDTO", responseDTO);
 
@@ -532,7 +534,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 			}
 		}
 
-		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateUpdateStatusSBMR(sbmFileProcSumId);
+		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateUpdateStatusSBMR(batchId, sbmFileProcSumId);
 
 		assertNotNull("SbmResponseDTO", responseDTO);
 
@@ -603,7 +605,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 			}
 		}
 
-		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateUpdateStatusSBMR(sbmFileProcSumId);
+		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateUpdateStatusSBMR(batchId, sbmFileProcSumId);
 
 		assertNotNull("SbmResponseDTO", responseDTO);
 

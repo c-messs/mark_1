@@ -22,12 +22,27 @@ import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileInfoPO;
  *
  */
 public class SBMFileInfoDaoImpl extends GenericEpsDao<SbmFileInfoPO> implements SbmFileInfoDao {
-
+	
+	/**
+	 * SELECT_FILE_INFO
+	 */
 	private String selectSbmFileInfoSql;
+	/**
+	 * SELECT_FILE_INFO_BY_FILESETID_FILENUM
+	 */
 	private String selectSBMFileInfoSqlByFileSetId;
-	private String selectFileStatusSql;
+	/**
+	 * SELECT_FILE_INFO_XML
+	 */
 	private String selectFileInfoXmlSql;
+	/**
+	 * INSERT_FILE_INFO, use when FILEINFOXML is not null.
+	 */
 	private String insertSBMFileInfoSql;
+	/**
+	 * INSERT_FILE_INFO_NULL, does not contain FILEINFOXML column and XMLTYPE(?) argument.
+	 */
+	private String insertSBMFileInfoNullSql;
 
 	/**
 	 * Constructor
@@ -42,8 +57,10 @@ public class SBMFileInfoDaoImpl extends GenericEpsDao<SbmFileInfoPO> implements 
 
 		final String userId = super.userVO.getUserId();
 		final Long sbmFileInfoId = sequenceHelper.nextSequenceId("SBMFILEINFOSEQ");
+		// If FILEINFOXML is null, do not attempt XMLTYPE(null).  Db default value is NULL.
+		final String sql = po.getFileInfoXML() != null ? insertSBMFileInfoSql : insertSBMFileInfoNullSql;
 
-		jdbcTemplate.update(insertSBMFileInfoSql, new PreparedStatementSetter() {
+		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			public void setValues(PreparedStatement ps) throws SQLException {
 				ps.setLong(1, sbmFileInfoId);
 				ps.setLong(2, po.getSbmFileProcessingSummaryId());
@@ -63,30 +80,20 @@ public class SBMFileInfoDaoImpl extends GenericEpsDao<SbmFileInfoPO> implements 
 				} else {
 					ps.setString(9, "N");
 				}
+				ps.setString(10, userId);
+				ps.setString(11, userId);
+				ps.setTimestamp(12, convertToSqlTimestamp(po.getSbmFileLastModifiedDateTime()));
 
+				// Only set if NOT null
 				if (po.getFileInfoXML() != null) {
 					Clob clob = ps.getConnection().createClob();
 					clob.setString(1, po.getFileInfoXML());
-					ps.setClob(10, clob);
-				} else {
-					ps.setObject(10, null);
+					ps.setClob(13, clob);
 				}
-
-				ps.setString(11, userId);
-				ps.setString(12, userId);
-				ps.setTimestamp(13, convertToSqlTimestamp(po.getSbmFileLastModifiedDateTime()));
 			}
 		});	
 
 		return sbmFileInfoId;
-	}
-
-	@Override
-	public List<String> getFileStatusList(String fileName) {
-
-		Object[] args = new Object[] {fileName};
-		List<String> statusList = (List<String>) jdbcTemplate.queryForList(selectFileStatusSql, String.class, args);
-		return statusList;
 	}
 
 
@@ -142,15 +149,7 @@ public class SBMFileInfoDaoImpl extends GenericEpsDao<SbmFileInfoPO> implements 
 	public void setSelectSBMFileInfoSqlByFileSetId(String selectSBMFileInfoSqlByFileSetId) {
 		this.selectSBMFileInfoSqlByFileSetId = selectSBMFileInfoSqlByFileSetId;
 	}
-
-
-	/**
-	 * @param selectFileStatusSql the selectFileStatusSql to set
-	 */
-	public void setSelectFileStatusSql(String selectFileStatusSql) {
-		this.selectFileStatusSql = selectFileStatusSql;
-	}
-
+	
 
 	/**
 	 * @param selectFileInfoXmlSql the selectFileInfoXmlSql to set
@@ -165,6 +164,14 @@ public class SBMFileInfoDaoImpl extends GenericEpsDao<SbmFileInfoPO> implements 
 	 */
 	public void setInsertSBMFileInfoSql(String insertSBMFileInfoSql) {
 		this.insertSBMFileInfoSql = insertSBMFileInfoSql;
+	}
+
+
+	/**
+	 * @param insertSBMFileInfoNullSql
+	 */
+	public void setInsertSBMFileInfoNullSql(String insertSBMFileInfoNullSql) {
+		this.insertSBMFileInfoNullSql = insertSBMFileInfoNullSql;
 	}
 
 }

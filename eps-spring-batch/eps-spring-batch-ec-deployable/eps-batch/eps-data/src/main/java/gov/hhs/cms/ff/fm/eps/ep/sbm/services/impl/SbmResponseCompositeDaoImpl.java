@@ -40,7 +40,6 @@ import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgAdditionalErrorInfoPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgValidationPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.StagingSbmGroupLockPO;
-import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMCache;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmResponseDTO;
@@ -92,25 +91,20 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 
 	private UserVO userVO;
 
-
 	@Override
-	public SbmResponseDTO generateSBMR(Long sbmFileProcSumId) {
+	public SbmResponseDTO generateSBMR(Long batchId, Long sbmFileProcSumId) {
 
 		SbmResponseDTO responseDTO = new SbmResponseDTO();
 		List<SbmFileSummaryMissingPolicyData> missingPolicyDataList = null;
 
-		if (SBMCache.getJobExecutionId() != null) {
-			userVO.setUserId(SBMCache.getJobExecutionId().toString());
+		if (batchId != null) {
+			userVO.setUserId(batchId.toString());
 		}
 
 		SbmFileProcessingSummaryPO epsSummaryPO = sbmFileProcSumDao.selectSbmFileProcessingSummary(sbmFileProcSumId);
 
-		// First, find/extract missing policies that are in the files in StagingSbmFile but 
-		// not in EPS PolicyVersion.  Then insert the ids into SbmFileSummaryMissingPolicy table.
-		sbmFileSumMissingPolicyDao.findAndInsertMissingPolicy(epsSummaryPO);
-		sbmFileSumMissingPolicyDao.findAndInsertMissingMember(epsSummaryPO);
-
-		// Retrieve the missing policy data for the outbound response and for Termination count determination.
+		// Retrieve the missing policy data for the outbound response and for
+		// Termination count determination.
 		missingPolicyDataList = sbmFileSumMissingPolicyDao.selectMissingPolicyList(sbmFileProcSumId);
 
 		getMissingPolicyTotals(epsSummaryPO, missingPolicyDataList);
@@ -118,20 +112,28 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		getSummaryTotals(epsSummaryPO);
 
 		String stateCd = SbmDataUtil.getStateCd(epsSummaryPO.getTenantId());
-		BigInteger cntEffectuatedPoliciesCancelled = policyDao.selectCountEffectuatedPoliciesCancelled(sbmFileProcSumId, stateCd);
+		BigInteger cntEffectuatedPoliciesCancelled = policyDao.selectCountEffectuatedPoliciesCancelled(sbmFileProcSumId,
+				stateCd);
 
 		List<SbmFileInfoPO> filePOList = sbmFileInfoDao.getSbmFileInfoList(sbmFileProcSumId);
 		epsSummaryPO.setTotalIssuerFileCount(filePOList.size());
 
-		boolean isAccepted = false;
+		boolean isAccepted = determineAccepted(epsSummaryPO);
+		boolean isApproved = determineApproved(epsSummaryPO);
 
-		FileAcceptanceRejection fileAR = sbmFileProcSumMapper.mapEpsToSbmr(epsSummaryPO, isAccepted, missingPolicyDataList, cntEffectuatedPoliciesCancelled.intValue());
+		if (isAccepted || isApproved) {
+
+			getAcceptedAndApprovalTotals(epsSummaryPO);
+		}
+
+		FileAcceptanceRejection fileAR = sbmFileProcSumMapper.mapEpsToSbmr(epsSummaryPO, isApproved,
+				missingPolicyDataList, cntEffectuatedPoliciesCancelled.intValue());
 		fileAR.getMissingPolicy().addAll(sbmFileSumMissingPolicyMapper.mapEpsToSbmr(missingPolicyDataList));
-
 
 		for (SbmFileInfoPO filePO : filePOList) {
 
-			FileInformationType fileInfo = sbmFileInfoMapper.mapEpsToSbmr(filePO, epsSummaryPO.getSbmFileStatusTypeCd());
+			FileInformationType fileInfo = sbmFileInfoMapper.mapEpsToSbmr(filePO,
+					epsSummaryPO.getSbmFileStatusTypeCd());
 
 			List<SbmTransMsgPO> sbmTransMsgPOList = sbmTransMsgDao.selectSbmTransMsg(filePO.getSbmFileInfoId());
 
@@ -139,10 +141,11 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 
 				PolicyErrorType policyError = sbmTransMsgMapper.mapEpsToSbmr(sbmTransMsgPO);
 
-				List<SbmTransMsgValidationPO> validationPOList = sbmTransMsgValidationDao.selectValidation(sbmTransMsgPO.getSbmTransMsgId());
+				List<SbmTransMsgValidationPO> validationPOList = sbmTransMsgValidationDao
+						.selectValidation(sbmTransMsgPO.getSbmTransMsgId());
 
-				if(CollectionUtils.isEmpty(validationPOList)) {
-					//No validation errors
+				if (CollectionUtils.isEmpty(validationPOList)) {
+					// No validation errors
 					continue;
 				}
 
@@ -150,7 +153,8 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 
 					PolicyErrorType.Error err = sbmTransMsgValidationMapper.mapEpsToSbmr(valPO);
 
-					List<SbmTransMsgAdditionalErrorInfoPO> addlErrInfoPOList = sbmTransMsgAddlErrInfoDao.selectSbmTransMsgAddlErrInfo(valPO);
+					List<SbmTransMsgAdditionalErrorInfoPO> addlErrInfoPOList = sbmTransMsgAddlErrInfoDao
+							.selectSbmTransMsgAddlErrInfo(valPO);
 
 					err.getAdditionalErrorInfo().addAll(sbmTransMsgAddlErrInfoMapper.mapEpsToSbmr(addlErrInfoPOList));
 
@@ -168,28 +172,34 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 
 		responseDTO.setSbmr(fileAR);
 		responseDTO.setSbmSummaryAndFileInfo(summaryDTO);
-		responseDTO.setXprErrorsExist(sbmTransMsgValidationDao.verifyXprErrorsExist(sbmFileProcSumId));
-		responseDTO.setXprWarningsExist(sbmTransMsgValidationDao.verifyXprWarningsExist(sbmFileProcSumId));
 		responseDTO.setTotalRecordsProcessed(new BigDecimal(epsSummaryPO.getTotalRecordProcessedCnt()));
 		responseDTO.setTotalRecordsRejected(new BigDecimal(epsSummaryPO.getTotalRecordRejectedCnt()));
 
 		sbmFileProcSumDao.updateSbmFileProcessingSummary(epsSummaryPO);
+		
+		boolean isCmsAppovalReq = sbmFileProcSumDao.verifyCmsApprovalRequired(sbmFileProcSumId);
+
+		if (!isCmsAppovalReq || isApproved) {
+			deleteStagingData(sbmFileProcSumId);
+		}
 
 		return responseDTO;
 	}
 
-
-
-	/* Retrieve the Summary from EPS, compute Approval totals (if approved) and generate FileAcceptanceRejection.
-	 * @see gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmResponseCompositeDao#generateUpdateStatusSBMR(java.lang.Long)
+	/*
+	 * Retrieve the Summary from EPS, compute Approval totals (if approved) and
+	 * generate FileAcceptanceRejection.
+	 * 
+	 * @see gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmResponseCompositeDao#
+	 * generateUpdateStatusSBMR(java.lang.Long)
 	 */
 	@Override
-	public SbmResponseDTO generateUpdateStatusSBMR(Long sbmFileProcSumId) {
+	public SbmResponseDTO generateUpdateStatusSBMR(Long batchId, Long sbmFileProcSumId) {
 
 		SbmResponseDTO responseDTO = new SbmResponseDTO();
 
-		if (SBMCache.getJobExecutionId() != null) {
-			userVO.setUserId(SBMCache.getJobExecutionId().toString());
+		if (batchId != null) {
+			userVO.setUserId(batchId.toString());
 		}
 
 		// Retrieve the complete summary for this set of file(s).
@@ -201,17 +211,22 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		// Only get totals if the set of file(s) has been accepted.
 		if (isAccepted) {
 
-			getApprovalTotals(epsSummaryPO);
+			getAcceptedAndApprovalTotals(epsSummaryPO);
 		}
 
 		String stateCd = SbmDataUtil.getStateCd(epsSummaryPO.getTenantId());
-		BigInteger cntEffectuatedPoliciesCancelled = policyDao.selectCountEffectuatedPoliciesCancelled(sbmFileProcSumId, stateCd);
+		BigInteger cntEffectuatedPoliciesCancelled = policyDao.selectCountEffectuatedPoliciesCancelled(sbmFileProcSumId,
+				stateCd);
 
-		// Retrieve the missing policy data for the outbound response and for Termination count determination.
-		List<SbmFileSummaryMissingPolicyData> missingPolicyDataList = sbmFileSumMissingPolicyDao.selectMissingPolicyList(sbmFileProcSumId);
+		// Retrieve the missing policy data for the outbound response and for
+		// Termination count determination.
+		List<SbmFileSummaryMissingPolicyData> missingPolicyDataList = sbmFileSumMissingPolicyDao
+				.selectMissingPolicyList(sbmFileProcSumId);
 
-		// Now all counts and missing policies are retrieved and set in PO and data list, map them to outbound.
-		FileAcceptanceRejection fileAR = sbmFileProcSumMapper.mapEpsToSbmr(epsSummaryPO, isAccepted, missingPolicyDataList, cntEffectuatedPoliciesCancelled.intValue());
+		// Now all counts and missing policies are retrieved and set in PO and
+		// data list, map them to outbound.
+		FileAcceptanceRejection fileAR = sbmFileProcSumMapper.mapEpsToSbmr(epsSummaryPO, isAccepted,
+				missingPolicyDataList, cntEffectuatedPoliciesCancelled.intValue());
 		fileAR.getMissingPolicy().addAll(sbmFileSumMissingPolicyMapper.mapEpsToSbmr(missingPolicyDataList));
 
 		List<SbmFileInfoPO> filePOList = sbmFileInfoDao.getSbmFileInfoList(sbmFileProcSumId);
@@ -219,7 +234,8 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		// Map fileInfo to outbound
 		for (SbmFileInfoPO filePO : filePOList) {
 
-			FileInformationType fileInfo = sbmFileInfoMapper.mapEpsToSbmr(filePO, epsSummaryPO.getSbmFileStatusTypeCd());
+			FileInformationType fileInfo = sbmFileInfoMapper.mapEpsToSbmr(filePO,
+					epsSummaryPO.getSbmFileStatusTypeCd());
 
 			fileAR.getSBMIFileInfo().add(fileInfo);
 		}
@@ -231,11 +247,12 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		responseDTO.setSbmr(fileAR);
 		responseDTO.setSbmSummaryAndFileInfo(summaryDTO);
 		responseDTO.setXprErrorsExist(sbmTransMsgValidationDao.verifyXprErrorsExist(sbmFileProcSumId));
-		responseDTO.setXprWarningsExist(sbmTransMsgValidationDao.verifyXprWarningsExist(sbmFileProcSumId));	
+		responseDTO.setXprWarningsExist(sbmTransMsgValidationDao.verifyXprWarningsExist(sbmFileProcSumId));
 
 		sbmFileProcSumDao.updateSbmFileProcessingSummary(epsSummaryPO);
 
-		// Since nothing written to Staging for BKOs, no need to attempt to delete.
+		// Since nothing written to Staging for BKOs, no need to attempt to
+		// delete.
 		if (!isBackOut) {
 			deleteStagingData(sbmFileProcSumId);
 		}
@@ -243,9 +260,9 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		return responseDTO;
 	}
 
-
 	/**
 	 * Delete File, Policy and Member data.
+	 * 
 	 * @param sbmFileProcSumId
 	 */
 	private void deleteStagingData(Long sbmFileProcSumId) {
@@ -259,30 +276,27 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 
 		int countFile = stagingSbmFileDao.deleteStagingSbmFile(sbmFileProcSumId);
 
-		//TODO Remove or change to DEBUG after testing.
-		LOG.info("\n\nTotal approved policy and member records DELETED from Staging.  sbmFileProcSumId: " + sbmFileProcSumId +
-				"\n     Policies: "  + cntPolicy + 
-				"\n     Premiums: " + cntPremium +
-				"\n     Statuses: " + cntStatus +
-				"\n     Members : " + cntMember +
-				"\n     Dates   : " + cntDate +
-				"\n     Joins   : " + cntJoin + "\n");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("\n\nTotal approved policy and member records DELETED from Staging.  sbmFileProcSumId: "
+					+ sbmFileProcSumId + "\n     Policies: " + cntPolicy + "\n     Premiums: " + cntPremium
+					+ "\n     Statuses: " + cntStatus + "\n     Members : " + cntMember + "\n     Dates   : " + cntDate
+					+ "\n     Joins   : " + cntJoin + "\n");
 
-		LOG.info("\nTotal files DELETED from StagingSbmFile.   sbmFileProcSumId: " + sbmFileProcSumId +
-				"\n     Files: " + countFile + "\n");
+			LOG.debug("\nTotal files DELETED from StagingSbmFile.   sbmFileProcSumId: " + sbmFileProcSumId
+					+ "\n     Files: " + countFile + "\n");
+		}
 	}
-
 
 	private void getSummaryTotals(SbmFileProcessingSummaryPO epsPO) {
 
 		Long sbmFileProcSumId = epsPO.getSbmFileProcSumId();
 
 		epsPO.setTotalRecordProcessedCnt(stagingSbmFileDao.selectPolicyCount(sbmFileProcSumId));
-		epsPO.setTotalRecordRejectedCnt(sbmTransMsgDao.selectRejectCount(sbmFileProcSumId));		
+		epsPO.setTotalRecordRejectedCnt(sbmTransMsgDao.selectRejectCount(sbmFileProcSumId));
 
 	}
 
-	private void getApprovalTotals(SbmFileProcessingSummaryPO epsPO) {
+	private void getAcceptedAndApprovalTotals(SbmFileProcessingSummaryPO epsPO) {
 
 		Long sbmFileProcSumId = epsPO.getSbmFileProcSumId();
 		String stateCd = SbmDataUtil.getStateCd(epsPO.getTenantId());
@@ -298,17 +312,19 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		// New policies, ones that did not "policy match"
 		int newANC = sbmTransMsgDao.selectNoMatchCount(sbmFileProcSumId, SbmTransMsgStatus.ACCEPTED_NO_CHANGE);
 		int newACC = sbmTransMsgDao.selectNoMatchCount(sbmFileProcSumId, SbmTransMsgStatus.ACCEPTED_WITH_CHANGES);
-		
+
 		epsPO.setNewPlcCreatedAsSentCnt(newANC);
 		epsPO.setNewPlcCreatedCorrectionApplCnt(newACC);
-		
+
 		epsPO.setTotalPolicyApprovedCnt(matchingACC + matchingANC + newACC + newANC);
 
-		BigInteger countEffectuated = policyDao.selectPolicyCountByStatus(sbmFileProcSumId, stateCd, PolicyStatus.EFFECTUATED_2);
+		BigInteger countEffectuated = policyDao.selectPolicyCountByStatus(sbmFileProcSumId, stateCd,
+				PolicyStatus.EFFECTUATED_2);
 		epsPO.setEffectuatedPolicyCount(countEffectuated.intValue());
 	}
 
-	private void getMissingPolicyTotals(SbmFileProcessingSummaryPO epsPO, List<SbmFileSummaryMissingPolicyData> missingPolicyDataList) {
+	private void getMissingPolicyTotals(SbmFileProcessingSummaryPO epsPO,
+			List<SbmFileSummaryMissingPolicyData> missingPolicyDataList) {
 
 		int notSubmittedEffectuatedCnt = 0;
 		int notSubmittedCancelledCnt = 0;
@@ -330,25 +346,36 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 				}
 			}
 		}
-		int totalPreviousPoliciesNotSubmit = notSubmittedEffectuatedCnt + notSubmittedCancelledCnt + notSubmittedTerminatedCnt;
+		int totalPreviousPoliciesNotSubmit = notSubmittedEffectuatedCnt + notSubmittedCancelledCnt
+				+ notSubmittedTerminatedCnt;
 		epsPO.setTotalPreviousPoliciesNotSubmit(totalPreviousPoliciesNotSubmit);
 		epsPO.setNotSubmittedEffectuatedCnt(notSubmittedEffectuatedCnt);
 		epsPO.setNotSubmittedCancelledCnt(notSubmittedCancelledCnt);
 		epsPO.setNotSubmittedTerminatedCnt(notSubmittedTerminatedCnt);
 	}
 
-
 	private boolean determineAccepted(SbmFileProcessingSummaryPO epsPO) {
 
 		boolean isAccepted = false;
 		SBMFileStatus status = SBMFileStatus.getEnum(epsPO.getSbmFileStatusTypeCd());
 
-		if (status.equals(SBMFileStatus.ACCEPTED) 
-				|| status.equals(SBMFileStatus.ACCEPTED_WITH_ERRORS) 
-				||status.equals(SBMFileStatus.ACCEPTED_WITH_WARNINGS)) {
+		if (status.equals(SBMFileStatus.ACCEPTED) || status.equals(SBMFileStatus.ACCEPTED_WITH_ERRORS)
+				|| status.equals(SBMFileStatus.ACCEPTED_WITH_WARNINGS)) {
 			isAccepted = true;
 		}
 		return isAccepted;
+	}
+
+	private boolean determineApproved(SbmFileProcessingSummaryPO epsPO) {
+
+		boolean isApproved = false;
+		SBMFileStatus status = SBMFileStatus.getEnum(epsPO.getSbmFileStatusTypeCd());
+
+		if (status.equals(SBMFileStatus.APPROVED) || status.equals(SBMFileStatus.APPROVED_WITH_ERRORS)
+				|| status.equals(SBMFileStatus.APPROVED_WITH_WARNINGS)) {
+			isApproved = true;
+		}
+		return isApproved;
 	}
 
 	private boolean determineBackOut(SbmFileProcessingSummaryPO epsPO) {
@@ -362,9 +389,9 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		return isBackOut;
 	}
 
-
 	@Override
-	public void createSBMResponseRecord(Long  sbmFileProcSumId, Long sbmFileInfoId, Long physicalDocumentId, SBMResponsePhaseTypeCode responseCd) {
+	public void createSBMResponseRecord(Long sbmFileProcSumId, Long sbmFileInfoId, Long physicalDocumentId,
+			SBMResponsePhaseTypeCode responseCd) {
 
 		SbmResponsePO po = new SbmResponsePO();
 		po.setSbmFileProcSumId(sbmFileProcSumId);
@@ -407,9 +434,8 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 			sbmFileProcSumIdList.add(po.getSbmFileProcSumId());
 		}
 
-		return sbmFileProcSumIdList ;
+		return sbmFileProcSumIdList;
 	}
-
 
 	@Override
 	public List<Long> getSummaryIdsForSBMRFromStagingSBMGroupLock(Long batchId) {
@@ -422,214 +448,224 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 			sbmFileProcSumIdList.add(po.getSbmFileProcSumId());
 		}
 
-		return sbmFileProcSumIdList ;
+		return sbmFileProcSumIdList;
 	}
 
+	@Override
+	public void validateMissingPolicies(Long batchId, Long sbmFileProcSumId) {
 
+		SbmFileProcessingSummaryPO epsSummaryPO = sbmFileProcSumDao.selectSbmFileProcessingSummary(sbmFileProcSumId);
+
+		// H2. Missing policies found for the state or issuer?
+		// First, find/extract missing policies that are in the files in
+		// StagingSbmFile but
+		// not in EPS PolicyVersion. Then insert the ids into
+		// SbmFileSummaryMissingPolicy table.
+		sbmFileSumMissingPolicyDao.findAndInsertMissingPolicy(epsSummaryPO);
+		sbmFileSumMissingPolicyDao.findAndInsertMissingMember(epsSummaryPO);
+	}
+
+	@Override
+	public SbmResponseDTO getSummary(Long sbmFileProcSumId) {
+
+		SbmResponseDTO responseDTO = new SbmResponseDTO();
+		SbmFileProcessingSummaryPO epsSummaryPO = sbmFileProcSumDao.selectSbmFileProcessingSummary(sbmFileProcSumId);
+
+		getSummaryTotals(epsSummaryPO);
+
+		SBMSummaryAndFileInfoDTO sbmSummaryDTO = sbmFileProcSumMapper.mapEpsToSbm(epsSummaryPO);
+
+		responseDTO.setSbmSummaryAndFileInfo(sbmSummaryDTO);
+		responseDTO.setXprErrorsExist(sbmTransMsgValidationDao.verifyXprErrorsExist(sbmFileProcSumId));
+		responseDTO.setXprWarningsExist(sbmTransMsgValidationDao.verifyXprWarningsExist(sbmFileProcSumId));
+		responseDTO.setTotalRecordsProcessed(new BigDecimal(epsSummaryPO.getTotalRecordProcessedCnt()));
+		responseDTO.setTotalRecordsRejected(new BigDecimal(epsSummaryPO.getTotalRecordRejectedCnt()));
+
+		return responseDTO;
+	}
 
 	/**
-	 * @param sbmFileProcSumDao the sbmFileProcSumDao to set
+	 * @param sbmFileProcSumDao
+	 *            the sbmFileProcSumDao to set
 	 */
 	public void setSbmFileProcSumDao(SbmFileProcessingSummaryDao sbmFileProcSumDao) {
 		this.sbmFileProcSumDao = sbmFileProcSumDao;
 	}
 
-
-
 	/**
-	 * @param sbmFileInfoDao the sbmFileInfoDao to set
+	 * @param sbmFileInfoDao
+	 *            the sbmFileInfoDao to set
 	 */
 	public void setSbmFileInfoDao(SbmFileInfoDao sbmFileInfoDao) {
 		this.sbmFileInfoDao = sbmFileInfoDao;
 	}
 
-
-
 	/**
-	 * @param sbmTransMsgDao the sbmTransMsgDao to set
+	 * @param sbmTransMsgDao
+	 *            the sbmTransMsgDao to set
 	 */
 	public void setSbmTransMsgDao(SbmTransMsgDao sbmTransMsgDao) {
 		this.sbmTransMsgDao = sbmTransMsgDao;
 	}
 
-
-
 	/**
-	 * @param sbmTransMsgValidationDao the sbmTransMsgValidationDao to set
+	 * @param sbmTransMsgValidationDao
+	 *            the sbmTransMsgValidationDao to set
 	 */
 	public void setSbmTransMsgValidationDao(SbmTransMsgValidationDao sbmTransMsgValidationDao) {
 		this.sbmTransMsgValidationDao = sbmTransMsgValidationDao;
 	}
 
-
-
 	/**
-	 * @param sbmTransMsgAddlErrInfoDao the sbmTransMsgAddlErrInfoDao to set
+	 * @param sbmTransMsgAddlErrInfoDao
+	 *            the sbmTransMsgAddlErrInfoDao to set
 	 */
 	public void setSbmTransMsgAddlErrInfoDao(SbmTransMsgAdditionalErrorInfoDao sbmTransMsgAddlErrInfoDao) {
 		this.sbmTransMsgAddlErrInfoDao = sbmTransMsgAddlErrInfoDao;
 	}
 
-
-
 	/**
-	 * @param sbmFileSumMissingPolicyDao the sbmFileSumMissingPolicyDao to set
+	 * @param sbmFileSumMissingPolicyDao
+	 *            the sbmFileSumMissingPolicyDao to set
 	 */
 	public void setSbmFileSumMissingPolicyDao(SbmFileSummaryMissingPolicyDao sbmFileSumMissingPolicyDao) {
 		this.sbmFileSumMissingPolicyDao = sbmFileSumMissingPolicyDao;
 	}
 
-
-
 	/**
-	 * @param stagingSbmFileDao the stagingSbmFileDao to set
+	 * @param stagingSbmFileDao
+	 *            the stagingSbmFileDao to set
 	 */
 	public void setStagingSbmFileDao(StagingSbmFileDao stagingSbmFileDao) {
 		this.stagingSbmFileDao = stagingSbmFileDao;
 	}
 
-
-
 	/**
-	 * @param stagingSbmPolicyDao the stagingSbmPolicyDao to set
+	 * @param stagingSbmPolicyDao
+	 *            the stagingSbmPolicyDao to set
 	 */
 	public void setStagingSbmPolicyDao(StagingSbmPolicyDao stagingSbmPolicyDao) {
 		this.stagingSbmPolicyDao = stagingSbmPolicyDao;
 	}
 
-
-
 	/**
-	 * @param stagingSbmGroupLockDao the stagingSbmGroupLockDao to set
+	 * @param stagingSbmGroupLockDao
+	 *            the stagingSbmGroupLockDao to set
 	 */
 	public void setStagingSbmGroupLockDao(StagingSbmGroupLockDao stagingSbmGroupLockDao) {
 		this.stagingSbmGroupLockDao = stagingSbmGroupLockDao;
 	}
 
-
-
 	/**
-	 * @param policyDao the policyDao to set
+	 * @param policyDao
+	 *            the policyDao to set
 	 */
 	public void setPolicyDao(SbmPolicyVersionDao policyDao) {
 		this.policyDao = policyDao;
 	}
 
-
-
 	/**
-	 * @param premiumDao the premiumDao to set
+	 * @param premiumDao
+	 *            the premiumDao to set
 	 */
 	public void setPremiumDao(SbmPolicyPremiumDao premiumDao) {
 		this.premiumDao = premiumDao;
 	}
 
-
-
 	/**
-	 * @param statusDao the statusDao to set
+	 * @param statusDao
+	 *            the statusDao to set
 	 */
 	public void setStatusDao(SbmPolicyStatusDao statusDao) {
 		this.statusDao = statusDao;
 	}
 
-
-
 	/**
-	 * @param joinDao the joinDao to set
+	 * @param joinDao
+	 *            the joinDao to set
 	 */
 	public void setJoinDao(SbmPolicyMemberDao joinDao) {
 		this.joinDao = joinDao;
 	}
 
-
-
 	/**
-	 * @param memberDao the memberDao to set
+	 * @param memberDao
+	 *            the memberDao to set
 	 */
 	public void setMemberDao(SbmPolicyMemberVersionDao memberDao) {
 		this.memberDao = memberDao;
 	}
 
-
-
 	/**
-	 * @param dateDao the dateDao to set
+	 * @param dateDao
+	 *            the dateDao to set
 	 */
 	public void setDateDao(SbmPolicyMemberDateDao dateDao) {
 		this.dateDao = dateDao;
 	}
 
-
-
 	/**
-	 * @param sbmFileProcSumMapper the sbmFileProcSumMapper to set
+	 * @param sbmFileProcSumMapper
+	 *            the sbmFileProcSumMapper to set
 	 */
 	public void setSbmFileProcSumMapper(SbmFileProcessingSummaryMapper sbmFileProcSumMapper) {
 		this.sbmFileProcSumMapper = sbmFileProcSumMapper;
 	}
 
-
-
 	/**
-	 * @param sbmFileInfoMapper the sbmFileInfoMapper to set
+	 * @param sbmFileInfoMapper
+	 *            the sbmFileInfoMapper to set
 	 */
 	public void setSbmFileInfoMapper(SbmFileInfoMapper sbmFileInfoMapper) {
 		this.sbmFileInfoMapper = sbmFileInfoMapper;
 	}
 
-
-
 	/**
-	 * @param sbmTransMsgMapper the sbmTransMsgMapper to set
+	 * @param sbmTransMsgMapper
+	 *            the sbmTransMsgMapper to set
 	 */
 	public void setSbmTransMsgMapper(SbmTransMsgMapper sbmTransMsgMapper) {
 		this.sbmTransMsgMapper = sbmTransMsgMapper;
 	}
 
-
-
 	/**
-	 * @param sbmTransMsgValidationMapper the sbmTransMsgValidationMapper to set
+	 * @param sbmTransMsgValidationMapper
+	 *            the sbmTransMsgValidationMapper to set
 	 */
 	public void setSbmTransMsgValidationMapper(SbmTransMsgValidationMapper sbmTransMsgValidationMapper) {
 		this.sbmTransMsgValidationMapper = sbmTransMsgValidationMapper;
 	}
 
-
-
 	/**
-	 * @param sbmTransMsgAddlErrInfoMapper the sbmTransMsgAddlErrInfoMapper to set
+	 * @param sbmTransMsgAddlErrInfoMapper
+	 *            the sbmTransMsgAddlErrInfoMapper to set
 	 */
 	public void setSbmTransMsgAddlErrInfoMapper(SbmTransMsgAdditionalErrorInfoMapper sbmTransMsgAddlErrInfoMapper) {
 		this.sbmTransMsgAddlErrInfoMapper = sbmTransMsgAddlErrInfoMapper;
 	}
 
-
-
 	/**
-	 * @param sbmFileSumMissingPolicyMapper the sbmFileSumMissingPolicyMapper to set
+	 * @param sbmFileSumMissingPolicyMapper
+	 *            the sbmFileSumMissingPolicyMapper to set
 	 */
 	public void setSbmFileSumMissingPolicyMapper(SbmFileSummaryMissingPolicyMapper sbmFileSumMissingPolicyMapper) {
 		this.sbmFileSumMissingPolicyMapper = sbmFileSumMissingPolicyMapper;
 	}
 
-
-
 	/**
-	 * @param sbmResponseDao the sbmResponseDao to set
+	 * @param sbmResponseDao
+	 *            the sbmResponseDao to set
 	 */
 	public void setSbmResponseDao(SbmResponseDao sbmResponseDao) {
 		this.sbmResponseDao = sbmResponseDao;
 	}
 
-
 	/**
-	 * @param userVO the userVO to set
+	 * @param userVO
+	 *            the userVO to set
 	 */
 	public void setUserVO(UserVO userVO) {
 		this.userVO = userVO;
 	}
-
 
 }

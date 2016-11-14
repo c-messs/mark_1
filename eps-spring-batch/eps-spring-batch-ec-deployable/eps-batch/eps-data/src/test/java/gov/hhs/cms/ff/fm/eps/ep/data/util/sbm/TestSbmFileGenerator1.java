@@ -48,7 +48,7 @@ public class TestSbmFileGenerator1 extends AbstractTestSbmFileGenerator implemen
 	/**
 	 * Number of Policies per QHPID
 	 */
-	private static final Long POL_LEN = 3L;
+	private static final Long POL_LEN = 500000L;
 	/**
 	 * Number of Members per Policy, MAX 6
 	 */

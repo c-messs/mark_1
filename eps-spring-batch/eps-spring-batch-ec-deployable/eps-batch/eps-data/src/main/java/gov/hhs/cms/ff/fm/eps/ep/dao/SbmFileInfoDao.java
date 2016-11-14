@@ -25,13 +25,6 @@ public interface SbmFileInfoDao {
 	 */
 	public List<SbmFileInfoPO> performFileMatch(String fileSetId, int fileNumber);
 	
-
-	/**
-	 * @param fileName
-	 * @return
-	 */
-	public List<String> getFileStatusList(String fileName);
-	
 	
 	/**
 	 * @param sbmFileInfoId

@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import gov.cms.dsh.sbmi.Enrollment;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
-import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProccessingSummary;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
@@ -175,14 +175,11 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 
 		SBMFileProcessingDTO inboundFileDTO1 = insertParentFileRecords(tenantId, sbmFileId, SBMFileStatus.REJECTED);
 		
-		List<SBMSummaryAndFileInfoDTO> actualList = sbmFileCompositeDao.getAllSBMFileInfos(inboundFileDTO1.getSbmFileProcSumId());
+		List<SBMFileInfo> actualList = sbmFileCompositeDao.getSbmFileInfoList(inboundFileDTO1.getSbmFileProcSumId());
 
 		assertEquals("SBMSummaryAndFileInfoDTO list size", 1, actualList.size());
 
-		SBMSummaryAndFileInfoDTO actual1 = actualList.get(0);
-		assertEquals("1) SbmFileProcessingSummaryId", inboundFileDTO1.getSbmFileProcSumId(), actual1.getSbmFileProcSumId());
-		assertEquals("1) SbmFileInfo List size", 1, actual1.getSbmFileInfoList().size());
-		
+		assertEquals("1) SbmFileInfo List size", 1, actualList.size());
 	}
 	
 	
@@ -534,7 +531,7 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 		Long sumId2 = insertSBMFileProcessingSummary(tenantId, "22222", "FSID-22222", SBMFileStatus.ACCEPTED_WITH_ERRORS);
 		Thread.sleep(100);
 		// Throw in one we are not expecting
-		Long sumId3 = insertSBMFileProcessingSummary(tenantId, "33333", "FSID-33333", SBMFileStatus.BYPASS_FREEZE);
+		insertSBMFileProcessingSummary(tenantId, "33333", "FSID-33333", SBMFileStatus.BYPASS_FREEZE);
 		Thread.sleep(100);
 		Long sumId4 = insertSBMFileProcessingSummary(tenantId, "33333", "FSID-33333", SBMFileStatus.ACCEPTED_WITH_WARNINGS);
 		Thread.sleep(100);
@@ -566,8 +563,6 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 		String stateCd = TestDataSBMUtility.getRandomSbmState();
 		String tenantId = stateCd + "0";
 		String issuerId =  TestDataSBMUtility.getRandomNumberAsString(5);
-		String sbmFileId = "FID-" + issuerId;
-		int fileNum = 1;
 		String fileSetId = "FSID-" + issuerId;
 		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(3);
 		userVO.setUserId(batchId.toString());

@@ -267,27 +267,21 @@ public class SBMFileCompositeDAOImpl implements SBMFileCompositeDAO {
 	}
 
 
-
 	@Override
-	public List<SBMSummaryAndFileInfoDTO> getAllSBMFileInfos(Long sbmFileProcSumId) {
-
-		List<SBMSummaryAndFileInfoDTO> sbmSummaryDTOList = new ArrayList<SBMSummaryAndFileInfoDTO>();
-
-		SbmFileProcessingSummaryPO summaryPO =  sbmFileProcSumDao.selectSbmFileProcessingSummary(sbmFileProcSumId); 
-
-		SBMSummaryAndFileInfoDTO epsSummaryDTO = sbmFileProcSumMapper.mapEpsToSbm(summaryPO);
+	public List<SBMFileInfo> getSbmFileInfoList(Long sbmFileProcSumId) {
+		
 		List<SbmFileInfoPO> filePOList = sbmFileInfoDao.getSbmFileInfoList(sbmFileProcSumId);
 		List<SBMFileInfo> sbmFileInfoList = sbmFileInfoMapper.mapEpsToSbm(filePOList);
-		epsSummaryDTO.getSbmFileInfoList().addAll(sbmFileInfoList);
-		sbmSummaryDTOList.add(epsSummaryDTO);
-
-		return sbmSummaryDTOList;
+		return sbmFileInfoList;
 	}
 
 	@Override
 	public void updateFileStatus(Long sbmFileProcSumId, SBMFileStatus fileStatus, Long batchId) {
 
-		// TODO add batchId to LASTMODIFIEDBY
+		if(batchId != null) {
+			
+			userVO.setUserId(batchId.toString());
+		} 
 		sbmFileProcSumDao.updateStatus(sbmFileProcSumId, fileStatus);
 	}
 

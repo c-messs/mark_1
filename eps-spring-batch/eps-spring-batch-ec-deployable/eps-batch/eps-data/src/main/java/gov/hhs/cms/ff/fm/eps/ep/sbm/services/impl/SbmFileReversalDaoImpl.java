@@ -20,6 +20,7 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SbmFileReversalDao;
  * @author j.radziewski
  *
  */
+@SuppressWarnings("rawtypes")
 public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReversalDao {
 
 	private final static Logger LOG = LoggerFactory.getLogger(SbmFileReversalDaoImpl.class);
@@ -46,10 +47,10 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 
 		//Single Policy version J86
 		int cntPolicy = copyPolicyVersion(fileProcSummaryId);
-		
+
 		//Policy Status update for J83 (Multiple prior versions)
 		int cntPrecedingStatus = copyPrecedingStatus(fileProcSummaryId);
-		
+
 		//Policy Status history carryover for J86 (Only one version existed)
 		int cntStatusHistory = copyStatusHistory(fileProcSummaryId);
 
@@ -60,20 +61,21 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 		int cntPremium = copyPolicyPremiums(fileProcSummaryId);
 		int cntJoin = copyPolicyMembers(fileProcSummaryId);
 
-		//TODO Remove or change to DEBUG after testing.
-		LOG.info("\n\nTotal policy records effected by Reversal (BKO) from EPS.  sbmFileProcSumId: " + fileProcSummaryId +
-				"\n     Statuses                     : " + cntStatus +
-				"\n     PrecedingPolicies (J83)      : " + cntPrecedingPolicy + 
-				"\n     Policies (modified, J86)     : " + cntPolicy +
-				"\n     Copied Preceding Status (J83): " + cntPrecedingStatus +	
-				"\n     Copied Status History (J86)  : " + cntStatusHistory +	
-				"\n     MED Updates Void             : " + cntMEDUpdatesVoid +
-				"\n     MED Updates Preceding        : " + cntMEDUpdatePreceding +
-				"\n     Premiums                     : " + cntPremium +
-				"\n     Joins                        : " + cntJoin + "\n");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("\n\nTotal policy records effected by Reversal (BKO) from EPS.  sbmFileProcSumId: " + fileProcSummaryId +
+					"\n     Statuses                     : " + cntStatus +
+					"\n     PrecedingPolicies (J83)      : " + cntPrecedingPolicy + 
+					"\n     Policies (modified, J86)     : " + cntPolicy +
+					"\n     Copied Preceding Status (J83): " + cntPrecedingStatus +	
+					"\n     Copied Status History (J86)  : " + cntStatusHistory +	
+					"\n     MED Updates Void             : " + cntMEDUpdatesVoid +
+					"\n     MED Updates Preceding        : " + cntMEDUpdatePreceding +
+					"\n     Premiums                     : " + cntPremium +
+					"\n     Joins                        : " + cntJoin + "\n");
+		}
 	}
 
-	
+
 	private int updatePolicyStatus(Long fileProcSummaryId) {
 
 		int cntRecord = jdbcTemplate.update(new PreparedStatementCreator() {
@@ -173,7 +175,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 		});
 		return cntRecord;
 	}
-	
+
 	private int copyPrecedingStatus(Long fileProcSummaryId) {
 
 		int cntRecord = jdbcTemplate.update(new PreparedStatementCreator() {
@@ -206,7 +208,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 		});
 		return cntRecord;
 	}
-	
+
 	private int copyStatusHistory(Long fileProcSummaryId) {
 
 		int cntRecord = jdbcTemplate.update(new PreparedStatementCreator() {
@@ -342,7 +344,7 @@ public class SbmFileReversalDaoImpl extends GenericEpsDao implements SbmFileReve
 		});
 		return cntRecord;
 	}
-	
+
 	private int updateMaintDateTimeForPreceding(Long fileProcSummaryId) {
 
 		int cntRecord = jdbcTemplate.update(new PreparedStatementCreator() {
