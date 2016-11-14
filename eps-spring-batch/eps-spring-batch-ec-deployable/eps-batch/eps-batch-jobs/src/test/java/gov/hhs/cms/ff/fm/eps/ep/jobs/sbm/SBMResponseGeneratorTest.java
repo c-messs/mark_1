@@ -405,36 +405,7 @@ public class SBMResponseGeneratorTest extends TestCase {
 		SBMFileStatus actualStatus = (SBMFileStatus) ReflectionTestUtils.invokeMethod(sbmrGenerator, "validateErrorThreshold", dto);
 		
 		assertEquals("SBMFileStatus", expectedStatus, actualStatus);
-	}
-
-	/*
-	 * private SBMFileStatus validateErrorThreshold(SbmResponseDTO dto) {
-
-		SBMFileStatus fileStatus = SBMFileStatus.ACCEPTED;
-
-		BigDecimal errorThreshold = dto.getSbmSummaryAndFileInfo().getErrorThresholdPercent();
-		if(errorThreshold == null) {
-			errorThreshold = BigDecimal.ZERO;
-		}
-
-		BigDecimal percentRejected = getPercentRejected(dto);
-
-		LOG.info("Compare threshold; errorThresholdAllowed:{}  percentRejected:{}", errorThreshold, percentRejected);
-		if(percentRejected.compareTo(errorThreshold) > 0 ) {
-			// percentRejected exceeded threshold so reject file/fileset 			
-			fileStatus = SBMFileStatus.REJECTED;
-		}
-		else if(dto.isXprErrorsExist()) {
-			fileStatus = SBMFileStatus.ACCEPTED_WITH_ERRORS;
-		}
-		else if(dto.isXprWarningsExist()) {
-			fileStatus = SBMFileStatus.ACCEPTED_WITH_WARNINGS;
-		}
-
-		return fileStatus;
-	}
-	 */
-	
+	}	
 	
 	private FileAcceptanceRejection createFileAcceptanceRejection() {
 		FileAcceptanceRejection sbmr = new FileAcceptanceRejection();
@@ -445,7 +416,5 @@ public class SBMResponseGeneratorTest extends TestCase {
 
 		return sbmr;
 	}
-
-
 
 }
