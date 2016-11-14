@@ -12,10 +12,11 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmResponseDTO;
 public interface SbmResponseCompositeDao {
 	
 	/**
+	 * @param batchId
 	 * @param sbmFileProcSumId
 	 * @return
 	 */
-	public SbmResponseDTO generateSBMR(Long sbmFileProcSumId);
+	public SbmResponseDTO generateSBMR(Long batchId, Long sbmFileProcSumId);
 		
 	
 	/**
@@ -58,9 +59,30 @@ public interface SbmResponseCompositeDao {
 	 */
 	public List<Long> getSummaryIdsForSBMRFromStagingSBMGroupLock(Long batchId);
 
+
 	/**
+	 * @param batchId
 	 * @param sbmFileProcSumId
 	 * @return
 	 */
-	public SbmResponseDTO generateUpdateStatusSBMR(Long sbmFileProcSumId);	
+	public SbmResponseDTO generateUpdateStatusSBMR(Long batchId, Long sbmFileProcSumId);	
+	
+	
+	/** H1. Identify if there are additional policies found in EPS that belongs to the 
+	 *  issuer or state that were not provided and not in Superseded or SBMIVoid status.
+	 *  Return a response containing EPS Summary that contain file and xpr error counts.
+	 * @param batchId
+	 * @param sbmFileProcSumId
+	 * @return
+	 */
+	public void validateMissingPolicies(Long batchId, Long sbmFileProcSumId);
+	
+	
+	/**
+	 * Retrieve the summary for perform Threshold Validation.
+	 *  - Includes whether or not if any errors exist and file info(s).
+	 * @param sbmFileProcSumId
+	 * @return
+	 */
+	public SbmResponseDTO getSummary(Long sbmFileProcSumId);
 }

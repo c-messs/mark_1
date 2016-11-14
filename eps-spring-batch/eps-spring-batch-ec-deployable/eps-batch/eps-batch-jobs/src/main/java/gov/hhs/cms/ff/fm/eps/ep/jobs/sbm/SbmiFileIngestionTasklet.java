@@ -31,7 +31,7 @@ public class SbmiFileIngestionTasklet implements Tasklet {
 	public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {		
 		
 		JobExecution jobExec = chunkContext.getStepContext().getStepExecution().getJobExecution();
-		Long jobId = chunkContext.getStepContext().getStepExecution().getJobExecution().getJobId();
+		Long jobId = jobExec.getJobId();
 				
 		//read one file and write
 		SBMFileProcessingDTO dto = fileIngestionReader.read(jobId);

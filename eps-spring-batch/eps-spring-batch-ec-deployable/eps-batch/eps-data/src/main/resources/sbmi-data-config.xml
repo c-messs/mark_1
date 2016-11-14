@@ -50,9 +50,9 @@
 		<property name="sequenceHelper" ref="sequenceHelper"></property>
 		<property name="selectSbmFileInfoSql" value="${SELECT_FILE_INFO}"></property>
 		<property name="selectSBMFileInfoSqlByFileSetId" value="${SELECT_FILE_INFO_BY_FILESETID_FILENUM}"></property>
-		<property name="selectFileStatusSql" value="${SELECT_FILE_STATUS}"></property>
 		<property name="selectFileInfoXmlSql" value="${SELECT_FILE_INFO_XML}"></property>
 		<property name="insertSBMFileInfoSql" value="${INSERT_FILE_INFO}"></property>
+		<property name="insertSBMFileInfoNullSql" value="${INSERT_FILE_INFO_NULL}"></property>
 		<property name="userVO" ref="userVO" />
 	</bean>
 	
@@ -74,7 +74,6 @@
 	<bean id="sbmFileErrorDao" class="gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl.SbmFileErrorDaoImpl">
 		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
 		<property name="insertErrorListSql" value="${INSERT_FILE_ERROR}"></property>
-		<property name="verifyFileErrorCountSql" value="${VERIFY_FILE_ERROR}"></property>
 		<property name="userVO" ref="userVO" />
 	</bean>
 	

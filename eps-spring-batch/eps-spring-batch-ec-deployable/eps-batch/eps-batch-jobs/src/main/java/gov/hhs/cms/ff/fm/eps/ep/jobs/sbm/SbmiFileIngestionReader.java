@@ -38,8 +38,11 @@ import org.springframework.batch.item.NonTransientResourceException;
 import org.springframework.batch.item.ParseException;
 import org.springframework.batch.item.UnexpectedInputException;
 
+import com.accenture.foundation.common.exception.EnvironmentException;
+
 import gov.cms.dsh.sbmi.FileInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.StateProrationConfiguration;
+import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode;
 import gov.hhs.cms.ff.fm.eps.ep.jobs.CommonUtil;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMCache;
@@ -60,7 +63,8 @@ public class SbmiFileIngestionReader  {
 	private static final Logger LOG = LoggerFactory.getLogger(SbmiFileIngestionReader.class);
 	private static final String ZIPPED_FILE_NAME_FORMAT = "\\w{1,10}\\.\\w{1,10}\\.\\w{1,10}\\.D(\\d{6})\\.T(\\d{9})(\\.\\w?+)?(\\.\\w*+)?";
 	private static final String LOCK_EXTENSION = "\\.lock$";
-	
+	private static final int FILE_EXISTS_MAX_LOOP_CNT = 10;
+
 	private File eftFolder;
 	private File privateFolder;
 	private File processedFolder;
@@ -181,19 +185,33 @@ public class SbmiFileIngestionReader  {
 
 		File fileFromEFT = null;
 		File sbmiFile = null;
-		String filename = "";
+		String fileName = "";
+		String fileNamePrev = "";
 		long lastModifiedTimeMillis = 0;
+		int loopCnt = 1;
 
-		//try until no files in EFT
+		// Try until no files in EFT.
+		// Or, if the private directory is not cleared from a previous job failure
+		// and the same file is re-run, limit the number of times a duplicate file is attempted to lock.
 		while((fileFromEFT = getAFileFromEFT()) != null) {
-			filename = fileFromEFT.getName();
+			fileName = fileFromEFT.getName();
 			lastModifiedTimeMillis = fileFromEFT.lastModified();
 			sbmiFile = lockFile(fileFromEFT);
 			if(sbmiFile != null) {
 				break;
 			}	
-			LOG.info("Unable to lock the file(Other job might have got the lock); trying with next file");
-		}		
+			LOG.info("Unable to lock the file (Other job might have got the lock); trying with next file");
+
+			if (fileName.equals(fileNamePrev)) {
+				loopCnt++;
+			}
+
+			if (loopCnt >= FILE_EXISTS_MAX_LOOP_CNT) {
+				throw new EnvironmentException(EProdEnum.EPROD_02.getLogMsg() + ".  File " + fileName + 
+						" is already locked.  Attempted to lock the same file " + FILE_EXISTS_MAX_LOOP_CNT + " times.");
+			}
+			fileNamePrev = fileName;
+		}	
 
 		if(sbmiFile == null) {
 			//no files in EFT
@@ -201,7 +219,7 @@ public class SbmiFileIngestionReader  {
 			return null;
 		}
 
-		SBMFileInfo fileInfo = createSBMFileInfo(filename, lastModifiedTimeMillis);
+		SBMFileInfo fileInfo = createSBMFileInfo(fileName, lastModifiedTimeMillis);
 
 		SBMFileProcessingDTO sbmFileProcDto = new SBMFileProcessingDTO();
 		sbmFileProcDto.setSbmFileInfo(fileInfo);
@@ -433,7 +451,7 @@ public class SbmiFileIngestionReader  {
 
 		List<SBMErrorDTO> zipErrorList = new ArrayList<SBMErrorDTO>();
 		String zipFileSrcId = SbmHelper.getTradingPartnerId(file.getName());
-		
+
 		String zipFileTs = zipFormatter.format(LocalDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneId.systemDefault()));
 		LOG.info("Zip file timestamp: " + zipFileTs);
 
@@ -533,7 +551,7 @@ public class SbmiFileIngestionReader  {
 				String fileNm = StringUtils.substringBefore(firstFile.getName(), SBMConstants.ZIPD);
 
 				File newFile = lockFile(firstFile);
-				
+
 				SBMFileInfo fileInfo = new SBMFileInfo();		
 				fileInfo.setSbmFileNm(fileNm);
 				fileInfo.setFunctionCd(SbmHelper.getFunctionCodeFromPreEFTFormat(fileNm)); 
@@ -601,17 +619,17 @@ public class SbmiFileIngestionReader  {
 
 			try {
 				FileOutputStream fileOutputStream = new FileOutputStream(gzipDirectory + File.separator + newFileName.replaceAll("\\.gz$", "").concat(gzipFileTs));
-	
+
 				int bytesRead;
-	
+
 				try {
 					while ((bytesRead = gzs.read(buffer)) > 0) {
 						fileOutputStream.write(buffer, 0, bytesRead);
 					}
-	
+
 				} catch (IOException e) {
 					LOG.error(e.getMessage());
-	
+
 				} finally {
 					fileOutputStream.close();
 				}
@@ -636,7 +654,7 @@ public class SbmiFileIngestionReader  {
 			String fileNm = StringUtils.substringBefore(firstFile.getName(), SBMConstants.GZIPD);
 
 			File newFile = lockFile(firstFile);
-			
+
 			SBMFileInfo fileInfo = new SBMFileInfo();		
 			fileInfo.setSbmFileNm(fileNm);
 			fileInfo.setFunctionCd(SbmHelper.getFunctionCodeFromFile(fileNm)); 

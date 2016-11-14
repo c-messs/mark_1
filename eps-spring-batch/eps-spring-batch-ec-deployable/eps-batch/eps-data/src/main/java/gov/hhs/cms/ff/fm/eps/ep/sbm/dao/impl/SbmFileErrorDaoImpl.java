@@ -19,7 +19,6 @@ public class SbmFileErrorDaoImpl extends GenericEpsDao<SbmFileErrorPO> implement
 	
 	
 	private String insertErrorListSql;
-	private String verifyFileErrorCountSql;
 
 	@Override
 	public void insertSbmFileErrorList(final List<SbmFileErrorPO> errList) {
@@ -54,13 +53,5 @@ public class SbmFileErrorDaoImpl extends GenericEpsDao<SbmFileErrorPO> implement
 	public void setInsertErrorListSql(String sql) {
 		this.insertErrorListSql = sql;
 	}
-
-	/**
-	 * @param verifyFileErrorCountSql the verifyFileErrorCountSql to set
-	 */
-	public void setVerifyFileErrorCountSql(String verifyFileErrorCountSql) {
-		this.verifyFileErrorCountSql = verifyFileErrorCountSql;
-	}
-
 
 }

@@ -117,7 +117,8 @@ public class SbmFileProcessingSummaryDaoImpl extends GenericEpsDao<SbmFileProces
 			public Boolean doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
 
 				ps.setString(1, fileStatus.getValue());
-				ps.setLong(2, sbmFileProcSumId);
+				ps.setString(2, userVO.getUserId());
+				ps.setLong(3, sbmFileProcSumId);
 
 				int rowsEffected = ps.executeUpdate();
 
