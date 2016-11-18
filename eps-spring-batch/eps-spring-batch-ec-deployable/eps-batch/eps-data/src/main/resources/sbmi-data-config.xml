@@ -202,8 +202,6 @@
 		<property name="jdbcTemplate" ref="jdbcTemplate"></property>
 		<property name="findInsertMissingPolicyByIssuerSql" value="${FIND_INSERT_MISSING_POLICY_BY_ISSUER}"></property>
 		<property name="findInsertMissingPolicyByStateSql" value="${FIND_INSERT_MISSING_POLICY_BY_STATE}"></property>
-		<property name="findInsertMissingMemberByIssuerSql" value="${FIND_INSERT_MISSING_MEMBER_BY_ISSUER}"></property>
-		<property name="findInsertMissingMemberByStateSql" value="${FIND_INSERT_MISSING_MEMBER_BY_STATE}"></property>
 		<property name="selectMissingPolicyDataSql" value="${SELECT_MISSING_POLICY_DATA}"></property>			
 		<property name="userVO" ref="userVO" />
 	</bean>	
@@ -266,7 +264,7 @@
 		<property name="sbmTransMsgDao" ref="sbmTransMsgDao" />
 		<property name="sbmTransMsgValidationDao" ref="sbmTransMsgValidationDao" />
 		<property name="sbmTransMsgAddlErrInfoDao" ref="sbmTransMsgAddlErrInfoDao" />
-		
+			
 		<property name="userVO" ref="userVO" />
 	</bean>
 	

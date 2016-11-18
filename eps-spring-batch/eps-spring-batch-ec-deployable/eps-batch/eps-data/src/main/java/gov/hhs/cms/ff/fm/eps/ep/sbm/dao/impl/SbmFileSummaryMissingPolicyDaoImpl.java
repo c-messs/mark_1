@@ -25,10 +25,17 @@ import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
  */
 public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSummaryMissingPolicyPO> implements SbmFileSummaryMissingPolicyDao {
 
+	/**
+	 * FIND_INSERT_MISSING_POLICY_BY_ISSUER
+	 */
 	private String findInsertMissingPolicyByIssuerSql;
+	/**
+	 * FIND_INSERT_MISSING_POLICY_BY_STATE
+	 */
 	private String findInsertMissingPolicyByStateSql;
-	private String findInsertMissingMemberByIssuerSql;
-	private String findInsertMissingMemberByStateSql;
+	/**
+	 * SELECT_MISSING_POLICY_DATA
+	 */
 	private String selectMissingPolicyDataSql;
 
 	private SbmMissingPolicyRowMapper missingPolicyRowMapper;
@@ -113,74 +120,6 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 
 
 	@Override
-	public int findAndInsertMissingMember(SbmFileProcessingSummaryPO summaryPO) {
-
-		int recordCnt = 0;
-		String stateCd = SbmDataUtil.getStateCd(summaryPO.getTenantId());
-
-		if (summaryPO.getIssuerId() != null) {
-			
-			recordCnt = findAndInsertMissingMemberByIssuer(summaryPO.getSbmFileProcSumId(), stateCd, summaryPO.getIssuerId(), summaryPO.getCoverageYear());
-		} else {
-			
-			recordCnt = findAndInsertMissingMemberByState(summaryPO.getSbmFileProcSumId(), stateCd, summaryPO.getCoverageYear());
-		}
-		return recordCnt;
-	}
-	
-	
-	private int findAndInsertMissingMemberByIssuer(final Long sbmFileProcSumId, final String stateCd, final String issuerId, int coverageYear) {
-
-		int[] rowsAffected = jdbcTemplate.batchUpdate(findInsertMissingMemberByIssuerSql, new BatchPreparedStatementSetter() {
-
-			@Override
-			public void setValues(PreparedStatement ps, int i) throws SQLException {
-
-				ps.setLong(1, sbmFileProcSumId);
-				ps.setString(2, userVO.getUserId());
-				ps.setString(3, userVO.getUserId());
-				ps.setLong(4, sbmFileProcSumId);
-				ps.setString(5, stateCd);
-				ps.setString(6, issuerId);
-				ps.setInt(7, coverageYear);
-			}
-
-			@Override
-			public int getBatchSize() {
-				return 1;
-			}
-		});	
-
-		return rowsAffected.length;		
-	}
-
-	
-	private int findAndInsertMissingMemberByState(final Long sbmFileProcSumId, final String stateCd, int coverageYear) {
-
-		int[] rowsAffected = jdbcTemplate.batchUpdate(findInsertMissingMemberByStateSql, new BatchPreparedStatementSetter() {
-
-			@Override
-			public void setValues(PreparedStatement ps, int i) throws SQLException {
-
-				ps.setLong(1, sbmFileProcSumId);
-				ps.setString(2, userVO.getUserId());
-				ps.setString(3, userVO.getUserId());
-				ps.setLong(4, sbmFileProcSumId);
-				ps.setString(5, stateCd);
-				ps.setInt(6, coverageYear);
-			}
-
-			@Override
-			public int getBatchSize() {
-				return 1;
-			}
-		});	
-
-		return rowsAffected.length;		
-	}
-
-
-	@Override
 	public List<SbmFileSummaryMissingPolicyData> selectMissingPolicyList(Long sbmFileProcSumId) {
 
 		return (List<SbmFileSummaryMissingPolicyData>) jdbcTemplate.query(selectMissingPolicyDataSql, missingPolicyRowMapper, sbmFileProcSumId);
@@ -229,22 +168,6 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 
 
 	/**
-	 * @param findInsertMissingMemberByIssuerSql the findInsertMissingMemberByIssuerSql to set
-	 */
-	public void setFindInsertMissingMemberByIssuerSql(String findInsertMissingMemberByIssuerSql) {
-		this.findInsertMissingMemberByIssuerSql = findInsertMissingMemberByIssuerSql;
-	}
-
-
-	/**
-	 * @param findInsertMissingMemberByStateSql the findInsertMissingMemberByStateSql to set
-	 */
-	public void setFindInsertMissingMemberByStateSql(String findInsertMissingMemberByStateSql) {
-		this.findInsertMissingMemberByStateSql = findInsertMissingMemberByStateSql;
-	}
-
-
-	/**
 	 * @param selectMissingPolicyDataSql the selectMissingPolicyDataSql to set
 	 */
 	public void setSelectMissingPolicyDataSql(String selectMissingPolicyDataSql) {
@@ -258,6 +181,5 @@ public class SbmFileSummaryMissingPolicyDaoImpl extends GenericEpsDao<SbmFileSum
 	public void setMissingPolicyRowMapper(SbmMissingPolicyRowMapper missingPolicyRowMapper) {
 		this.missingPolicyRowMapper = missingPolicyRowMapper;
 	}
-
 
 }

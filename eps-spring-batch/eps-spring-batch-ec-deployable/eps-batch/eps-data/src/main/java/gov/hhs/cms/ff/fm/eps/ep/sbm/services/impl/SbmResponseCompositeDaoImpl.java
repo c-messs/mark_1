@@ -462,7 +462,6 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		// not in EPS PolicyVersion. Then insert the ids into
 		// SbmFileSummaryMissingPolicy table.
 		sbmFileSumMissingPolicyDao.findAndInsertMissingPolicy(epsSummaryPO);
-		sbmFileSumMissingPolicyDao.findAndInsertMissingMember(epsSummaryPO);
 	}
 
 	@Override
