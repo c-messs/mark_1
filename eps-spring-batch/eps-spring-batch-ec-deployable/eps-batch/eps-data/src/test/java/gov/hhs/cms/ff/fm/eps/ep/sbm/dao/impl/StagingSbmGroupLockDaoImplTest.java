@@ -24,30 +24,30 @@ import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 @TransactionConfiguration(transactionManager = "transactionManager", defaultRollback = true)
 @Transactional
 public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
-	
+
 	@Autowired
 	private StagingSbmGroupLockDao stagingSbmGroupLockDao;
-	
+
 	@Autowired
 	private UserVO userVO;
 
-	
+
 	@Test
 	public void test_insertStagingSbmGroupLock() {
 
 		assertNotNull("stagingSbmGroupLockDao", stagingSbmGroupLockDao);
 		userVO.setUserId("StagSbmGrpLockDaoTest");
 		String stateCd = TestDataSBMUtility.getRandomSbmState();
-		
+
 		Long expectedProcGrpId = TestDataSBMUtility.getRandomNumberAsLong(4); 
-		
+
 		Long sbmFileProcSumId = insertSBMFileProcessingSummary(stateCd + "0");
-		
+
 		List<StagingSbmGroupLockPO> poList = new ArrayList<StagingSbmGroupLockPO>();
 		StagingSbmGroupLockPO po = new StagingSbmGroupLockPO();
 		po.setSbmFileProcSumId(sbmFileProcSumId);
 		po.setProcessingGroupId(expectedProcGrpId);
-		
+
 		poList.add(po);
 
 		stagingSbmGroupLockDao.insertStagingSbmGroupLock(poList);
@@ -63,23 +63,23 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 		assertNull("BATCHID should be null", row.get("BATCHID"));
 		assertSysData(row);
 	}
-	
+
 	@Test
 	public void test_updateStagingGroupLock() {
 
 		assertNotNull("stagingSbmGroupLockDao", stagingSbmGroupLockDao);
 		userVO.setUserId("StagSbmGrpLockDaoTest");
 		String stateCd = TestDataSBMUtility.getRandomSbmState();
-		
+
 		Long expectedProcGrpId = 0L; 
-		
+
 		Long sbmFileProcSumId = insertSBMFileProcessingSummary(stateCd + "0");
-		
+
 		List<StagingSbmGroupLockPO> poList = new ArrayList<StagingSbmGroupLockPO>();
 		StagingSbmGroupLockPO po = new StagingSbmGroupLockPO();
 		po.setSbmFileProcSumId(sbmFileProcSumId);
 		po.setProcessingGroupId(expectedProcGrpId);
-		
+
 		poList.add(po);
 
 		stagingSbmGroupLockDao.insertStagingSbmGroupLock(poList);
@@ -94,11 +94,11 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 		assertEquals("PROCESSINGGROUPID ", new BigDecimal(expectedProcGrpId), row.get("PROCESSINGGROUPID"));
 		assertNull("BATCHID should be null", row.get("BATCHID"));
 		assertSysData(row);
-		
-		
+
+
 		boolean updated = stagingSbmGroupLockDao.updateStagingGroupLock(sbmFileProcSumId, 9999L);
 		assertTrue("updated", updated);
-		
+
 		sql = "SELECT * FROM STAGINGSBMGROUPLOCK WHERE SBMFILEPROCESSINGSUMMARYID = " + sbmFileProcSumId;
 
 		List<Map<String, Object>> updatedList = jdbc.queryForList(sql);
@@ -110,25 +110,25 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 		assertNotNull("BATCHID should not be null", updateRow.get("BATCHID"));
 		assertEquals("BATCHID should be 9999", 9999, ((BigDecimal)updateRow.get("BATCHID")).longValue());
 		assertSysData(updateRow);
-		
+
 	}
-	
+
 	@Test
 	public void test_updateStagingGroupLockForExtract() {
 
 		assertNotNull("stagingSbmGroupLockDao", stagingSbmGroupLockDao);
 		userVO.setUserId("StagSbmGrpLockDaoTest");
 		String stateCd = TestDataSBMUtility.getRandomSbmState();
-		
+
 		Long expectedProcGrpId = 1L; 
-		
+
 		Long sbmFileProcSumId = insertSBMFileProcessingSummary(stateCd + "0");
-		
+
 		List<StagingSbmGroupLockPO> poList = new ArrayList<StagingSbmGroupLockPO>();
 		StagingSbmGroupLockPO po = new StagingSbmGroupLockPO();
 		po.setSbmFileProcSumId(sbmFileProcSumId);
 		po.setProcessingGroupId(expectedProcGrpId);
-		
+
 		poList.add(po);
 
 		stagingSbmGroupLockDao.insertStagingSbmGroupLock(poList);
@@ -143,11 +143,11 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 		assertEquals("PROCESSINGGROUPID ", new BigDecimal(expectedProcGrpId), row.get("PROCESSINGGROUPID"));
 		assertNull("BATCHID should be null", row.get("BATCHID"));
 		assertSysData(row);
-		
-		
+
+
 		boolean updated = stagingSbmGroupLockDao.updateStagingGroupLockForExtract(9999L);
 		assertTrue("updated", updated);
-		
+
 		sql = "SELECT * FROM STAGINGSBMGROUPLOCK WHERE SBMFILEPROCESSINGSUMMARYID = " + sbmFileProcSumId;
 
 		List<Map<String, Object>> updatedList = jdbc.queryForList(sql);
@@ -159,25 +159,25 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 		assertNotNull("BATCHID should not be null", updateRow.get("BATCHID"));
 		assertEquals("BATCHID should be 9999", 9999, ((BigDecimal)updateRow.get("BATCHID")).longValue());
 		assertSysData(updateRow);
-		
+
 	}
-	
+
 	@Test
 	public void test_deleteStagingGroupLock() {
 
 		assertNotNull("stagingSbmGroupLockDao", stagingSbmGroupLockDao);
 		userVO.setUserId("StagSbmGrpLockDaoTest");
 		String stateCd = TestDataSBMUtility.getRandomSbmState();
-		
+
 		Long expectedProcGrpId = 0L; 
-		
+
 		Long sbmFileProcSumId = insertSBMFileProcessingSummary(stateCd + "0");
-		
+
 		List<StagingSbmGroupLockPO> poList = new ArrayList<StagingSbmGroupLockPO>();
 		StagingSbmGroupLockPO po = new StagingSbmGroupLockPO();
 		po.setSbmFileProcSumId(sbmFileProcSumId);
 		po.setProcessingGroupId(expectedProcGrpId);
-		
+
 		poList.add(po);
 
 		stagingSbmGroupLockDao.insertStagingSbmGroupLock(poList);
@@ -192,11 +192,11 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 		assertEquals("PROCESSINGGROUPID ", new BigDecimal(expectedProcGrpId), row.get("PROCESSINGGROUPID"));
 		assertNull("BATCHID should be null", row.get("BATCHID"));
 		assertSysData(row);
-		
-		
+
+
 		boolean updated = stagingSbmGroupLockDao.updateStagingGroupLock(sbmFileProcSumId, 9999L);
 		assertTrue("updated", updated);
-		
+
 		sql = "SELECT * FROM STAGINGSBMGROUPLOCK WHERE SBMFILEPROCESSINGSUMMARYID = " + sbmFileProcSumId;
 
 		List<Map<String, Object>> updatedList = jdbc.queryForList(sql);
@@ -208,28 +208,28 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 		assertNotNull("BATCHID should not be null", updateRow.get("BATCHID"));
 		assertEquals("BATCHID should be 9999", 9999, ((BigDecimal)updateRow.get("BATCHID")).longValue());
 		assertSysData(updateRow);
-		
+
 		int deletedCount = stagingSbmGroupLockDao.deleteStagingGroupLock(sbmFileProcSumId, 9999L);
-		
+
 		assertEquals("deleted count", 1, deletedCount);
 	}
-	
+
 	@Test
 	public void test_deleteStagingGroupLockForExtract() {
 
 		assertNotNull("stagingSbmGroupLockDao", stagingSbmGroupLockDao);
 		userVO.setUserId("StagSbmGrpLockDaoTest");
 		String stateCd = TestDataSBMUtility.getRandomSbmState();
-		
+
 		Long expectedProcGrpId = 1L; 
-		
+
 		Long sbmFileProcSumId = insertSBMFileProcessingSummary(stateCd + "0");
-		
+
 		List<StagingSbmGroupLockPO> poList = new ArrayList<StagingSbmGroupLockPO>();
 		StagingSbmGroupLockPO po = new StagingSbmGroupLockPO();
 		po.setSbmFileProcSumId(sbmFileProcSumId);
 		po.setProcessingGroupId(expectedProcGrpId);
-		
+
 		poList.add(po);
 
 		stagingSbmGroupLockDao.insertStagingSbmGroupLock(poList);
@@ -244,11 +244,11 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 		assertEquals("PROCESSINGGROUPID ", new BigDecimal(expectedProcGrpId), row.get("PROCESSINGGROUPID"));
 		assertNull("BATCHID should be null", row.get("BATCHID"));
 		assertSysData(row);
-		
-		
+
+
 		boolean updated = stagingSbmGroupLockDao.updateStagingGroupLockForExtract(9999L);
 		assertTrue("updated", updated);
-		
+
 		sql = "SELECT * FROM STAGINGSBMGROUPLOCK WHERE SBMFILEPROCESSINGSUMMARYID = " + sbmFileProcSumId;
 
 		List<Map<String, Object>> updatedList = jdbc.queryForList(sql);
@@ -260,28 +260,28 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 		assertNotNull("BATCHID should not be null", updateRow.get("BATCHID"));
 		assertEquals("BATCHID should be 9999", 9999, ((BigDecimal)updateRow.get("BATCHID")).longValue());
 		assertSysData(updateRow);
-		
+
 		int deletedCount = stagingSbmGroupLockDao.deleteStagingGroupLockForExtract(9999L);
-		
+
 		assertEquals("deleted count", 1, deletedCount);
 	}
-	
+
 	@Test
 	public void test_selectStagingGroupLockZero() {
 
 		assertNotNull("stagingSbmGroupLockDao", stagingSbmGroupLockDao);
 		userVO.setUserId("StagSbmGrpLockDaoTest");
 		String stateCd = TestDataSBMUtility.getRandomSbmState();
-		
+
 		Long expectedProcGrpId = 0L; 
-		
+
 		Long sbmFileProcSumId = insertSBMFileProcessingSummary(stateCd + "0");
-		
+
 		List<StagingSbmGroupLockPO> poList = new ArrayList<StagingSbmGroupLockPO>();
 		StagingSbmGroupLockPO po = new StagingSbmGroupLockPO();
 		po.setSbmFileProcSumId(sbmFileProcSumId);
 		po.setProcessingGroupId(expectedProcGrpId);
-		
+
 		poList.add(po);
 
 		stagingSbmGroupLockDao.insertStagingSbmGroupLock(poList);
@@ -295,30 +295,32 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 
 		assertEquals("PROCESSINGGROUPID ", new BigDecimal(expectedProcGrpId), row.get("PROCESSINGGROUPID"));
 		assertNull("BATCHID should be null", row.get("BATCHID"));
-		
+
 		boolean updated = stagingSbmGroupLockDao.updateStagingGroupLock(sbmFileProcSumId, 9999L);
 		assertTrue("updated", updated);
-		
+
 		List<StagingSbmGroupLockPO> locksList = stagingSbmGroupLockDao.selectStagingGroupLockZero(9999L);
-		assertEquals("STAGING Group Lock list size", 1, locksList.size());
+		// There should be at least 1, but there could be more if there is other data in EPS not
+		// related to this test.  Hence, confirm it is not 0.
+		assertNotSame("STAGING Group Lock list size", 0, locksList.size());
 	}
-	
+
 	@Test
 	public void test_selectStagingGroupLockSbmr() {
 
 		assertNotNull("stagingSbmGroupLockDao", stagingSbmGroupLockDao);
 		userVO.setUserId("StagSbmGrpLockDaoTest");
 		String stateCd = TestDataSBMUtility.getRandomSbmState();
-		
+
 		Long expectedProcGrpId = 0L; 
-		
+
 		Long sbmFileProcSumId = insertSBMFileProcessingSummary(stateCd + "0");
-		
+
 		List<StagingSbmGroupLockPO> poList = new ArrayList<StagingSbmGroupLockPO>();
 		StagingSbmGroupLockPO po = new StagingSbmGroupLockPO();
 		po.setSbmFileProcSumId(sbmFileProcSumId);
 		po.setProcessingGroupId(expectedProcGrpId);
-		
+
 		poList.add(po);
 
 		stagingSbmGroupLockDao.insertStagingSbmGroupLock(poList);
@@ -332,34 +334,36 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 
 		assertEquals("PROCESSINGGROUPID ", new BigDecimal(expectedProcGrpId), row.get("PROCESSINGGROUPID"));
 		assertNull("BATCHID should be null", row.get("BATCHID"));
-		
+
 		boolean updated = stagingSbmGroupLockDao.updateStagingGroupLock(sbmFileProcSumId, 9999L);
 		assertTrue("updated", updated);
-		
+
 		List<StagingSbmGroupLockPO> locksList = stagingSbmGroupLockDao.selectStagingGroupLockSbmr();
-		assertEquals("STAGING Group Lock list size", 1, locksList.size());
+		// There should be at least 1, but there could be more if there is other data in EPS not
+		// related to this test.  Hence, confirm it is not 0.
+		assertNotSame("STAGING Group Lock list size", 0, locksList.size());
 	}
-	
+
 	@Test
 	public void test_selectSbmFileProcessingSummaryIdList() {
 
 		assertNotNull("stagingSbmGroupLockDao", stagingSbmGroupLockDao);
 		userVO.setUserId("StagSbmGrpLockDaoTest");
 		String stateCd = TestDataSBMUtility.getRandomSbmState();
-		
+
 		Long expectedProcGrpId = 1L; 
-		
+
 		Long sbmFileProcSumId = insertSBMFileProcessingSummary(stateCd + "0");
-		
+
 		String insertSql = "INSERT INTO STAGINGSBMPOLICY (SBMFILEPROCESSINGSUMMARYID, STAGINGSBMPOLICYID, PROCESSINGGROUPID) VALUES (STAGINGSBMPOLICYSEQ.NEXTVAL, " 
-							+ sbmFileProcSumId + "," + expectedProcGrpId + ")";
+				+ sbmFileProcSumId + "," + expectedProcGrpId + ")";
 		jdbc.execute(insertSql);
-		
+
 		List<StagingSbmGroupLockPO> poList = new ArrayList<StagingSbmGroupLockPO>();
 		StagingSbmGroupLockPO po = new StagingSbmGroupLockPO();
 		po.setSbmFileProcSumId(sbmFileProcSumId);
 		po.setProcessingGroupId(expectedProcGrpId);
-		
+
 		poList.add(po);
 
 		stagingSbmGroupLockDao.insertStagingSbmGroupLock(poList);
@@ -373,14 +377,14 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 
 		assertEquals("PROCESSINGGROUPID ", new BigDecimal(expectedProcGrpId), row.get("PROCESSINGGROUPID"));
 		assertNull("BATCHID should be null", row.get("BATCHID"));
-		
+
 		List<StagingSbmGroupLockPO> locksList = stagingSbmGroupLockDao.selectSbmFileProcessingSummaryIdList();
 		assertEquals("STAGING Group Lock list size", 1, locksList.size());
 	}
-	
+
 	@Test
 	public void test_deleteStaging_Exception() { 
-				
+
 		Class<?> expectedEx = com.accenture.foundation.common.exception.ApplicationException.class;
 		String expectedCd = EProdEnum.EPROD_10.getCode();
 		Long sbmFileProcSumId = null;
@@ -392,10 +396,10 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 			assertEquals("EPROD", expectedCd, ex.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void test_deleteStagingExtract_Exception() { 
-				
+
 		Class<?> expectedEx = com.accenture.foundation.common.exception.ApplicationException.class;
 		String expectedCd = EProdEnum.EPROD_10.getCode();
 		Long batchId = null;
@@ -406,5 +410,5 @@ public class StagingSbmGroupLockDaoImplTest extends BaseSBMDaoTest {
 			assertEquals("EPROD", expectedCd, ex.getMessage());
 		}
 	}
-	
+
 }

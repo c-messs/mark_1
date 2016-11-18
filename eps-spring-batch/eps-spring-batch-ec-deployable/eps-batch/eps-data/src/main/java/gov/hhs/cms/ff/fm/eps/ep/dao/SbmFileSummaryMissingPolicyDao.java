@@ -13,19 +13,14 @@ public interface SbmFileSummaryMissingPolicyDao {
 	
 	
 	/**
+	 * Since policies from the inbound file cannot be determined until after approval,
+	 * find the policies (by file) by looking for what is not in the inbound file compared
+	 * to latest policies from EPS.
 	 * @param summaryPO
 	 * @return
 	 */
 	public int findAndInsertMissingPolicy(SbmFileProcessingSummaryPO summaryPO);
 	
-	
-	/**
-	 * Finds the latest EPS members that are not present in STAGINGSBMFILE based on ExchangeAssignedMemberId.
-	 * @param summaryPO
-	 * @return
-	 */
-	public int findAndInsertMissingMember(SbmFileProcessingSummaryPO summaryPO);
-
 	
 	/** 
 	 * Selects data from POLICYVERSION and POLICYSTATUS based on PolicyVersionId from table SBMFILESUMMARYMISSSINGPOLICYDATA.
@@ -33,6 +28,7 @@ public interface SbmFileSummaryMissingPolicyDao {
 	 * @return
 	 */
 	public List<SbmFileSummaryMissingPolicyData> selectMissingPolicyList(Long sbmFileProcSumId);
+	
 		
 	
 }

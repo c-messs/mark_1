@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +14,7 @@ import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
 
 /**
@@ -24,25 +24,25 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
 public class SBMFileStatusHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SBMFileStatusHandler.class);
-	
+
 	private int freezePeriodStartDay;
 	private int freezePeriodEndDay;
 	private SBMFileCompositeDAO fileCompositeDao;
-	
+
 	/**
 	 * Determine and Set the SBMI File Status
 	 * 
 	 * @param fileProcDto
 	 */
 	public void determineAndSetFileStatus(SBMFileProcessingDTO fileProcDto) {
-				
+
 		FileInformationType fileInfoType = fileProcDto.getFileInfoType();
 		LOG.info("Determing file status for fileId:{}", fileInfoType.getFileId());
-		
+
 		LocalDate today = LocalDate.now();
 		LocalDateTime fileLastModifiedDateTime = fileProcDto.getSbmFileInfo().getFileLastModifiedDateTime();
 		LocalDateTime freezeStartDateTime =  LocalDate.now().withDayOfMonth(freezePeriodStartDay).atStartOfDay();
-		
+
 		//check is in freeze period
 		if((freezePeriodStartDay <= today.getDayOfMonth()) && (today.getDayOfMonth() <= freezePeriodEndDay)) {
 			//If a file is received before freeze period then that file should be processed regardless of freeze period
@@ -52,14 +52,14 @@ public class SBMFileStatusHandler {
 				return;
 			}
 		}
-		
+
 		//check if all files in fileset received
 		if(fileInfoType.getIssuerFileInformation() != null && fileInfoType.getIssuerFileInformation().getIssuerFileSet() != null
 				&& fileInfoType.getIssuerFileInformation().getIssuerFileSet().getTotalIssuerFiles() > 1) {
-			
+
 			//set default status
 			fileProcDto.setSbmFileStatusType(SBMFileStatus.PENDING_FILES); 
-						
+
 			if(fileProcDto.getFileProcSummaryFromDB() != null) {
 				// check if all file received		
 				int totalFiles = fileInfoType.getIssuerFileInformation().getIssuerFileSet().getTotalIssuerFiles();
@@ -70,7 +70,7 @@ public class SBMFileStatusHandler {
 						count = count - 1;
 					}
 				}
-				
+
 				if(count == 0) {
 					//All files received					
 					LOG.info("All files received for SbmFileProcSumId:{}", fileProcDto.getFileProcSummaryFromDB().getSbmFileProcSumId());
@@ -86,20 +86,52 @@ public class SBMFileStatusHandler {
 				return;
 			}
 		}
-		
-		//check if there are pre-existing SBMI file in Accepted or InProcess status for the SBM state
-		List<SBMSummaryAndFileInfoDTO> currentlyProcessing = fileCompositeDao.getAllInProcessOrPendingApprovalForState(getStateCd(fileInfoType));
-		if(CollectionUtils.isNotEmpty(currentlyProcessing)) {
-			LOG.info("Other file is in InProcess or pending approval for the state:{}; Files List:{}", getStateCd(fileInfoType), currentlyProcessing);
-			fileProcDto.setSbmFileStatusType(SBMFileStatus.ON_HOLD); 
-			LOG.info("fileId:{}, status set to ON_HOLD", fileInfoType.getFileId());
-			return;
 
-		}				
+		// B36. Is there a file/fileset currently being processed for the SBM?
+		boolean isFileProcessing = determineFileProcessing(fileInfoType);
 		
+		if (isFileProcessing) {
+			//B43. Update File Status from “In Process” to “On Hold”
+			fileProcDto.setSbmFileStatusType(SBMFileStatus.ON_HOLD);
+			return;
+		}				
+
 		fileProcDto.setSbmFileStatusType(SBMFileStatus.IN_PROCESS); 
 	}
-	
+
+
+	/**
+	 * Determine if any state files are in process, or if a file
+	 * for the inbound issuer file already has a file for that 
+	 * issuer currently in process (status ACC, ACE, ACW, or IPC). 
+	 * @param fileInfoType
+	 * @return
+	 */
+	private boolean determineFileProcessing(FileInformationType fileInfoType) {
+
+		boolean isHold = false;
+		String stateCd = getStateCd(fileInfoType);
+		String issuerId = SbmDataUtil.getIssuerId(fileInfoType);
+		// Get all pending files for state in ACC, ACE, ACW, or IPC status
+		List<SBMSummaryAndFileInfoDTO> summaryList = fileCompositeDao.getAllInProcessOrPendingApprovalForState(stateCd);
+
+		for (SBMSummaryAndFileInfoDTO summaryDTO : summaryList) {
+			// If issuerId == null then it is a State file
+			// If any state file is in process, then hold all other inbound files.
+			if (summaryDTO.getIssuerId() == null) {
+				isHold = true;
+				break;
+			} else {
+				// If another file for this issuer is in process, then hold this issuer file.
+				if (summaryDTO.getIssuerId().equals(issuerId)) {
+					isHold = true;
+					break;
+				}
+			}
+		}
+		return isHold;
+	}
+
 	/**
 	 * @param freezePeriodStartDay the freezePeriodStartDay to set
 	 */
@@ -120,5 +152,5 @@ public class SBMFileStatusHandler {
 	public void setFileCompositeDao(SBMFileCompositeDAO fileCompositeDao) {
 		this.fileCompositeDao = fileCompositeDao;
 	}
-	
+
 }

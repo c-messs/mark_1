@@ -70,7 +70,10 @@ public interface SbmResponseCompositeDao {
 	
 	/** H1. Identify if there are additional policies found in EPS that belongs to the 
 	 *  issuer or state that were not provided and not in Superseded or SBMIVoid status.
-	 *  Return a response containing EPS Summary that contain file and xpr error counts.
+	 *  Insert any found missing policies.
+	 *  
+	 *  Note: Missing members are found in business validations (WR-010) and are inserted
+	 *  into SBMTRANSMSGVALIDATION when saving policies and warnings for each policy. 
 	 * @param batchId
 	 * @param sbmFileProcSumId
 	 * @return
