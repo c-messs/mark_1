@@ -475,9 +475,17 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 					expectedSBMRStatus[idx++], actualMissingPolicy.getCurrentCMSPolicyStatus());
 		}
 	}
+	
+//	@Test
+//	public void test_MatchingPlcNoChangeCnt() {
+//		TODO: Create policies in EPS and same policies in File and compare count.
+	
+//		//assertEquals("MatchingPlcNoChangeCnt", expected_ANC, actual.get("MATCHINGPLCNOCHGCNT"));
+//	}
+//	
+	
 
 	/*
-	 * - TotalPolicyApprovedCnt
 	 * - MatchingPlcNoChangeCnt;
 	 * - MatchingPlcChgApplCnt
 	 * - MatchingPlcCorrectedChgApplCnt
@@ -491,11 +499,6 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 				SbmTransMsgStatus.ACCEPTED_NO_CHANGE, SbmTransMsgStatus.ACCEPTED_NO_CHANGE, 
 		};
 
-		// Since 2 policies are inserted per ExchangePolicyId for this SbmFileProcSumId
-		// and TotalPolicyApprovedCnt is both matching and new policies.
-		// The *2 is for this test only and would not occur.  Both cycles are using the same SbmfileProcSumId for this test.
-		BigDecimal expected_TOT = new BigDecimal(statuses.length * 2); 
-		BigDecimal expected_ANC = new BigDecimal(4);
 		BigDecimal expected_ACC = new BigDecimal(3);
 		BigDecimal expected_ACC_Corrected = new BigDecimal(1);
 
@@ -508,7 +511,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		String issuerId = "11111";
 		String qhpId = TestDataSBMUtility.makeQhpId(issuerId, tenantId);
 
-		SBMFileProcessingDTO fileDTO = insertParentFileRecords(tenantId, sbmFileId.toString(), SBMFileStatus.ACCEPTED_WITH_WARNINGS);
+		SBMFileProcessingDTO fileDTO = insertParentFileRecords(tenantId, sbmFileId.toString(), SBMFileStatus.APPROVED_WITH_WARNINGS);
 
 		Long sbmFileProcSumId = fileDTO.getSbmFileProcSumId();
 		Long sbmFileInfoId = fileDTO.getSbmFileInfo().getSbmFileInfoId();
@@ -546,8 +549,6 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 
 		Map<String, Object> actual = actualList.get(0);
 
-		assertEquals("TotalPolicyApprovedCnt", expected_TOT, actual.get("TOTALPOLICYAPPROVEDCNT"));
-		assertEquals("MatchingPlcNoChangeCnt", expected_ANC, actual.get("MATCHINGPLCNOCHGCNT"));
 		assertEquals("MatchingPlcChgApplCnt", expected_ACC, actual.get("MATCHINGPLCCHGAPPLCNT"));
 		assertEquals("MatchingPlcCorrectedChgApplCnt", expected_ACC_Corrected, actual.get("MATCHINGPLCCORRECTEDCHGAPPLCNT"));
 
@@ -583,7 +584,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		LocalDate psd = JAN_1;
 		LocalDate ped = DEC_31;
 
-		SBMFileProcessingDTO fileDTO = insertParentFileRecords(tenantId, sbmFileId.toString(), SBMFileStatus.ACCEPTED_WITH_WARNINGS);
+		SBMFileProcessingDTO fileDTO = insertParentFileRecords(tenantId, sbmFileId.toString(), SBMFileStatus.APPROVED_WITH_WARNINGS);
 
 		Long sbmFileProcSumId = fileDTO.getSbmFileProcSumId();
 		Long sbmFileInfoId = fileDTO.getSbmFileInfo().getSbmFileInfoId();

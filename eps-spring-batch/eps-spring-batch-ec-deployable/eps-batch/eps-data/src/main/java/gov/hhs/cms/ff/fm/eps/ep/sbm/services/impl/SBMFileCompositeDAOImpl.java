@@ -165,7 +165,7 @@ public class SBMFileCompositeDAOImpl implements SBMFileCompositeDAO {
 	@Override
 	public SBMSummaryAndFileInfoDTO getLatestSBMFileProcessingSummaryByIssuer(String issuerId) {
 
-		SbmFileProcessingSummaryPO summaryPO =  sbmFileProcSumDao.selectSbmFileProcessingSummaryLatest(null, issuerId); 
+		SbmFileProcessingSummaryPO summaryPO =  sbmFileProcSumDao.selectSbmFileProcessingSummaryLatestApproved(null, issuerId); 
 		SBMSummaryAndFileInfoDTO epsSummaryDTO = sbmFileProcSumMapper.mapEpsToSbm(summaryPO);
 		return epsSummaryDTO;
 	}
@@ -173,7 +173,7 @@ public class SBMFileCompositeDAOImpl implements SBMFileCompositeDAO {
 	@Override
 	public SBMSummaryAndFileInfoDTO getLatestSBMFileProcessingSummaryByState(String stateCode) {
 
-		SbmFileProcessingSummaryPO summaryPO =  sbmFileProcSumDao.selectSbmFileProcessingSummaryLatest(stateCode, null); 
+		SbmFileProcessingSummaryPO summaryPO =  sbmFileProcSumDao.selectSbmFileProcessingSummaryLatestApproved(stateCode, null); 
 		SBMSummaryAndFileInfoDTO summaryDTO = sbmFileProcSumMapper.mapEpsToSbm(summaryPO);
 		return summaryDTO;
 	}

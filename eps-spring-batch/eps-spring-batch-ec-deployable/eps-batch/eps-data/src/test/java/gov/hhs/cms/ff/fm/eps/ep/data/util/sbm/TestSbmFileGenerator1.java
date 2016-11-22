@@ -48,11 +48,11 @@ public class TestSbmFileGenerator1 extends AbstractTestSbmFileGenerator implemen
 	/**
 	 * Number of Policies per QHPID
 	 */
-	private static final Long POL_LEN = 500000L;
+	private static final Long POL_LEN = 1L;
 	/**
 	 * Number of Members per Policy, MAX 6
 	 */
-	private static final Long MEM_LEN = 2L;
+	private static final Long MEM_LEN = 1L;
 
 
 	public static void main(String[] args) {
@@ -65,8 +65,8 @@ public class TestSbmFileGenerator1 extends AbstractTestSbmFileGenerator implemen
 
 	public void run() {
 
-		Long idSeed = TestDataSBMUtility.getRandomNumberAsLong(4);
-		Long fileId = idSeed + 1000000L;
+		Long idSeed = 1L;//TestDataSBMUtility.getRandomNumberAsLong(4);
+		Long fileId = TestDataSBMUtility.getRandomNumberAsLong(6);// idSeed + 100000L;
 		String tenantId = null;
 		int covYr = YEAR;
 		String issuerId = "79998";  //HIOS ID <- make array for multilple files.

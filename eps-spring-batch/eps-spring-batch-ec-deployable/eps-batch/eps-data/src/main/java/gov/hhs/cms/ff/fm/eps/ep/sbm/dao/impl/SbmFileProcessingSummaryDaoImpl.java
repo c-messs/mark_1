@@ -21,21 +21,62 @@ import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileProcessingSummaryPO;
  */
 public class SbmFileProcessingSummaryDaoImpl extends GenericEpsDao<SbmFileProcessingSummaryPO> implements SbmFileProcessingSummaryDao {
 
+	/**
+	 * MATCH_FILE_PROC_SUM
+	 */
 	private String matchSbmFileProcSumSql;
+	/**
+	 * SELECT_FILE_PROC_SUM
+	 */
 	private String selectSbmFileProcSumSql;
+	/**
+	 * FIND_FILE_PROC_SUM
+	 */
 	private String findSbmFileProcSumSql;
+    /**
+     * FIND_FILE_PROC_SUM_FILENAME
+     */
     private String findSbmFileProcSumFileNameSql;
+	/**
+	 * FIND_FILE_PROC_SUM_STATUS
+	 */
 	private String findSbmFileProcSumFileStatusSql;
+	/**
+	 * FIND_FILE_PROC_SUM_STATUS_STATECD
+	 */
 	private String findSbmFileProcSumFileStatusStateCdSql;
+	/**
+	 * INSERT_FILE_PROC_SUM
+	 */
 	private String insertSbmFileProcSumSql;
+	/**
+	 * UPDATE_FILE_PROC_SUM_STATUS
+	 */
 	private String updateSbmFileProcSumStatusSql;
-	private String selectSbmFileProcSumLatestStateCdSql;
-	private String selectSbmFileProcSumLatestIssuerIdSql;
+	/**
+	 * SELECT_FILE_PROC_SUM_LATEST_APPROVED_STATECD
+	 */
+	private String selectSbmFileProcSumLatestApprovedStateCdSql;
+	/**
+	 * SELECT_FILE_PROC_SUM_LATEST_APPROVED_ISSUERID
+	 */
+	private String selectSbmFileProcSumLatestApprovedIssuerIdSql;
+	/**
+	 * VERIFY_JOB_RUNNING
+	 */
 	private String verifyJobRunningSql;
+	/**
+	 * UPDATE_FILE_PROC_SUM
+	 */
 	private String updateSbmFileProcSumSql;
+	/**
+	 * UPDATE_FILE_PROC_SUM_CMS_APPROVED
+	 */
 	private String updateSbmFileProcSumCmsApprovedSql;
+	/**
+	 * VERIFY_CMS_APPROVAL_REQ
+	 */
 	private String verifyCmsApprovalReqSql;
-
 
 	/**
 	 * Constructor
@@ -62,17 +103,17 @@ public class SbmFileProcessingSummaryDaoImpl extends GenericEpsDao<SbmFileProces
 	}
 
 	@Override
-	public SbmFileProcessingSummaryPO selectSbmFileProcessingSummaryLatest(String stateCd, String issuerId) {
+	public SbmFileProcessingSummaryPO selectSbmFileProcessingSummaryLatestApproved(String stateCd, String issuerId) {
 
 		SbmFileProcessingSummaryPO po = null;
 		String arg = null;
 		String sql = null;
 		if (stateCd != null) {
 			arg = stateCd + "%";
-			sql = selectSbmFileProcSumLatestStateCdSql;
+			sql = selectSbmFileProcSumLatestApprovedStateCdSql;
 		} else {
 			arg = issuerId;
-			sql = selectSbmFileProcSumLatestIssuerIdSql;
+			sql = selectSbmFileProcSumLatestApprovedIssuerIdSql;
 		}
 		List<SbmFileProcessingSummaryPO> poList =  (List<SbmFileProcessingSummaryPO>) jdbcTemplate.query(sql, rowMapper, arg);
 		if (!poList.isEmpty()) {
@@ -346,19 +387,19 @@ public class SbmFileProcessingSummaryDaoImpl extends GenericEpsDao<SbmFileProces
 
 
 	/**
-	 * @param selectSbmFileProcSumLatestStateCdSql the selectSbmFileProcSumLatestStateCdSql to set
+	 * @param selectSbmFileProcSumLatestApprovedStateCdSql the selectSbmFileProcSumLatestApprovedStateCdSql to set
 	 */
-	public void setSelectSbmFileProcSumLatestStateCdSql(String selectSbmFileProcSumLatestStateCdSql) {
-		this.selectSbmFileProcSumLatestStateCdSql = selectSbmFileProcSumLatestStateCdSql;
+	public void setSelectSbmFileProcSumLatestApprovedStateCdSql(String selectSbmFileProcSumLatestApprovedStateCdSql) {
+		this.selectSbmFileProcSumLatestApprovedStateCdSql = selectSbmFileProcSumLatestApprovedStateCdSql;
 	}
 
 
 	/**
-	 * @param selectSbmFileProcSumLatestIssuerIdSql the selectSbmFileProcSumLatestIssuerIdSql to set
+	 * @param selectSbmFileProcSumLatestApprovedIssuerIdSql the selectSbmFileProcSumLatestApprovedIssuerIdSql to set
 	 */
-	public void setSelectSbmFileProcSumLatestIssuerIdSql(String selectSbmFileProcSumLatestIssuerIdSql) {
-		this.selectSbmFileProcSumLatestIssuerIdSql = selectSbmFileProcSumLatestIssuerIdSql;
-	}
+	public void setSelectSbmFileProcSumLatestApprovedIssuerIdSql(String selectSbmFileProcSumLatestApprovedIssuerIdSql) {
+		this.selectSbmFileProcSumLatestApprovedIssuerIdSql = selectSbmFileProcSumLatestApprovedIssuerIdSql;
+	}	
 
 
 	/**

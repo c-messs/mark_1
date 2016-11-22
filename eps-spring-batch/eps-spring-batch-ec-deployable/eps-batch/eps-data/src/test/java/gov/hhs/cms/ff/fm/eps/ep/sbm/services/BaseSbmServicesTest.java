@@ -134,10 +134,16 @@ public abstract class BaseSbmServicesTest extends TestCase {
 	}
 
 	protected SBMFileProcessingDTO insertParentFileRecords(String tenantId, String sbmFileId, String issuerFileSetId, int fileNum, String issuerId) {
+		
+		SBMFileStatus fileStatus = SBMFileStatus.IN_PROCESS;
+		return insertParentFileRecords(tenantId, sbmFileId, issuerFileSetId, fileNum, issuerId, fileStatus);
+	}
+	
+	protected SBMFileProcessingDTO insertParentFileRecords(String tenantId, String sbmFileId, String issuerFileSetId, int fileNum, String issuerId, SBMFileStatus fileStatus) {
 
 		SBMFileProcessingDTO dto = new SBMFileProcessingDTO();
 		dto.setTenantId(tenantId);
-		Long sbmFileProcSumId = insertSBMFileProcessingSummary(tenantId, issuerId, issuerFileSetId, SBMFileStatus.IN_PROCESS);
+		Long sbmFileProcSumId = insertSBMFileProcessingSummary(tenantId, issuerId, issuerFileSetId, fileStatus);
 		Long sbmFileInfoId = insertSBMFileInfo(sbmFileProcSumId, sbmFileId, fileNum);
 		dto.setSbmFileInfo(new SBMFileInfo());
 		dto.getSbmFileInfo().setSbmFileInfoId(sbmFileInfoId);
