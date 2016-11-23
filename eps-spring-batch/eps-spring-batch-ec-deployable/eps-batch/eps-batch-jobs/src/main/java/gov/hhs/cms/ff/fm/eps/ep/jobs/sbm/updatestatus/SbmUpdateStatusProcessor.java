@@ -339,11 +339,13 @@ public class SbmUpdateStatusProcessor {
 						}
 						else {
 							LOG.info("Getting latest SBM Summary record by stateCode:{}", SbmDataUtil.getStateCd(recordDto.getTenantId()));
+							//J52. Validate that the file/fileset requested for reversal is the latest file/fileset 
+							//for the SBM or Issuer in the EPS database and in any of the following status: APP, APE, APW
 							latestSummaryDto = fileCompositeDao.getLatestSBMFileProcessingSummaryByState(SbmDataUtil.getStateCd(recordDto.getTenantId()));
 						}
 						
 						LOG.info("latestSummaryDto : {}", latestSummaryDto);
-						
+					
 						if(latestSummaryDto == null || latestSummaryDto.getSbmFileProcSumId() == null 
 								|| latestSummaryDto.getSbmFileProcSumId().equals(summaryDto.getSbmFileProcSumId())) {						
 							recordDto.setSbmFileProcSumId(summaryDto.getSbmFileProcSumId());

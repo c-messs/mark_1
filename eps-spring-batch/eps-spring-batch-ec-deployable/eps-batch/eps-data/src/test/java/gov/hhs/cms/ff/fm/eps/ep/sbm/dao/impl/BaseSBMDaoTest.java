@@ -328,10 +328,11 @@ public abstract class BaseSBMDaoTest  extends TestCase {
 	protected Long insertStagingSbmPolicy(SBMFileProcessingDTO fileDTO, String policyXML) {
 
 		Long stagingSbmPolicyId = jdbc.queryForObject("SELECT STAGINGSBMPOLICYSEQ.NEXTVAL FROM DUAL", Long.class);
-		jdbc.execute("INSERT INTO STAGINGSBMPOLICY (SBMPOLICYXML, PROCESSINGGROUPID, " +
+		String sql = "INSERT INTO STAGINGSBMPOLICY (SBMPOLICYXML, PROCESSINGGROUPID, " +
 				"SBMFILEPROCESSINGSUMMARYID, STAGINGSBMPOLICYID, SBMFILEINFOID) " +
 				"VALUES (XMLType('" + policyXML + "'), 88, " +
-				fileDTO.getSbmFileProcSumId() + ", " + stagingSbmPolicyId + ", " +  fileDTO.getSbmFileInfo().getSbmFileInfoId() + ")");
+				fileDTO.getSbmFileProcSumId() + ", " + stagingSbmPolicyId + ", " +  fileDTO.getSbmFileInfo().getSbmFileInfoId() + ")";
+		jdbc.execute(sql);
 		return stagingSbmPolicyId;
 	}
 
@@ -339,10 +340,11 @@ public abstract class BaseSBMDaoTest  extends TestCase {
 	protected Long insertSBMTransMsg(Long sbmFileInfoId, String state) {
 
 		Long sbmTransMsgId = jdbc.queryForObject("SELECT SBMTRANSMSGSEQ.NEXTVAL FROM DUAL", Long.class);
-		jdbc.execute("INSERT INTO SBMTRANSMSG (SBMTRANSMSGID, MSG, TRANSMSGDIRECTIONTYPECD, TRANSMSGTYPECD, " +
+		String sql = "INSERT INTO SBMTRANSMSG (SBMTRANSMSGID, MSG, TRANSMSGDIRECTIONTYPECD, TRANSMSGTYPECD, " +
 				"SUBSCRIBERSTATECD, SBMFILEINFOID, CREATEDATETIME, LASTMODIFIEDDATETIME) " +
 				"VALUES (" + sbmTransMsgId + ", XMLType('<Test>Data for sbmTransMsgId: " +
-				sbmTransMsgId +"</Test>'), '1', '1', '"+ state+ "', " + sbmFileInfoId + ", SYSDATE, SYSDATE)");
+				sbmTransMsgId +"</Test>'), '1', '1', '"+ state+ "', " + sbmFileInfoId + ", SYSDATE, SYSDATE)";
+		jdbc.execute(sql);
 		return sbmTransMsgId;
 	}
 	

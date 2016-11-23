@@ -97,7 +97,7 @@ public interface SBMFileCompositeDAO {
 	public SBMSummaryAndFileInfoDTO getLatestSBMFileProcessingSummaryByIssuer(String issuerId);
 	
 	/**
-	 * Returns latest file processing summary for state. Returns null if nothing exist
+	 * Returns latest file processing summary for state with status of APP, APE, APW. Returns null if nothing exist
 	 * @param stateCode
 	 * @return
 	 */

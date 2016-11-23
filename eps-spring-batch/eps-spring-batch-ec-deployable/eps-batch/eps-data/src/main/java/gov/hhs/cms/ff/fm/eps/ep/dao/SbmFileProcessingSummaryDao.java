@@ -28,11 +28,12 @@ public interface SbmFileProcessingSummaryDao {
 	public SbmFileProcessingSummaryPO selectSbmFileProcessingSummary(final Long sbmFileProcSumId);
 		
 	/**
+	 * Get the "latest" summary in approved status (APP, APE, APW) either by state or issuerId.
 	 * @param stateCd
 	 * @param issuerId
 	 * @return
 	 */
-	public SbmFileProcessingSummaryPO selectSbmFileProcessingSummaryLatest(String stateCd, String issuerId);	
+	public SbmFileProcessingSummaryPO selectSbmFileProcessingSummaryLatestApproved(String stateCd, String issuerId);	
 	
 	/**
 	 * @param issuerId

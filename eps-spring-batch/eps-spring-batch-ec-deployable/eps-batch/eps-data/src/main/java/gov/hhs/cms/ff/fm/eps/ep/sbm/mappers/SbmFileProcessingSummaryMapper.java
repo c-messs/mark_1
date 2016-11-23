@@ -169,14 +169,8 @@ public class SbmFileProcessingSummaryMapper {
 
 			TotalApproved totAppr = new TotalApproved();
 
-			//Number of records that passed XSD and business logic validation (with Warnings only- no Errors)
 			totAppr.setTotalPolicyRecordsApproved(po.getTotalPolicyApprovedCnt());
-
-			//Number of matching records in which no changes were applied to EPS due to no changes to the record since last SBMI submission
-			// Meaning, this is the count of XPRs that were the same as a previous cycle and were not rejected.
-			int matchPolicyNoChangeCnt = (po.getTotalRecordProcessedCnt() - (po.getTotalRecordRejectedCnt() + po.getTotalPolicyApprovedCnt()));
-			totAppr.setMatchingPoliciesNoChangeRequired(matchPolicyNoChangeCnt);
-
+			totAppr.setMatchingPoliciesNoChangeRequired(po.getMatchingPlcNoChangeCnt());
 			totAppr.setMatchingPoliciesChangeApplied(po.getMatchingPlcChgApplCnt());
 			totAppr.setMatchingPoliciesCorrectedChangeApplied(po.getMatchingPlcCorrectedChgApplCnt());
 			totAppr.setNewPoliciesCreatedAsSent(po.getNewPlcCreatedAsSentCnt());

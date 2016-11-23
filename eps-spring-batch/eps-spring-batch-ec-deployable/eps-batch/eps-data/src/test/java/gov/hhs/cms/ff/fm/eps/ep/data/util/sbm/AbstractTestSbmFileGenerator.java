@@ -45,6 +45,9 @@ public abstract class AbstractTestSbmFileGenerator {
 	protected String TEST_PATH_INPUT_DIR = "/SBMFiles/input/";
 	
 	protected String TEST_PATH_UPDATE_STATUS_INPUT_DIR = "/SBMFiles/sbmUpdateStatus/input/";
+	
+	protected String TEST_PATH_FILES_DIR = "/SBMFiles/testFiles/";
+
 
 	private static Marshaller marshallerENR;
 	static {

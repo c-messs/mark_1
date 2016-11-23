@@ -36,8 +36,8 @@
 		<property name="findSbmFileProcSumFileStatusSql" value="${FIND_FILE_PROC_SUM_STATUS}"></property>
 		<property name="findSbmFileProcSumFileStatusStateCdSql" value="${FIND_FILE_PROC_SUM_STATUS_STATECD}"></property>		
 		<property name="updateSbmFileProcSumStatusSql" value="${UPDATE_FILE_PROC_SUM_STATUS}" />
-		<property name="selectSbmFileProcSumLatestStateCdSql" value="${SELECT_FILE_PROC_SUM_LATEST_STATECD}" />
-		<property name="selectSbmFileProcSumLatestIssuerIdSql" value="${SELECT_FILE_PROC_SUM_LATEST_ISSUERID}" />
+		<property name="selectSbmFileProcSumLatestApprovedStateCdSql" value="${SELECT_FILE_PROC_SUM_LATEST_APPROVED_STATECD}" />
+		<property name="selectSbmFileProcSumLatestApprovedIssuerIdSql" value="${SELECT_FILE_PROC_SUM_LATEST_APPROVED_ISSUERID}" />
 		<property name="verifyJobRunningSql" value="${VERIFY_JOB_RUNNING}" />
 		<property name="updateSbmFileProcSumSql" value="${UPDATE_FILE_PROC_SUM}" />
 		<property name="updateSbmFileProcSumCmsApprovedSql" value="${UPDATE_FILE_PROC_SUM_CMS_APPROVED}" />

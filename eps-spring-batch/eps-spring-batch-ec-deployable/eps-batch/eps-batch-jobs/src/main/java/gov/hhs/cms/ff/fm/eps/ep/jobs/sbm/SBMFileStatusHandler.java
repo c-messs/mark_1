@@ -89,7 +89,7 @@ public class SBMFileStatusHandler {
 
 		// B36. Is there a file/fileset currently being processed for the SBM?
 		boolean isFileProcessing = determineFileProcessing(fileInfoType);
-		
+
 		if (isFileProcessing) {
 			//B43. Update File Status from “In Process” to “On Hold”
 			fileProcDto.setSbmFileStatusType(SBMFileStatus.ON_HOLD);
@@ -109,27 +109,38 @@ public class SBMFileStatusHandler {
 	 */
 	private boolean determineFileProcessing(FileInformationType fileInfoType) {
 
-		boolean isHold = false;
+		boolean isFileProcessing = false;
 		String stateCd = getStateCd(fileInfoType);
 		String issuerId = SbmDataUtil.getIssuerId(fileInfoType);
+		boolean isIssuerFile = (issuerId != null);
+		
 		// Get all pending files for state in ACC, ACE, ACW, or IPC status
-		List<SBMSummaryAndFileInfoDTO> summaryList = fileCompositeDao.getAllInProcessOrPendingApprovalForState(stateCd);
+		List<SBMSummaryAndFileInfoDTO> inProcSummaryList = fileCompositeDao.getAllInProcessOrPendingApprovalForState(stateCd);
 
-		for (SBMSummaryAndFileInfoDTO summaryDTO : summaryList) {
-			// If issuerId == null then it is a State file
-			// If any state file is in process, then hold all other inbound files.
-			if (summaryDTO.getIssuerId() == null) {
-				isHold = true;
-				break;
-			} else {
-				// If another file for this issuer is in process, then hold this issuer file.
-				if (summaryDTO.getIssuerId().equals(issuerId)) {
-					isHold = true;
+		if (isIssuerFile) {
+			
+			for (SBMSummaryAndFileInfoDTO inProcSummaryDTO : inProcSummaryList) {
+				// If issuerId == null then it is a State file
+				// If any state file is in process, then hold all other inbound files.
+				if (inProcSummaryDTO.getIssuerId() == null) {
+					isFileProcessing = true;
 					break;
+				} else {
+					// If another file for this issuer is in process, then hold this issuer file.
+					if (inProcSummaryDTO.getIssuerId().equals(issuerId)) {
+						isFileProcessing = true;
+						break;
+					}
 				}
+			} // END for
+		} else {
+			// If any file is in process when inbound file is a state file.
+			if (!inProcSummaryList.isEmpty()) {
+				
+				isFileProcessing = true;
 			}
 		}
-		return isHold;
+		return isFileProcessing;
 	}
 
 	/**

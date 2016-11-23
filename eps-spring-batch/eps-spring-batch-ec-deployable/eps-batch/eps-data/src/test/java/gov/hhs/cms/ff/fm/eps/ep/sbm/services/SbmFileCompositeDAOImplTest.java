@@ -295,7 +295,7 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 		int fileNum = 1;
 		String issuerId = id;
 		
-		insertParentFileRecords(tenantId, sbmFileId, issuerFileSetId, fileNum, issuerId);
+		insertParentFileRecords(tenantId, sbmFileId, issuerFileSetId, fileNum, issuerId, SBMFileStatus.APPROVED_WITH_ERRORS);
 		
 		SBMSummaryAndFileInfoDTO actual = sbmFileCompositeDao.getLatestSBMFileProcessingSummaryByIssuer(issuerId);
 		assertNotNull("SBMSummaryAndFileInfoDTO should not be null", actual);
@@ -312,7 +312,7 @@ public class SbmFileCompositeDAOImplTest extends BaseSbmServicesTest {
 		int fileNum = 1;
 		String issuerId = id;
 		
-		insertParentFileRecords(tenantId, sbmFileId, issuerFileSetId, fileNum, issuerId);
+		insertParentFileRecords(tenantId, sbmFileId, issuerFileSetId, fileNum, issuerId, SBMFileStatus.APPROVED);
 		
 		SBMSummaryAndFileInfoDTO actual = sbmFileCompositeDao.getLatestSBMFileProcessingSummaryByState(stateCd);
 		assertNotNull("SBMSummaryAndFileInfoDTO should not be null", actual);
