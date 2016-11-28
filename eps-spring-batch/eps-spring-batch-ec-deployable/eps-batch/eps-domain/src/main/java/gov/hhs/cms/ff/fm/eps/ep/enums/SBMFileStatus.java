@@ -8,6 +8,8 @@ import com.accenture.foundation.common.exception.ApplicationException;
  */
 public enum SBMFileStatus {
 
+	// The name MUST match exactly, including case, as in the SBMResponse.xsd
+	// other will fail XSD validation for the states.
 	REJECTED	            ("RJC", "Rejected"),
 	ACCEPTED	            ("ACC", "Accepted"),
 	ACCEPTED_WITH_ERRORS	("ACE", "Accepted with errors"),

@@ -5,6 +5,7 @@ import java.util.List;
 
 import gov.cms.dsh.sbmi.FileInformationType.IssuerFileInformation;
 import gov.cms.dsh.sbmi.FileInformationType.IssuerFileInformation.IssuerFileSet;
+import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileInfoPO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
@@ -118,7 +119,10 @@ public class SbmFileInfoMapper {
 		fileInfo.setSourceFileId(po.getSbmFileId());
 		fileInfo.setFileCreateDateTime(DateTimeUtil.getXMLGregorianCalendar(po.getSbmFileCreateDateTime()));
 		fileInfo.setFileNumber(po.getSbmFileNum());
-		fileInfo.setFileProcessingStatus(summaryStatus);
+		// Use the enum name and not the value to be XSD valid
+		// so when marshall to SBMR.
+		SBMFileStatus status = SBMFileStatus.getEnum(summaryStatus);
+		fileInfo.setFileProcessingStatus(status.getName());
 
 		return fileInfo;
 	}

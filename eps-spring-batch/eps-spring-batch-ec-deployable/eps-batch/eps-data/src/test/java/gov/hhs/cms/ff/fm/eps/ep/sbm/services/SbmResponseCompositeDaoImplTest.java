@@ -170,7 +170,7 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 	@Test
 	public void test_generateUpdateStatusSBMR_Cycle_1() {
 
-		assertNotNull("SbmResponseCompositeDao is NOT null.", sbmResponseCompositeDao);
+		String expectedFileProcStatus = SBMFileStatus.IN_PROCESS.getName();
 
 		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(3);
 
@@ -193,6 +193,12 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		SbmResponseDTO responseDTO = sbmResponseCompositeDao.generateUpdateStatusSBMR(batchId, fileDTO.getSbmFileProcSumId());
 
 		assertNotNull("SbmResponseDTO", responseDTO);
+		// Tests the outbound status.  
+		// Since status can be set AFTER the SBMR is generated in method generateSBMRForUpdateStatus,
+		// it will still be INPROC for this test.
+		// Basically, it tests that the mapper uses the name and not the value.
+		assertEquals("SBMR XSD valid FileProcessingStatus", expectedFileProcStatus, 
+				responseDTO.getSbmr().getSBMIFileInfo().get(0).getFileProcessingStatus());
 
 	}
 
@@ -708,31 +714,6 @@ public class SbmResponseCompositeDaoImplTest extends BaseSbmServicesTest {
 		assertEquals("NotSubmittedTerminatedCnt", expectedNotSubmittedTerminatedCnt, epsPO.getNotSubmittedTerminatedCnt().intValue());		
 	}
 
-
-	/**
-	 * Tests all SbmFileStatuses.
-	 */
-	@Test
-	public void test_determineAccepted() {
-
-		boolean expected = true;
-		SBMFileStatus[] expectedStatus = SBMFileStatus.values();
-
-		for (SBMFileStatus status : expectedStatus) {
-			SbmFileProcessingSummaryPO epsPO = new SbmFileProcessingSummaryPO();
-			epsPO.setSbmFileStatusTypeCd(status.getValue());
-
-			if (SBMFileStatus.ACCEPTED.equals(status) 
-					|| SBMFileStatus.ACCEPTED_WITH_ERRORS.equals(status) 
-					|| SBMFileStatus.ACCEPTED_WITH_WARNINGS.equals(status)) {
-				expected = true;
-			} else {
-				expected = false;
-			}
-			Boolean actual = (Boolean) ReflectionTestUtils.invokeMethod(sbmResponseCompositeDao, "determineAccepted", epsPO);
-			assertEquals("should be " + expected + " for status: " + status.getValue(), expected, actual.booleanValue());
-		}
-	}
 
 
 	/**
