@@ -361,18 +361,6 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		epsPO.setNotSubmittedTerminatedCnt(notSubmittedTerminatedCnt);
 	}
 
-	private boolean determineAccepted(SbmFileProcessingSummaryPO epsPO) {
-
-		boolean isAccepted = false;
-		SBMFileStatus status = SBMFileStatus.getEnum(epsPO.getSbmFileStatusTypeCd());
-
-		if (status.equals(SBMFileStatus.ACCEPTED) || status.equals(SBMFileStatus.ACCEPTED_WITH_ERRORS)
-				|| status.equals(SBMFileStatus.ACCEPTED_WITH_WARNINGS)) {
-			isAccepted = true;
-		}
-		return isAccepted;
-	}
-
 	private boolean determineApproved(SbmFileProcessingSummaryPO epsPO) {
 
 		boolean isApproved = false;
