@@ -10,6 +10,7 @@ import gov.cms.dsh.sbmr.SBMIPROCSUMType;
 import gov.cms.dsh.sbmr.SBMIPROCSUMType.FinalRecordsProcessedSummary;
 import gov.cms.dsh.sbmr.SBMIPROCSUMType.FinalRecordsProcessedSummary.TotalApproved;
 import gov.cms.dsh.sbmr.SBMRHeaderType;
+import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileProcessingSummaryPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmFileSummaryMissingPolicyData;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProccessingSummary;
@@ -171,7 +172,7 @@ public class SbmFileProcessingSummaryMapperTest extends SBMBaseMapperTest {
 		
 		List<SbmFileSummaryMissingPolicyData> missingPolicyDataList = new ArrayList<SbmFileSummaryMissingPolicyData>();
 
-		FileAcceptanceRejection actual = mapper.mapEpsToSbmr(expected, false, missingPolicyDataList, 0);
+		FileAcceptanceRejection actual = mapper.mapEpsToSbmr(expected, missingPolicyDataList, 0);
 
 		assertNotNull("FileAcceptanceRejection", actual);
 
@@ -199,7 +200,7 @@ public class SbmFileProcessingSummaryMapperTest extends SBMBaseMapperTest {
 		
 		List<SbmFileSummaryMissingPolicyData> missingPolicyDataList = new ArrayList<SbmFileSummaryMissingPolicyData>();
 
-		FileAcceptanceRejection actual = mapper.mapEpsToSbmr(expected, false, missingPolicyDataList, 0);
+		FileAcceptanceRejection actual = mapper.mapEpsToSbmr(expected, missingPolicyDataList, 0);
 
 		assertNotNull("FileAcceptanceRejection", actual);
 
@@ -222,11 +223,10 @@ public class SbmFileProcessingSummaryMapperTest extends SBMBaseMapperTest {
 		String tenantId = "VT0";
 		String issuerId = "4444";
 		String issuerFileSetId = "123444";
-		
-		boolean isAccepted = true;
 
 		SbmFileProcessingSummaryPO expected = makeSbmFileProcessingSummaryPO(tenantId, issuerId, issuerFileSetId);
 		expected.setSbmFileProcSumId(id);
+		expected.setSbmFileStatusTypeCd(SBMFileStatus.APPROVED.getValue());
 
 		int expectedTotalPreviousPoliciesNotSubmitted = 4;
 
@@ -247,7 +247,7 @@ public class SbmFileProcessingSummaryMapperTest extends SBMBaseMapperTest {
 		
 		int expectedCountOfEffectuatedPoliciesCancelled = 0;
 		
-		FileAcceptanceRejection actual = mapper.mapEpsToSbmr(expected, isAccepted, missingPolicyDataList, expectedCountOfEffectuatedPoliciesCancelled);
+		FileAcceptanceRejection actual = mapper.mapEpsToSbmr(expected, missingPolicyDataList, expectedCountOfEffectuatedPoliciesCancelled);
 		
 		assertNotNull("FileAcceptanceRejection", actual);
 
@@ -266,5 +266,94 @@ public class SbmFileProcessingSummaryMapperTest extends SBMBaseMapperTest {
 		
 		assertEquals("CountOfEffectuatedPoliciesCancelled", expected.getTotalPolicyApprovedCnt().intValue(), actualTotAppr.getTotalPolicyRecordsApproved());
 	}
+	
+	
+	@Test
+	public void test_mapEpsToSbmr_DisApproved() {
+
+		Long id = TestDataSBMUtility.getRandomNumberAsLong(3);
+		String tenantId = "VT0";
+		String issuerId = "4444";
+		String issuerFileSetId = "123444";
+
+		SbmFileProcessingSummaryPO expected = makeSbmFileProcessingSummaryPO(tenantId, issuerId, issuerFileSetId);
+		expected.setSbmFileProcSumId(id);
+		expected.setSbmFileStatusTypeCd(SBMFileStatus.DISAPPROVED.getValue());
+
+		int expectedTotalPreviousPoliciesNotSubmitted = 4;
+
+		List<SbmFileSummaryMissingPolicyData> missingPolicyDataList = new ArrayList<SbmFileSummaryMissingPolicyData>();
+		for (int i = 0; i < expectedTotalPreviousPoliciesNotSubmitted; ++i) {
+			SbmFileSummaryMissingPolicyData missingPolicyData = new SbmFileSummaryMissingPolicyData();
+			missingPolicyData.setExchangePolicyId("EXPOID-" + i);
+			missingPolicyDataList.add(missingPolicyData);
+		}
+		
+		int expectedTotalRecordProcessedCnt = 10;
+		int expectedTotalRecordRejectedCnt = 4;
+		int expectedEffectuatedPolicyCount = 5;
+							
+		expected.setTotalRecordProcessedCnt(expectedTotalRecordProcessedCnt);
+		expected.setTotalRecordRejectedCnt(expectedTotalRecordRejectedCnt);
+		expected.setEffectuatedPolicyCount(expectedEffectuatedPolicyCount);
+		
+		int expectedCountOfEffectuatedPoliciesCancelled = 0;
+		
+		FileAcceptanceRejection actual = mapper.mapEpsToSbmr(expected, missingPolicyDataList, expectedCountOfEffectuatedPoliciesCancelled);
+		
+		assertNotNull("FileAcceptanceRejection", actual);
+
+		SBMIPROCSUMType actualSummary = actual.getSBMIPROCSUM();
+		assertNull("SBMIPROCSUMType", actualSummary);
+
+	}
+	
+	
+	/**
+	 * Tests all SbmFileStatuses.
+	 */
+	@Test
+	public void test_determineBackOut() {
+
+		boolean expected = true;
+		SBMFileStatus[] expectedStatus = SBMFileStatus.values();
+
+		for (SBMFileStatus status : expectedStatus) {
+			SbmFileProcessingSummaryPO epsPO = new SbmFileProcessingSummaryPO();
+			epsPO.setSbmFileStatusTypeCd(status.getValue());
+
+			if (SBMFileStatus.BACKOUT.equals(status)) {
+				expected = true;
+			} else {
+				expected = false;
+			}
+			boolean actual = mapper.determineBackOut(epsPO);
+			assertEquals("should be " + expected + " for status: " + status.getValue(), expected, actual);
+		}
+	}
+	
+	/**
+	 * Tests all SbmFileStatuses.
+	 */
+	@Test
+	public void test_determineApprove() {
+
+		boolean expected = true;
+		SBMFileStatus[] expectedStatus = SBMFileStatus.values();
+
+		for (SBMFileStatus status : expectedStatus) {
+			SbmFileProcessingSummaryPO epsPO = new SbmFileProcessingSummaryPO();
+			epsPO.setSbmFileStatusTypeCd(status.getValue());
+
+			if (SBMFileStatus.BACKOUT.equals(status)) {
+				expected = true;
+			} else {
+				expected = false;
+			}
+			boolean actual = mapper.determineBackOut(epsPO);
+			assertEquals("should be " + expected + " for status: " + status.getValue(), expected, actual);
+		}
+	}
+
 
 }

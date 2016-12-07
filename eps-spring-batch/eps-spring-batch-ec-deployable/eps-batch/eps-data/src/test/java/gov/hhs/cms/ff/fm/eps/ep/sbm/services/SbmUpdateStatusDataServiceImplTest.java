@@ -57,7 +57,7 @@ public class SbmUpdateStatusDataServiceImplTest extends BaseSbmServicesTest {
 		insertStagingSbmPolicy(sbmFileProcSumId, sbmFileInfoId, policyXml);
 
 		String exchangePolicyId = "EXPOLID-" + sbmFileId;
-		SbmTransMsgStatus status = SbmTransMsgStatus.ACCEPTED_WITH_CHANGES;
+		SbmTransMsgStatus status = SbmTransMsgStatus.ACCEPTED_WITH_SBM_CHANGE;
 
 		Long sbmTransMsgId = insertSbmTransMsg(sbmFileInfoId, stateCd, exchangePolicyId, status);
 		int rcn = 1;
@@ -166,7 +166,7 @@ public class SbmUpdateStatusDataServiceImplTest extends BaseSbmServicesTest {
 		insertStagingSbmPolicy(sbmFileProcSumId, sbmFileInfoId, policyXml);
 
 		String exchangePolicyId = "EXPOLID-" + sbmFileId;
-		SbmTransMsgStatus status = SbmTransMsgStatus.ACCEPTED_WITH_CHANGES;
+		SbmTransMsgStatus status = SbmTransMsgStatus.ACCEPTED_WITH_SBM_CHANGE;
 
 		Long sbmTransMsgId = insertSbmTransMsg(sbmFileInfoId, stateCd, exchangePolicyId, status);
 		int rcn = 1;
@@ -338,7 +338,7 @@ public class SbmUpdateStatusDataServiceImplTest extends BaseSbmServicesTest {
 		insertStagingSbmPolicy(sbmFileProcSumId, sbmFileInfoId, policyXml);
 
 		String exchangePolicyId = "EXPOLID-" + sbmFileId;
-		SbmTransMsgStatus status = SbmTransMsgStatus.ACCEPTED_WITH_CHANGES;
+		SbmTransMsgStatus status = SbmTransMsgStatus.ACCEPTED_WITH_SBM_CHANGE;
 
 		Long sbmTransMsgId = insertSbmTransMsg(sbmFileInfoId, stateCd, exchangePolicyId, status);
 		int rcn = 1;

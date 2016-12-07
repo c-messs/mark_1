@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import gov.cms.dsh.sbmi.FileInformationType;
 import gov.cms.dsh.sbmi.PolicyMemberType;
 import gov.cms.dsh.sbmi.PolicyType;
+import gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode;
 
 /**
  * @author j.radziewski
@@ -18,7 +19,7 @@ public class SbmDataUtil {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SbmDataUtil.class);
 
-	
+
 	/**
 	 * Extract StateCd from TenantId.
 	 * @param tenantId
@@ -163,14 +164,14 @@ public class SbmDataUtil {
 		}
 		return isCsrVariant;
 	}
-	
+
 	/**
 	 * Extract PolicyMemberType from SBM PolicyType.
 	 * @param policy
 	 * @return
 	 */
 	public static PolicyMemberType getSubsciber(PolicyType policy) {
-		
+
 		PolicyMemberType subscriber = null;
 		if (policy != null) {
 			for (PolicyMemberType member : policy.getMemberInformation()) {
@@ -184,5 +185,26 @@ public class SbmDataUtil {
 		return subscriber;
 	}
 
+
+	/**
+	 * Determine if there are any warnings due to EPS changing inbound SBM data.
+	 * (ie: Correcting CSR Amount, Changing languageCode)
+	 * @param policyDTO
+	 * @return
+	 */
+	public static boolean hasWarningFromEPSChange(SBMPolicyDTO policyDTO) {
+
+		boolean hasWarningFromEPSChange = false;
+		for (SbmErrWarningLogDTO errWarnDTO : policyDTO.getErrorList()) {
+			SBMErrorWarningCode errWarnEnum = SBMErrorWarningCode.getEnum(errWarnDTO.getErrorWarningTypeCd());
+			if (SBMErrorWarningCode.WR_004.equals(errWarnEnum) || SBMErrorWarningCode.WR_005.equals(errWarnEnum)
+					|| SBMErrorWarningCode.WR_006.equals(errWarnEnum) || SBMErrorWarningCode.WR_007.equals(errWarnEnum) 
+					|| SBMErrorWarningCode.WR_008.equals(errWarnEnum) || SBMErrorWarningCode.WR_009.equals(errWarnEnum)) {
+				hasWarningFromEPSChange = true;
+				break;
+			}
+		}
+		return hasWarningFromEPSChange;
+	}
 
 }

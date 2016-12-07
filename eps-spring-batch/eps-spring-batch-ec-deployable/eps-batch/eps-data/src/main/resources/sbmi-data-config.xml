@@ -108,9 +108,7 @@
 		<property name="insertSbmTransMsgSql" value="${INSERT_SBMTRANSMSG}"></property>
 		<property name="selectSbmTransMsgSql" value="${SELECT_SBMTRANSMSG}"></property>
 		<property name="selectRejectCountSql" value="${SELECT_SBMTRANSMSG_REJECT_COUNT}"></property>
-		<property name="selectMatchCountSql" value="${SELECT_SBMTRANSMSG_MATCH_COUNT}"></property>
-		<property name="selectMatchCountCorrectedSql" value="${SELECT_SBMTRANSMSG_MATCH_COUNT_CORRECTED}"></property>
-		<property name="selectNoMatchCountSql" value="${SELECT_SBMTRANSMSG_NO_MATCH_COUNT}"></property>
+		<property name="selectSbmTransMsgCountsSql" value="${SELECT_SBMTRANSMSG_COUNTS}"></property>
 		<property name="userVO" ref="userVO" />
 	</bean>
 	

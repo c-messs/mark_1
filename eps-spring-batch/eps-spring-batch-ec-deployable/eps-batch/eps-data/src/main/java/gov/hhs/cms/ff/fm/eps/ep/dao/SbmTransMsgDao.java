@@ -2,7 +2,7 @@ package gov.hhs.cms.ff.fm.eps.ep.dao;
 
 import java.util.List;
 
-import gov.hhs.cms.ff.fm.eps.ep.enums.SbmTransMsgStatus;
+import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgCountData;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgPO;
 
 /**
@@ -15,12 +15,11 @@ public interface SbmTransMsgDao {
 	 * Insert SbmTransMsg from PO.  
 	 * NOTE: To avoid using "Clob clob = ps.getConnection().createClob();" in Java land, SBMTRANSMSG.MSG XML data
 	 * is selected directly from STAGINGSBMPOLICY by using StagingSbmPolicyId.
-	 * @param batchId
 	 * @param stagingSbmPolicyid
 	 * @param po
 	 * @return
 	 */
-	public Long insertSbmTransMsg(Long batchId, Long stagingSbmPolicyid, SbmTransMsgPO po);
+	public Long insertSbmTransMsg(Long stagingSbmPolicyid, SbmTransMsgPO po);
 	
 	
 	/**
@@ -31,33 +30,26 @@ public interface SbmTransMsgDao {
 	
 	
 	/**
+	 * Select only count of SbmTransMsgs with a status of RJC. 
+	 * StateCd is included to make sure we only hit the needed partition.
 	 * @param sbmFileProcSumId
+	 * @param stateCd
 	 * @return
 	 */
-	public Integer selectRejectCount(Long sbmFileProcSumId);
+	public Integer selectRejectCount(Long sbmFileProcSumId, String stateCd);
 	
 	
 	/**
+	 * Selects counts by status, hasPolicyVersionId, and hasPriorPolicyVersionId for 
+	 * setting "new" and "matching" counts in summary. StateCd is included to make sure
+	 * we only hit the needed partition.
+	 * Expected record format similar to the following:
+	 * Status hasPvId  hasPPvId  cntStatus
+	 *  ACC    1          0        n
+	 *  AEC	   1          1        n
 	 * @param sbmFileProcSumId
-	 * @param status
+	 * @param stateCd
 	 * @return
 	 */
-	public Integer selectMatchCount(Long sbmFileProcSumId, SbmTransMsgStatus status);
-	
-	
-	/**
-	 * @param sbmFileProcSumId
-	 * @return
-	 */
-	public Integer selectMatchCountCorrected(Long sbmFileProcSumId);
-	
-	
-	/**
-	 * @param sbmFileProcSumId
-	 * @param status
-	 * @return
-	 */
-	public Integer selectNoMatchCount(Long sbmFileProcSumId, SbmTransMsgStatus status);
-	
-	
+	public List<SbmTransMsgCountData> selectSbmTransMsgCounts(Long sbmFileProcSumId, String stateCd);
 }

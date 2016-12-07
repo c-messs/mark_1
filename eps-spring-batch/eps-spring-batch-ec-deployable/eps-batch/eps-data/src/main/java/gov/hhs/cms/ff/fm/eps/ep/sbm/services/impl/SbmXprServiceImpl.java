@@ -132,7 +132,9 @@ public class SbmXprServiceImpl implements SbmXprService {
 
 				setPolicyVersionIdForAllPOs(genPOList, pvId);
 
-				LOG.info("Saving Policy. " + policyDTO.getLogMsg());
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Saving Policy. " + policyDTO.getLogMsg());
+				}
 
 				premiumDao.insertStagingPolicyPremiumList(inboundPremiumList);
 				statusDao.insertStagingPolicyStatusList(inboundStatusList);
@@ -161,7 +163,7 @@ public class SbmXprServiceImpl implements SbmXprService {
 
 						Long pmvId = pmvDao.insertStagingPolicyMemberVersion(inboundPmv);
 
-						LOG.info("Member changed.  Inserting into staging using NEW policyMemberVersionId: " + pmvId);
+						LOG.debug("Member changed.  Inserting into staging using NEW policyMemberVersionId: {}",  pmvId);
 
 						// Only add members from inbound. If an EPS member is not matched up with an inbound member,
 						// that member version will NOT carry over to new policy.
@@ -175,7 +177,7 @@ public class SbmXprServiceImpl implements SbmXprService {
 
 					} else {
 
-						LOG.info("Member did NOT change!  NOT inserting this member into staging.  Joining using EPS policyMemberVersionId: " + epsMember.getPolicyMemberVersionId());
+						LOG.debug("Member did NOT change!  NOT inserting this member into staging.  Joining using EPS policyMemberVersionId: {}", epsMember.getPolicyMemberVersionId());
 						// If inbound member no different than EPS member, join the new policy Version to the existing "latest" EPS Member.
 						inboundPMList.add(createPolicyMemberPO(pvId, epsMember.getPolicyMemberVersionId(), stateCd));
 					}					
@@ -190,16 +192,26 @@ public class SbmXprServiceImpl implements SbmXprService {
 				joinDao.insertStagingPolicyMember(inboundPMList);
 
 			} else {
+				// Policy is a repeat of last cycle, since no difference in values.
+				if (SbmDataUtil.hasWarningFromEPSChange(policyDTO)) {
+					// If there are warnings, meaning EPS changed a value (like langCode, CSRAmount, etc) 
+					// and now that policy is the same as what is already in EPS, create an SBMTransMsg and 
+					// log that warning as to be reported on SBMR, but don't save a new policy version.
+					sbmTransMsgCompositeDao.saveSbmTransMsg(policyDTO);
+					LOG.debug("Inbound Policy SAME as EPS \"latest\" policy AFTER system change. SbmTransMsg and warnings saved, but NO new policy version created.");
+				
+				} else {
 
-				LOG.info("Inbound Policy SAME as EPS policy. NO SbmTransMsg or Policy saved.");
+					LOG.debug("Inbound Policy SAME as EPS policy. NO SbmTransMsg or Policy saved.");
+				}
 
-				//TODO: determine if we need to update a status somewhere, or count?
 			}
 		} else {
 			// Save SbmTransMsg (and errors) since there were errors.
 			sbmTransMsgCompositeDao.saveSbmTransMsg(policyDTO);
 		}
 	}
+
 
 	@Override
 	public void saveXprSkippedTransaction(SBMPolicyDTO policyDTO) {
@@ -208,6 +220,14 @@ public class SbmXprServiceImpl implements SbmXprService {
 
 	}
 
+	/**
+	 * Determines if any POs of all members have changed.  Meaning inbound data that is mapped to a PO
+	 * is different than a PO with data from EPS after mapping.
+	 * @param policyDTO
+	 * @param epsPMVList
+	 * @param epsDateList
+	 * @return
+	 */
 	private boolean determineMemberChanged(SBMPolicyDTO policyDTO, List<SbmPolicyMemberVersionPO> epsPMVList, List<SbmPolicyMemberDatePO> epsDateList) {
 
 		boolean isAnyMemberChanged = false;
@@ -271,7 +291,10 @@ public class SbmXprServiceImpl implements SbmXprService {
 
 	/**
 	 * Determines if any member POs of a member have changed.  Meaning inbound data that is mapped to a PO
-	 * is different than a PO with data from EPS after mapping.  
+	 * is different than a PO with data from EPS after mapping.
+	 * Debug this by determining which PO changed, then put a stop point
+	 * in the equals method of that PO to determine which value caused the method
+	 * to return true.  
 	 * @param poList
 	 * @return
 	 */

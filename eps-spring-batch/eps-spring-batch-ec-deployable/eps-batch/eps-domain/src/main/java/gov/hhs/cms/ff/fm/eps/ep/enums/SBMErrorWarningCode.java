@@ -118,5 +118,20 @@ public enum SBMErrorWarningCode {
 	public String getCode() {
 		return code;
 	}
-		
+	
+	/**
+	 * Get the enum from String value.
+	 * @param code
+	 * @return
+	 */
+	public static SBMErrorWarningCode getEnum(String code) {
+        for (SBMErrorWarningCode type: SBMErrorWarningCode.values()) {
+            if (type.getCode().equals(code)) {
+                return type;
+            }
+        }
+        return null;
+    }
+	
+	
 }

@@ -318,6 +318,7 @@ public abstract class BaseSbmServicesTest extends TestCase {
 		String tableNm = isStaging ? "STAGINGPOLICYMEMBERVERSION" : "POLICYMEMBERVERSION";
 		String stagingAttrs = ", PRIORPOLICYMEMBERVERSIONID, X12LANGUAGETYPECD, X12LANGUAGEQUALIFIERTYPECD, X12RACEETHNICITYTYPECD, ZIPPLUS4CD";
 		String priorPmvIdArg = isStaging ? stagingAttrs : "";
+		String nonCovSubIndArg = member.getNonCoveredSubscriberInd() != null ? "NONCOVEREDSUBSCRIBERIND," : "";
 
 		//" (subscriberInd = 'Y' and length(policyMemberLastNm) <= 60 and length(policyMemberFirstNm) <= 35 and length(policyMemberMiddleNm) <= 25) or
 		//(nvl(subscriberInd,'N') != 'Y' )
@@ -331,17 +332,20 @@ public abstract class BaseSbmServicesTest extends TestCase {
 			firstNm = firstNm.length() > 35 ? firstNm.substring(0, 35) : firstNm;
 			midNm = midNm.length() > 25 ? midNm.substring(0, 25) : midNm;
 		}
+		
+		String nonCovSubIndVal = member.getNonCoveredSubscriberInd() != null ? "'" + member.getNonCoveredSubscriberInd() + "', " : "";
+
 		String sql = "INSERT INTO  " + tableNm + 
 				"(POLICYMEMBERVERSIONID, SUBSCRIBERIND, ISSUERASSIGNEDMEMBERID, EXCHANGEMEMBERID, MAINTENANCESTARTDATETIME, " +
 				"POLICYMEMBERLASTNM, POLICYMEMBERFIRSTNM, POLICYMEMBERMIDDLENM, POLICYMEMBERSALUTATIONNM, " +
 				"POLICYMEMBERSUFFIXNM, POLICYMEMBERSSN, EXCHANGEPOLICYID, SUBSCRIBERSTATECD, X12TOBACCOUSETYPECD, POLICYMEMBERBIRTHDATE, " +
-				"X12GENDERTYPECD,  CREATEBY, LASTMODIFIEDBY " + priorPmvIdArg + ") " +
+				"X12GENDERTYPECD, " + nonCovSubIndArg + " CREATEBY, LASTMODIFIEDBY " + priorPmvIdArg + ") " +
 				"VALUES (" + policyMemberVersionId + ", '" + member.getSubscriberIndicator() + "', '"  + member.getIssuerAssignedMemberId() + "', "+
 				"'" + member.getExchangeAssignedMemberId() + "', " + toTimestampValue(msd) + ",'" + lastNm + "', " +
 				"'" + firstNm + "', '" + midNm + "', '" + member.getNamePrefix()  + "', " +
 				toVal(member.getNameSuffix()) + ", '" + member.getSocialSecurityNumber() + "', '" + exchangePolicyId + "', " + 
 				"'" + stateCd + "', '" + member.getTobaccoUseCode() + "', " + toDateValue(member.getBirthDate()) + ", " +
-				"'" + member.getGenderCode() + "', " + 
+				"'" + member.getGenderCode() + "', " + nonCovSubIndVal +
 				"'" + userVO.getUserId() + "', '" + userVO.getUserId() + "'";
 		if (isStaging) { 
 			sql+= ", " + priorPmvId + ", '" + member.getLanguageCode() + "', '" + member.getLanguageQualifierCode() +
@@ -349,7 +353,6 @@ public abstract class BaseSbmServicesTest extends TestCase {
 		}
 		sql += ")";
 		//POLICYMEMBERDEATHDATE, INCORRECTGENDERTYPECD left out because not in inbound member.
-		// PRIORPOLICYMEMBERVERSIONID, NONCOVEREDSUBSCRIBERIND
 		jdbc.execute(sql);
 		return policyMemberVersionId;
 	}

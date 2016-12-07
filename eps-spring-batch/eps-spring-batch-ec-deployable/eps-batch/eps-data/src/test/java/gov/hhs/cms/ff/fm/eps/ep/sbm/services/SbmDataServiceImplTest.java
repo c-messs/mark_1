@@ -46,7 +46,7 @@ public class SbmDataServiceImplTest extends BaseSbmServicesTest {
 		SBMFileProcessingDTO fileDTO = insertParentFileRecords(tenantId, sbmFileId); 
 		
 		Long sbmFileInfoId = fileDTO.getSbmFileInfo().getSbmFileInfoId();
-		SbmTransMsgStatus status = SbmTransMsgStatus.ACCEPTED_WITH_CHANGES;
+		SbmTransMsgStatus status = SbmTransMsgStatus.ACCEPTED_WITH_SBM_CHANGE;
 		
 		Long sbmTransMsgId = insertSbmTransMsg(sbmFileInfoId, state, exchangePolicyId, status);
 		

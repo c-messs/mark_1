@@ -58,7 +58,7 @@ public class SbmTransMsgCompositeDaoImplTest extends BaseSbmServicesTest {
 		Long sbmFileProcSumId = parentDTO.getSbmFileProcSumId();
 		Long sbmFileInfoId = parentDTO.getSbmFileInfo().getSbmFileInfoId();
 		Long stagingPolicyId   = insertStagingSbmPolicy(sbmFileProcSumId, sbmFileInfoId, policyXml);
-		Long sbmTransMsgId = insertSbmTransMsg(sbmFileInfoId, state, exchangePolicyId, SbmTransMsgStatus.ACCEPTED_NO_CHANGE);
+		Long sbmTransMsgId = insertSbmTransMsg(sbmFileInfoId, state, exchangePolicyId, SbmTransMsgStatus.ACCEPTED_WITH_EPS_CHANGE);
 		
 		inboundPolicyDTO.setSbmTransMsgId(sbmTransMsgId);
 		inboundPolicyDTO.setSbmFileInfoId(sbmFileInfoId);
