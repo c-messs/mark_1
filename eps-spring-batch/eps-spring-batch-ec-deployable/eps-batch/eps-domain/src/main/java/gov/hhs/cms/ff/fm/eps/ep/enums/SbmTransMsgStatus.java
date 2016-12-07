@@ -11,10 +11,10 @@ import com.accenture.foundation.common.exception.ApplicationException;
  */
 public enum SbmTransMsgStatus {
 	
-	REJECTED             ("RJC", "Rejected", "Policy that failed schema and business validations, or belonging to a file that failed error threshold validation."),
-	ACCEPTED_WITH_CHANGES("ACC", "Accepted With Changes", "Matched Policy record processed successfully with changes found or New policy processed successfully with changes applied to persist to DB."),
-	ACCEPTED_NO_CHANGE   ("ANC", "Accepted No Change", "New or matched policy with no changes applied to XPR to persist to DB."),
-	SKIP                 ("SKP", "Skip", "Technical exceptions during processing."),
+	REJECTED                 ("RJC", "Rejected", "Policy that failed schema and business validations, or belonging to a file that failed error threshold validation."),
+	ACCEPTED_WITH_SBM_CHANGE ("ACC", "Accepted With SBM Change", "Matched Policy record processed successfully with changes found or New policy processed successfully with changes applied to persist to DB."),
+	SKIP                     ("SKP", "Skip", "Technical exceptions during processing."),
+	ACCEPTED_WITH_EPS_CHANGE ("AEC", "Accepted With EPS Change", "New or matched policy with EPS changes applied to XPR to persist to DB."),
 
 	;
 

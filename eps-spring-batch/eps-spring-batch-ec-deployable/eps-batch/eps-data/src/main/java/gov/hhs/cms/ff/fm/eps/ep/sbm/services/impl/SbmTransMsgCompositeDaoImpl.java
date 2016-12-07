@@ -45,20 +45,22 @@ public class SbmTransMsgCompositeDaoImpl implements SbmTransMsgCompositeDao {
 
 	@Override
 	public Long saveSbmTransMsg(SBMPolicyDTO policyDTO, SbmTransMsgStatus status) {
-		
+
 		if (policyDTO.getBatchId() != null) {
 			userVO.setUserId(policyDTO.getBatchId().toString());
 		} 
 
 		SbmTransMsgPO po = sbmTransMsgMapper.mapSBMToEPS(policyDTO);
-		
+
 		if(SbmTransMsgStatus.SKIP.equals(status)) {
 			po.setSbmTransMsgProcStatusTypeCd(SbmTransMsgStatus.SKIP.getCode());
 		}
-		
-		LOG.info("Saving SbmTransMsg: " + policyDTO.getLogMsg() + ", statusCd=" + po.getSbmTransMsgProcStatusTypeCd());
 
-		Long sbmTransMsgId = sbmTransMsgDao.insertSbmTransMsg(policyDTO.getBatchId(), policyDTO.getStagingSbmPolicyid(), po);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Saving SbmTransMsg: " + policyDTO.getLogMsg() + ", statusCd=" + po.getSbmTransMsgProcStatusTypeCd());
+		}
+
+		Long sbmTransMsgId = sbmTransMsgDao.insertSbmTransMsg(policyDTO.getStagingSbmPolicyid(), po);
 		policyDTO.setSbmTransMsgId(sbmTransMsgId);
 
 		saveSbmErrorsAndWarnings(policyDTO);
@@ -72,7 +74,9 @@ public class SbmTransMsgCompositeDaoImpl implements SbmTransMsgCompositeDao {
 		List<SbmTransMsgValidationPO> errPoList = sbmTransMsgValidationMapper.mapSbmToEps(inboundPolicyDTO);
 
 		if (!errPoList.isEmpty()) {
-			LOG.info("Saving Validation Errors: "  + inboundPolicyDTO.getLogMsg());
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Saving Validation Errors: "  + inboundPolicyDTO.getLogMsg());
+			}
 			sbmTransMsgValidationDao.insertSbmTransMsgValidationList(errPoList);
 		}
 
@@ -139,5 +143,5 @@ public class SbmTransMsgCompositeDaoImpl implements SbmTransMsgCompositeDao {
 	public void setUserVO(UserVO userVO) {
 		this.userVO = userVO;
 	}
-	
+
 }

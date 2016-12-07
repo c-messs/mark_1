@@ -59,14 +59,6 @@ public interface SbmResponseCompositeDao {
 	 */
 	public List<Long> getSummaryIdsForSBMRFromStagingSBMGroupLock(Long batchId);
 
-
-	/**
-	 * @param batchId
-	 * @param sbmFileProcSumId
-	 * @return
-	 */
-	public SbmResponseDTO generateUpdateStatusSBMR(Long batchId, Long sbmFileProcSumId);	
-	
 	
 	/** H1. Identify if there are additional policies found in EPS that belongs to the 
 	 *  issuer or state that were not provided and not in Superseded or SBMIVoid status.

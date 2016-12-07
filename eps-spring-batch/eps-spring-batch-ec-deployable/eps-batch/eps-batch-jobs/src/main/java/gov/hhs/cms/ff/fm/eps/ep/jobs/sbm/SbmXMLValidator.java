@@ -155,7 +155,6 @@ public class SbmXMLValidator {
 			SAXParser parser = factory.newSAXParser();
 			XMLReader reader = parser.getXMLReader();
 			reader.parse(new InputSource(inputStream));
-			LOG.info(xmlFileURL + " is valid xml.");
 			valid = true;
 		} catch (SAXException e) {
 			LOG.warn("Invalid XML:  "+ xmlFileURL + "\n\tReason: " + e.getMessage());
@@ -215,7 +214,7 @@ public class SbmXMLValidator {
 		enrollment.setFileInformation(fileInfoType);
 		
 		enrollmentMarshaller.marshal(enrollment, writer);
-		LOG.info("Marshalled FileInformationType to xml string with enrollment root tag:\n{}", writer.toString());
+		LOG.debug("Marshalled FileInformationType to xml string with enrollment root tag:\n{}", writer.toString());
 		return writer.toString();
 	}
 	
@@ -332,9 +331,8 @@ public class SbmXMLValidator {
 		//set custom error handler to collect all errors				
 		reader.setErrorHandler(handler);	
 		reader.parse(is);	
-		
-		LOG.info("elementCounts: {}", elementCount);
-		LOG.info("schemaErrors Count: {};  {}", schemaErrors.size(), schemaErrors);
+
+		LOG.debug("schemaErrors Count: {};  {}", schemaErrors.size(), schemaErrors);
 		
 		dto.getSchemaErrorsList().addAll(schemaErrors);
 				
@@ -688,7 +686,7 @@ public class SbmXMLValidator {
 			for( XMLSchemaError err : errorsNotIdentified) {
 				SBMErrorDTO errorLog = SbmHelper.createErrorLog(err.getElementLocalName(), SBMErrorWarningCode.ER_998.getCode(), err.getException().getMessage());
 				sbmErrors.add(errorLog);
-				LOG.info("ER-998 is created: {}", errorLog);
+				LOG.debug("ER-998 is created: {}", errorLog);
 			}		
 		}
 		

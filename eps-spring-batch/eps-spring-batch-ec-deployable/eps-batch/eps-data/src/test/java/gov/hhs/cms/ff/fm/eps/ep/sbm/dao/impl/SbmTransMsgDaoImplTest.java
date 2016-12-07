@@ -27,6 +27,7 @@ import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgPO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
 import gov.hhs.cms.ff.fm.eps.ep.util.DateTimeUtil;
 import gov.hhs.cms.ff.fm.eps.ep.util.sbm.TestDataSBMUtility;
+import gov.hhs.cms.ff.fm.eps.ep.vo.UserVO;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:/sbmi-data-config.xml", "classpath:/test-context-data.xml" })
@@ -36,7 +37,10 @@ public class SbmTransMsgDaoImplTest extends BaseSBMDaoTest {
 
 
 	@Autowired
-	SbmTransMsgDao sbmTransMsgDao;
+	private SbmTransMsgDao sbmTransMsgDao;
+	
+	@Autowired
+	private UserVO userVO;
 	
 	
 	private static Unmarshaller unmarshaller;
@@ -55,7 +59,6 @@ public class SbmTransMsgDaoImplTest extends BaseSBMDaoTest {
 	@Test
 	public void test_insertSbmTransMsg() throws JAXBException  {
 
-		assertNotNull("SbmTransMsgDao", sbmTransMsgDao);
 		int expectedListSize = 1;
 		String issuerId = "88888";
 		String tenantId = "CA0";
@@ -67,6 +70,9 @@ public class SbmTransMsgDaoImplTest extends BaseSBMDaoTest {
 		Long batchId = TestDataSBMUtility.getRandomNumberAsLong(7);
 		fileDTO.setBatchId(batchId);
 		
+		// set in calling composite Daos.
+		userVO.setUserId(batchId.toString());
+		
 		PolicyType expectedPolicy = TestDataSBMUtility.makePolicyType(rcn, qhpId, exchangePolicyId);
 		String expectedPolicyXML = TestDataSBMUtility.getPolicyAsXmlString(expectedPolicy);
 		
@@ -76,7 +82,7 @@ public class SbmTransMsgDaoImplTest extends BaseSBMDaoTest {
 		SbmTransMsgPO expected = makeSbmTransMsgPO(fileDTO.getSbmFileInfo().getSbmFileInfoId());
 		expected.setMsg(expectedPolicyXML);
 
-		Long sbmTransMsgId = sbmTransMsgDao.insertSbmTransMsg(batchId, stagingSbmPolicyId, expected);
+		Long sbmTransMsgId = sbmTransMsgDao.insertSbmTransMsg(stagingSbmPolicyId, expected);
 		assertNotNull("SbmTransMsgId", sbmTransMsgId);
 
 		String sql = "SELECT stm.SBMTRANSMSGID, stm.TRANSMSGDATETIME, stm.MSG.GETCLOBVAL() AS MSGXML, stm.TRANSMSGDIRECTIONTYPECD, stm.TRANSMSGTYPECD, " +
@@ -97,7 +103,7 @@ public class SbmTransMsgDaoImplTest extends BaseSBMDaoTest {
 		assertEquals("PlanId", expected.getPlanId(), actual.get("PLANID"));
 		assertEquals("SbmTransMsgProcStatusTypeCd", expected.getSbmTransMsgProcStatusTypeCd(), actual.get("SBMTRANSMSGPROCSTATUSTYPECD"));
 		assertEquals("ExchangeAssignedPolicyId", expected.getExchangeAssignedPolicyId(), actual.get("EXCHANGEASSIGNEDPOLICYID"));
-	//	assertSysData(actual, batchId);
+		assertSysData(actual, batchId);
 		
 		// Since the marshalled format is slightly different that the inserted format,
 		// go ahead and marshall and compare some values to confirm policy from staging is the same as the one in SbmTransMsg.

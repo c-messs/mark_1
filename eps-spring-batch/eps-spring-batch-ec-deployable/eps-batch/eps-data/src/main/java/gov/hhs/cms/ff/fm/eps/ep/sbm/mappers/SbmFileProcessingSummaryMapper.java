@@ -128,7 +128,7 @@ public class SbmFileProcessingSummaryMapper {
 	 * @param cntEffPoliciesCancelled
 	 * @return FileAcceptanceRejection
 	 */
-	public FileAcceptanceRejection mapEpsToSbmr(SbmFileProcessingSummaryPO po, boolean isApproved, List<SbmFileSummaryMissingPolicyData> missingPolicyDataList, int cntEffPoliciesCancelled) {
+	public FileAcceptanceRejection mapEpsToSbmr(SbmFileProcessingSummaryPO po, List<SbmFileSummaryMissingPolicyData> missingPolicyDataList, int cntEffPoliciesCancelled) {
 
 		FileAcceptanceRejection fileAR = new FileAcceptanceRejection();
 
@@ -139,7 +139,7 @@ public class SbmFileProcessingSummaryMapper {
 		hdr.setTenantId(po.getTenantId());
 		hdr.setCoverageYear(po.getCoverageYear());
 		hdr.setIssuerId(po.getIssuerId());
-		
+
 		// Only show (outbound SBMR) TotalIssuerFiles if there is an IssuerFileSet.  Do not show for Issuer Only and StateWide files.
 		if(po.getIssuerFileSetId() != null) {
 			hdr.setIssuerFileSetId(po.getIssuerFileSetId());
@@ -148,45 +148,97 @@ public class SbmFileProcessingSummaryMapper {
 
 		fileAR.setSBMRHeader(hdr);
 
-		SBMIPROCSUMType summary = new SBMIPROCSUMType();
+		if (!determineDisApproved(po)) {
 
-		if (missingPolicyDataList != null) {
+			SBMIPROCSUMType summary = new SBMIPROCSUMType();
 
-			summary.setTotalPreviousPoliciesNotSubmitted(missingPolicyDataList.size());
+			if (missingPolicyDataList != null) {
+
+				summary.setTotalPreviousPoliciesNotSubmitted(missingPolicyDataList.size());
+			}
+
+			summary.setNotSubmittedEffectuated(po.getNotSubmittedEffectuatedCnt());
+			summary.setNotSubmittedTerminated(po.getNotSubmittedTerminatedCnt());
+			summary.setNotSubmittedCancelled(po.getNotSubmittedCancelledCnt());
+
+			FinalRecordsProcessedSummary finalSummary = new FinalRecordsProcessedSummary();
+
+			finalSummary.setTotalRecordsProcessed(po.getTotalRecordProcessedCnt());
+			finalSummary.setTotalRecordsRejected(po.getTotalRecordRejectedCnt());
+			finalSummary.setCountOfEffectuatedPoliciesCancelled(cntEffPoliciesCancelled);
+
+			if (determineApproved(po)) {
+
+				TotalApproved totAppr = new TotalApproved();
+
+				totAppr.setTotalPolicyRecordsApproved(po.getTotalPolicyApprovedCnt());
+				totAppr.setMatchingPoliciesNoChangeRequired(po.getMatchingPlcNoChangeCnt());
+				totAppr.setMatchingPoliciesChangeApplied(po.getMatchingPlcChgApplCnt());
+				totAppr.setMatchingPoliciesCorrectedChangeApplied(po.getMatchingPlcCorrectedChgApplCnt());
+				totAppr.setNewPoliciesCreatedAsSent(po.getNewPlcCreatedAsSentCnt());
+				totAppr.setNewPoliciesCreatedWithCorrectionApplied(po.getNewPlcCreatedCorrectionApplCnt());
+
+				finalSummary.setTotalApproved(totAppr);
+			}
+
+			summary.setFinalRecordsProcessedSummary(finalSummary);
+
+			fileAR.setSBMIPROCSUM(summary);
 		}
-
-		summary.setNotSubmittedEffectuated(po.getNotSubmittedEffectuatedCnt());
-		summary.setNotSubmittedTerminated(po.getNotSubmittedTerminatedCnt());
-		summary.setNotSubmittedCancelled(po.getNotSubmittedCancelledCnt());
-
-		FinalRecordsProcessedSummary finalSummary = new FinalRecordsProcessedSummary();
-
-		finalSummary.setTotalRecordsProcessed(po.getTotalRecordProcessedCnt());
-		finalSummary.setTotalRecordsRejected(po.getTotalRecordRejectedCnt());
-		finalSummary.setCountOfEffectuatedPoliciesCancelled(cntEffPoliciesCancelled);
-
-		if (isApproved) {
-
-			TotalApproved totAppr = new TotalApproved();
-
-			totAppr.setTotalPolicyRecordsApproved(po.getTotalPolicyApprovedCnt());
-			totAppr.setMatchingPoliciesNoChangeRequired(po.getMatchingPlcNoChangeCnt());
-			totAppr.setMatchingPoliciesChangeApplied(po.getMatchingPlcChgApplCnt());
-			totAppr.setMatchingPoliciesCorrectedChangeApplied(po.getMatchingPlcCorrectedChgApplCnt());
-			totAppr.setNewPoliciesCreatedAsSent(po.getNewPlcCreatedAsSentCnt());
-			totAppr.setNewPoliciesCreatedWithCorrectionApplied(po.getNewPlcCreatedCorrectionApplCnt());
-
-			finalSummary.setTotalApproved(totAppr);
-		}
-
-		summary.setFinalRecordsProcessedSummary(finalSummary);
-
-		fileAR.setSBMIPROCSUM(summary);
 
 		return fileAR;
 	}
 
 
+	/**
+	 * Determine if summary is a status of approved.
+	 * @param epsPO
+	 * @return
+	 */
+	public boolean determineApproved(SbmFileProcessingSummaryPO epsPO) {
+
+		boolean isApproved = false;
+		SBMFileStatus status = SBMFileStatus.getEnum(epsPO.getSbmFileStatusTypeCd());
+
+		if (status.equals(SBMFileStatus.APPROVED) || status.equals(SBMFileStatus.APPROVED_WITH_ERRORS)
+				|| status.equals(SBMFileStatus.APPROVED_WITH_WARNINGS)) {
+			isApproved = true;
+		}
+		return isApproved;
+	}
+
+
+	/**
+	 * Determine if summary is a status of disapproved.
+	 * @param epsPO
+	 * @return
+	 */
+	public boolean determineDisApproved(SbmFileProcessingSummaryPO epsPO) {
+
+		boolean isDisApproved = false;
+		SBMFileStatus status = SBMFileStatus.getEnum(epsPO.getSbmFileStatusTypeCd());
+
+		if (status.equals(SBMFileStatus.DISAPPROVED)) {
+			isDisApproved = true;
+		}
+		return isDisApproved;
+	}
+	
+	/**
+	 * Determine if summary is a status of backout.
+	 * @param epsPO
+	 * @return
+	 */
+	public boolean determineBackOut(SbmFileProcessingSummaryPO epsPO) {
+
+		boolean isBackOut = false;
+		SBMFileStatus status = SBMFileStatus.getEnum(epsPO.getSbmFileStatusTypeCd());
+
+		if (status.equals(SBMFileStatus.BACKOUT)) {
+			isBackOut = true;
+		}
+		return isBackOut;
+	}
 
 
 

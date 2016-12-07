@@ -1,10 +1,8 @@
 package gov.hhs.cms.ff.fm.eps.dispatcher;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -30,12 +28,15 @@ public class EFTDispatchDriver {
 	/** The logger. */
 	private static Logger logger = org.slf4j.LoggerFactory
 			.getLogger(EFTDispatchDriver.class);
-	
+
 	/** The eft dispatcher dao. */
 	private EFTDispatcherDAO eftDispatcherDao;
-	
+
 	/** The batch props. */
 	private String batchProps;
+
+
+	private List<String> generatedFileNames;
 
 	/**
 	 * Save dispatch content.
@@ -56,20 +57,20 @@ public class EFTDispatchDriver {
 			String physicalDocumentTypeCd, String serverEnvironmentTypeCd, String tradingPartnerId,
 			Integer issuerHIOSId, String statePostalCd,
 			String targetEFTTypeApplicationTypeCd) throws SQLException,
-			IOException {
+	IOException {
 		DateTime dateTime = DateTime.now();
 
 
-		List<String> fileNames = new ArrayList<String>();
-		fileNames.addAll(generateFileNames(physicalDocumentTypeCd,
+		generatedFileNames = new ArrayList<String>();
+		generatedFileNames.addAll(generateFileNames(physicalDocumentTypeCd,
 				serverEnvironmentTypeCd, dateTime));
-		
+
 		if(StringUtils.isNotBlank(tradingPartnerId)) {
-			fileNames.addAll(generateFileNamesWithTradPartnerId(tradingPartnerId, physicalDocumentTypeCd, serverEnvironmentTypeCd, dateTime));
+			generatedFileNames.addAll(generateFileNamesWithTradPartnerId(tradingPartnerId, physicalDocumentTypeCd, serverEnvironmentTypeCd, dateTime));
 		}
-		
-		logger.debug("Filenames created:{}", fileNames);
-		
+
+		logger.debug("Filenames created:{}", generatedFileNames);
+
 		PhysicalDocument physicalDocument = new PhysicalDocument();
 		physicalDocument.setPhysicalDocumentDateTime(dateTime);
 		physicalDocument.setPhysicalDocumentByteArray(content);
@@ -81,7 +82,7 @@ public class EFTDispatchDriver {
 		physicalDocument.setPhysicalDocumentApprvdInd("N");
 		physicalDocument.setPhysicalDcmntDsptchTypeCd("C");
 		physicalDocument
-				.setTargetEFTApplicationTypeCd(targetEFTTypeApplicationTypeCd);
+		.setTargetEFTApplicationTypeCd(targetEFTTypeApplicationTypeCd);
 		// generating random unique FileId
 		physicalDocument.setPhysicalDocumentFileName(FileName);
 
@@ -89,53 +90,22 @@ public class EFTDispatchDriver {
 
 		List<DispatchedPhysicalDocument> dispatchDocuments = new ArrayList<DispatchedPhysicalDocument>();
 
-		for (String fileName : fileNames) {
+		for (String fileName : generatedFileNames) {
 			DispatchedPhysicalDocument dispatchedPhysicalDocument = new DispatchedPhysicalDocument();
 			dispatchedPhysicalDocument
-					.setPhysicalDocumentIdentifier(physicalDocId);
+			.setPhysicalDocumentIdentifier(physicalDocId);
 			dispatchedPhysicalDocument.setFailedDispatchInd("N");
 			dispatchedPhysicalDocument
-					.setDispachedPhysicalDcmntFileNm(fileName);
+			.setDispachedPhysicalDcmntFileNm(fileName);
 			dispatchDocuments.add(dispatchedPhysicalDocument);
 		}
 
-		generateFiles(fileNames, content);
+		generateFiles(generatedFileNames, content);
 		eftDispatcherDao.insertsDispatchedDocuments(dispatchDocuments);
-		
+
 		return physicalDocId;
 	}
-	
-	/**
-	 * Save dispatch content.
-	 *
-	 * @param inputStream the input stream
-	 * @param FileName the file name
-	 * @param physicalDocumentTypeCd the physical document type cd
-	 * @param serverEnvironmentTypeCd the server environment type cd
-	 * @param issuerHIOSId the issuer hios id
-	 * @param statePostalCd the state postal cd
-	 * @param targetEFTTypeApplicationTypeCd the target eft type application type cd
-	 * @throws SQLException the SQL exception
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
-	public void saveDispatchContent(InputStream inputStream, String FileName,
-			String physicalDocumentTypeCd, String serverEnvironmentTypeCd,
-			Integer issuerHIOSId, String statePostalCd,
-			String targetEFTTypeApplicationTypeCd) throws SQLException,
-			IOException {
-		logger.debug("inside EFTDispatchDriver.saveDispatchContent(InputStream) method");
-		
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		byte[] buffer = new byte[1024];
-		int length;
 
-		while ((length = inputStream.read(buffer)) > 0) {
-			outputStream.write(buffer, 0, length);
-		}
-		byte[] byteArray = outputStream.toByteArray();
-
-		saveDispatchContent(byteArray, FileName, physicalDocumentTypeCd, serverEnvironmentTypeCd, null, issuerHIOSId, statePostalCd, targetEFTTypeApplicationTypeCd);
-	}
 
 	/**
 	 * Generate file names.
@@ -169,12 +139,12 @@ public class EFTDispatchDriver {
 			String day = format.format(dateTime.toDate());
 			format = new SimpleDateFormat("HHmmssSSS");
 			String time = format.format(dateTime.toDate());	
-		
+
 			String environmentTypeCD = "T";			
 			if(serverEnvironmentTypeCd.equalsIgnoreCase("P") || serverEnvironmentTypeCd.equalsIgnoreCase("R")) {
 				environmentTypeCD =  serverEnvironmentTypeCd;
 			}
-			
+
 			String fileName =  targetsourceID + "."+ targetFunctionCode + "."+ "D" + day + "." + "T" + time + "." + environmentTypeCD;
 
 			logger.debug("physicalDocumentFileName created: " + fileName);
@@ -183,7 +153,7 @@ public class EFTDispatchDriver {
 
 		return fileNames;
 	}
-	
+
 	/**
 	 * Generate file names.
 	 * 
@@ -235,7 +205,7 @@ public class EFTDispatchDriver {
 		for (String fileName : fileNames) {
 			try {
 				logger.debug("Creating file " + batchProps + fileName);
-				
+
 				File newfile = new File(batchProps + fileName);
 				outStream = new FileOutputStream(newfile);
 				outStream.write(byteArray);
@@ -299,5 +269,21 @@ public class EFTDispatchDriver {
 	 */
 	public void setBatchProps(String batchProps) {
 		this.batchProps = batchProps;
+	}
+	
+	/**
+	 * Returns the first fileName.
+	 * @return
+	 */
+	public String getGeneratedFileName() {
+		
+		String fileName = null;
+		if (generatedFileNames == null) {
+			generatedFileNames = new ArrayList<String>();
+		}
+		if (!generatedFileNames.isEmpty()) {
+			fileName = generatedFileNames.get(0);
+		}
+		return fileName;
 	}
 }

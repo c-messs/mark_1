@@ -2,6 +2,7 @@ package gov.hhs.cms.ff.fm.eps.ep.sbm.dao.impl;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
@@ -19,6 +21,7 @@ import gov.hhs.cms.ff.fm.eps.ep.dao.SbmTransMsgDao;
 import gov.hhs.cms.ff.fm.eps.ep.dao.mappers.SbmTransMsgRowMapper;
 import gov.hhs.cms.ff.fm.eps.ep.enums.EProdEnum;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SbmTransMsgStatus;
+import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgCountData;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgPO;
 
 /**
@@ -30,13 +33,25 @@ public class SbmTransMsgDaoImpl extends GenericEpsDao<SbmTransMsgPO> implements 
 
 	private final static Logger LOG = LoggerFactory.getLogger(SbmTransMsgDaoImpl.class);
 
+	/**
+	 * INSERT_SBMTRANSMSG
+	 */
 	private String insertSbmTransMsgSql;
+	/**
+	 * SELECT_SBMTRANSMSG
+	 */
 	private String selectSbmTransMsgSql;
+	/**
+	 * SELECT_SBMTRANSMSG_REJECT_COUNT
+	 */
 	private String selectRejectCountSql;
-	private String selectMatchCountSql;
-	private String selectMatchCountCorrectedSql;
-	private String selectNoMatchCountSql;
+	
+	/**
+	 * SELECT_SBMTRANSMSG_COUNTS
+	 */
+	private String selectSbmTransMsgCountsSql;
 
+	
 	/**
 	 * Constructor
 	 */
@@ -45,7 +60,7 @@ public class SbmTransMsgDaoImpl extends GenericEpsDao<SbmTransMsgPO> implements 
 	}
 
 	@Override
-	public Long insertSbmTransMsg(final Long batchId, final Long stagingSbmPolicyId, final SbmTransMsgPO po) {
+	public Long insertSbmTransMsg(final Long stagingSbmPolicyId, final SbmTransMsgPO po) {
 
 
 		KeyHolder generatedKeyHolder = new GeneratedKeyHolder();
@@ -62,7 +77,6 @@ public class SbmTransMsgDaoImpl extends GenericEpsDao<SbmTransMsgPO> implements 
 				try {
 					ps = con.prepareStatement(insertSbmTransMsgSql, new String[] { "SBMTRANSMSGID" });
 
-
 					if (po.getTransMsgDateTime() != null) {
 						ps.setTimestamp(1, Timestamp.valueOf(po.getTransMsgDateTime()));
 					} else {
@@ -72,7 +86,7 @@ public class SbmTransMsgDaoImpl extends GenericEpsDao<SbmTransMsgPO> implements 
 					ps.setString(3, po.getTransMsgTypeCd());
 					ps.setLong(4, po.getSbmFileInfoId());
 					ps.setString(5, po.getSubscriberStateCd());
-					
+
 					if (po.getRecordControlNum() != null) {
 						ps.setInt(6, po.getRecordControlNum());
 					} else {
@@ -105,37 +119,51 @@ public class SbmTransMsgDaoImpl extends GenericEpsDao<SbmTransMsgPO> implements 
 		return generatedKeyHolder.getKey().longValue();
 	}
 
-	
+
+	@Override
+	public List<SbmTransMsgCountData> selectSbmTransMsgCounts(Long sbmFileProcSumId, String stateCd) {
+
+		List<SbmTransMsgCountData> dataList = jdbcTemplate.query(selectSbmTransMsgCountsSql, 
+				new SbmTransMsgCountDataRowMapper(), sbmFileProcSumId, stateCd);
+		return dataList;
+	}
+
+
+	static private class SbmTransMsgCountDataRowMapper implements RowMapper<SbmTransMsgCountData> {
+
+		/**
+		 * Creates SbmTransMsgCountData
+		 * @param rs
+		 * @param rowNum
+		 * @return missingPolicyData
+		 */
+		public SbmTransMsgCountData mapRow(ResultSet rs, int rowNum) throws SQLException {
+
+			SbmTransMsgCountData cntData = new SbmTransMsgCountData();
+
+			cntData.setStatus(SbmTransMsgStatus.getEnum(rs.getString("SBMTRANSMSGPROCSTATUSTYPECD")));
+			cntData.setHasPolicyVersionId(rs.getBoolean("HASPOLICYVERSIONID"));
+			cntData.setHasPriorPolicyVersionId(rs.getBoolean("HASPRIORPOLICYVERSIONID"));
+			cntData.setCountStatus(rs.getInt("CNT_STATUS"));
+
+			return cntData;
+		}
+	}
+
+
+
 	@Override
 	public List<SbmTransMsgPO> selectSbmTransMsg(Long sbmFileInfo) {
-		
+
 		return (List<SbmTransMsgPO>) jdbcTemplate.query(selectSbmTransMsgSql, rowMapper, sbmFileInfo);
 	}
-	
-	@Override
-	public Integer selectRejectCount(Long sbmFileProcSumId) {
-		
-		return jdbcTemplate.queryForObject(selectRejectCountSql, new Object[] {sbmFileProcSumId}, Integer.class);
-	}
-
 
 	@Override
-	public Integer selectMatchCount(Long sbmFileProcSumId, SbmTransMsgStatus status) {
-		
-		return jdbcTemplate.queryForObject(selectMatchCountSql, new Object[] {sbmFileProcSumId, status.getCode()}, Integer.class);
-	}
-	
-	@Override
-	public Integer selectMatchCountCorrected(Long sbmFileProcSumId) {
+	public Integer selectRejectCount(Long sbmFileProcSumId, String stateCd) {
 
-		return jdbcTemplate.queryForObject(selectMatchCountCorrectedSql, new Object[] {sbmFileProcSumId}, Integer.class);
+		return jdbcTemplate.queryForObject(selectRejectCountSql, new Object[] {sbmFileProcSumId, stateCd}, Integer.class);
 	}
 
-	@Override
-	public Integer selectNoMatchCount(Long sbmFileProcSumId, SbmTransMsgStatus status) {
-		
-		return jdbcTemplate.queryForObject(selectNoMatchCountSql, new Object[] {sbmFileProcSumId, status.getCode()}, Integer.class);
-	}
 
 	/**
 	 * @param insertSbmTransMsgSql the insertSbmTransMsgSql to set
@@ -152,20 +180,6 @@ public class SbmTransMsgDaoImpl extends GenericEpsDao<SbmTransMsgPO> implements 
 	}
 
 	/**
-	 * @param selectMatchCountSql the selectMatchCountSql to set
-	 */
-	public void setSelectMatchCountSql(String selectMatchCountSql) {
-		this.selectMatchCountSql = selectMatchCountSql;
-	}
-
-	/**
-	 * @param selectMatchCountCorrectedSql the selectMatchCountCorrectedSql to set
-	 */
-	public void setSelectMatchCountCorrectedSql(String selectMatchCountCorrectedSql) {
-		this.selectMatchCountCorrectedSql = selectMatchCountCorrectedSql;
-	}
-
-	/**
 	 * @param selectRejectCountSql the selectRejectCountSql to set
 	 */
 	public void setSelectRejectCountSql(String selectRejectCountSql) {
@@ -173,12 +187,10 @@ public class SbmTransMsgDaoImpl extends GenericEpsDao<SbmTransMsgPO> implements 
 	}
 
 	/**
-	 * @param selectNoMatchCountSql the selectNoMatchCountSql to set
+	 * @param selectSbmTransMsgCountsSql the selectSbmTransMsgCountsSql to set
 	 */
-	public void setSelectNoMatchCountSql(String selectNoMatchCountSql) {
-		this.selectNoMatchCountSql = selectNoMatchCountSql;
+	public void setSelectSbmTransMsgCountsSql(String selectSbmTransMsgCountsSql) {
+		this.selectSbmTransMsgCountsSql = selectSbmTransMsgCountsSql;
 	}
-
-	
 
 }

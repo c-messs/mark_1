@@ -26,6 +26,7 @@ import gov.cms.dsh.sbmr.SBMIPROCSUMType.FinalRecordsProcessedSummary;
 import gov.hhs.cms.ff.fm.eps.dispatcher.EFTDispatchDriver;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileProcessingDTO;
@@ -192,7 +193,7 @@ public class SBMResponseGeneratorTest extends TestCase {
 
 		SBMSummaryAndFileInfoDTO summaryDto = new SBMSummaryAndFileInfoDTO();
 		summaryDto.setErrorThresholdPercent(new BigDecimal(5));
-		summaryDto.setSbmFileStatusType(SBMFileStatus.IN_PROCESS);
+		summaryDto.setSbmFileStatusType(SBMFileStatus.ACCEPTED);
 
 		SBMFileInfo fileInfo = new SBMFileInfo();
 		fileInfo.setTradingPartnerId("CA01");
@@ -200,7 +201,7 @@ public class SBMResponseGeneratorTest extends TestCase {
 
 		dto.setSbmSummaryAndFileInfo(summaryDto);
 
-		Mockito.when(sbmResponseDaoMock.generateUpdateStatusSBMR(Mockito.anyLong(), Mockito.anyLong())).thenReturn(dto);
+		Mockito.when(sbmResponseDaoMock.generateSBMR(Mockito.anyLong(), Mockito.anyLong())).thenReturn(dto);
 
 		SBMUpdateStatusRecordDTO updateStatusDto = new SBMUpdateStatusRecordDTO();
 		updateStatusDto.setNewFileSatus(SBMFileStatus.APPROVED);
@@ -211,9 +212,6 @@ public class SBMResponseGeneratorTest extends TestCase {
 		sbmrGenerator.generateSBMRForUpdateStatus(updateStatusDto, jobId);
 
 		Assert.assertNotNull("Should not be null", dto.getSbmr());
-		for( FileInformationType sbmrFileInfo: dto.getSbmr().getSBMIFileInfo()) {
-			Assert.assertTrue("Incorrect status value", SBMFileStatus.APPROVED.getName().equals(sbmrFileInfo.getFileProcessingStatus()));
-		}
 	}
 
 
@@ -406,6 +404,18 @@ public class SBMResponseGeneratorTest extends TestCase {
 		
 		assertEquals("SBMFileStatus", expectedStatus, actualStatus);
 	}	
+	
+	@Test
+	public void test_logFileMsg() {
+		
+		String funcType = SBMConstants.FUNCTION_CODE_SBMS;
+		Long sbmFileProcSumId =  Long.valueOf(9999003);
+		Long physicalDocId =  Long.valueOf(8);
+		String fileName = "YYMMDD.P";
+		ReflectionTestUtils.invokeMethod(sbmrGenerator, "logFileMsg", funcType, sbmFileProcSumId, physicalDocId, fileName);
+		assertEquals("Something (this is a test for the log msg)", true, true);
+	}
+	
 	
 	private FileAcceptanceRejection createFileAcceptanceRejection() {
 		FileAcceptanceRejection sbmr = new FileAcceptanceRejection();
