@@ -54,8 +54,7 @@ public class SbmFileValidator {
 		//validate is state allowed for SBM submission
 		validateStateAllowedForSBM(dto);  
 		
-		//validate coverageYear
-		validateCoverageYear(dto);
+		validateCoverageYear(dto, LocalDate.now());
 		
 		validateFileIdAndTenantId(dto);
 		
@@ -81,7 +80,7 @@ public class SbmFileValidator {
 		}		
 	}
 	
-	private void validateCoverageYear(SBMFileProcessingDTO dto) {
+	private void validateCoverageYear(SBMFileProcessingDTO dto, LocalDate today) {
 		
 		int coverageYearFromFile = dto.getFileInfoType().getCoverageYear();
 		
@@ -90,9 +89,9 @@ public class SbmFileValidator {
 			dto.getErrorList().add(createErrorLog(COVERAGE_YEAR.getElementNm(), ER_015.getCode(), ""+coverageYearFromFile, SBMConstants.ERRORMSG_COVERAGEYEAR));
 		}
 		
-		LocalDate today = LocalDate.now();
+		
 		if(coverageYearFromFile == (today.getYear() + 1)) {
-			if( (today.getMonthValue() != 11) || (today.getMonthValue() != 12) ) {
+			if( (today.getMonthValue() != 11) && (today.getMonthValue() != 12) ) {
 				dto.getErrorList().add(createErrorLog(COVERAGE_YEAR.getElementNm(), ER_017.getCode(), ""+coverageYearFromFile));
 			}
 		}
