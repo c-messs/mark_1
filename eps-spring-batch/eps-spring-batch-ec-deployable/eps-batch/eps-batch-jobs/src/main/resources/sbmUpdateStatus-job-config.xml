@@ -38,6 +38,7 @@
 		<property name="privateFolder" value="${eps.sbm.sbmUpdateStatus.privatefolder}"></property>
 		<property name="processedFolder" value="${eps.sbm.sbmUpdateStatus.processedfolder}"></property>
 		<property name="updateStatusProcessor" ref="sbmUpdateStatusProcessor"></property>
+		<property name="environmentCd"  value="${eps.eft.filenameSuffix.environmentCode}" />
 	</bean>
 	
 	<bean id="sbmUpdateStatusProcessor" class="gov.hhs.cms.ff.fm.eps.ep.jobs.sbm.updatestatus.SbmUpdateStatusProcessor">

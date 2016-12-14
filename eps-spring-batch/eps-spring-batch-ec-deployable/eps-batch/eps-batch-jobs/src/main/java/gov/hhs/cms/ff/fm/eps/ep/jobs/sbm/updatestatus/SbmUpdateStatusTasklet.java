@@ -25,70 +25,74 @@ import gov.hhs.cms.ff.fm.eps.ep.jobs.CommonUtil;
  *
  */
 public class SbmUpdateStatusTasklet implements Tasklet {
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(SbmUpdateStatusTasklet.class);
-	
-	
+
+
 	private File eftFolder;
 	private File privateFolder;
 	private File processedFolder;	
 	private SbmUpdateStatusProcessor updateStatusProcessor;
-	
-	
+	private String environmentCd;
+
+
 	/* (non-Javadoc)
 	 * @see org.springframework.batch.core.step.tasklet.Tasklet#execute(org.springframework.batch.core.StepContribution, org.springframework.batch.core.scope.context.ChunkContext)
 	 */
 	@Override
 	public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-		
+
 		Long jobExecId = chunkContext.getStepContext().getStepExecution().getJobExecutionId();
-		
+
 		//check if SBMI job is running then	fails the job with EPROD-39 error
 		if(updateStatusProcessor.isSBMIJobRunning()) {
 			throw new ApplicationException("EPROD-39 Unable to execute batch job request. Another essential batch job is currently in progress.");
 		}
-		
+
 		File fileToProcess = getAFileToProcess();
 		if(fileToProcess == null) {
 			LOG.info("No files to process.");
 			return RepeatStatus.FINISHED;
 		}
-		
+
 		updateStatusProcessor.processUpdateStatus(fileToProcess, jobExecId);
-		
+
 		//move file to processed folder
 		FileUtils.moveFileToDirectory(fileToProcess, processedFolder, false);
-		
+
 		return null;
 	}
-	
-	
+
+
 	private File getAFileToProcess() throws IOException {
-		
+
 		File fileToProcess = null;
-		
+
 		List<File> filesList = CommonUtil.getFilesFromDir(privateFolder);
-		LOG.info("Files in {}: {}", privateFolder, filesList);
-				
+		LOG.debug("Files in {}: {}", privateFolder, filesList);
+
 		if(CollectionUtils.isNotEmpty(filesList)) {
-			LOG.info("Files in {}: {}", privateFolder, filesList);
+			LOG.debug("Files in {}: {}", privateFolder, filesList);
 			if(CollectionUtils.isNotEmpty(filesList)) {
 				fileToProcess = filesList.get(0);
 			}				
 		}
 		else {
-			filesList = CommonUtil.getFilesFromDir(eftFolder);
-			LOG.info("Files in {}: {}", eftFolder, filesList);
+			filesList = CommonUtil.getFilesFromDir(eftFolder, environmentCd);
+			LOG.debug("Files in {}: {}", eftFolder, filesList);
 			if(CollectionUtils.isNotEmpty(filesList)) {
 				File fileFromEft = filesList.get(0);
 				fileToProcess = new File(privateFolder, fileFromEft.getName());
 
-				LOG.info("Moving file from {} to {}", fileFromEft, fileToProcess);
+				LOG.debug("Moving file from {} to {}", fileFromEft, fileToProcess);
 				FileUtils.moveFile(fileFromEft, fileToProcess);
 			}
-		}	
-		
-		LOG.info("Returning {}", fileToProcess);
+		}
+		if (fileToProcess != null) {
+			LOG.info("Returning '{}' file from EFT folder: {}", environmentCd, fileToProcess.getName());
+		} else {
+			LOG.info("NO '{}' files in EFT folder.", environmentCd);
+		}
 		return fileToProcess;
 	}
 
@@ -119,5 +123,13 @@ public class SbmUpdateStatusTasklet implements Tasklet {
 	public void setUpdateStatusProcessor(SbmUpdateStatusProcessor updateStatusProcessor) {
 		this.updateStatusProcessor = updateStatusProcessor;
 	}
-	
+
+
+	/**
+	 * @param environmentCd the environmentCd to set
+	 */
+	public void setEnvironmentCd(String environmentCd) {
+		this.environmentCd = environmentCd;
+	}
+
 }

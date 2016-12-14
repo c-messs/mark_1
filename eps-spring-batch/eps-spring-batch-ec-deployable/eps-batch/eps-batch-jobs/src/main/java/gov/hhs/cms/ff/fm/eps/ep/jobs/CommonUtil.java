@@ -13,6 +13,8 @@ import org.apache.commons.lang.StringUtils;
 
 import com.accenture.foundation.common.exception.EnvironmentException;
 
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants;
+
 /**
  * @author eps
  *
@@ -48,23 +50,43 @@ public class CommonUtil {
 		}
 		return listAsString;
 	}
-	
-	/**
-	 * This method creates a list of files in the source directory.
-	 *
-	 * @param dir the dir
-	 * @return List<File> - sorted by last modified date
-	 */
-	public static List<File> getFilesFromDir(File dir) {
-		List<File> files = new ArrayList<File>();
 
+
+	/**
+	 * This method creates a list of files in the source directory
+	 * and filters out by Environment Code only if in PROD or PROD-R. 
+	 * @param dir
+	 * @param envCd
+	 * @return
+	 */
+	public static List<File> getFilesFromDir(File dir, String envCd) {
+
+		List<File> files = new ArrayList<File>();
 
 		if (dir.isDirectory()) {
 			//Create a Filename filter to identify filter files
 			File[] dirFiles = dir.listFiles(new FileFilter() {
 				@Override
-				public boolean accept(File pathname) {
-					return pathname.isFile();
+				public boolean accept(File file) {
+
+					boolean isFile = file.isFile();
+					boolean isEnv = true;
+					// Only filter if the envCd is passed in.
+					if (envCd != null) {
+						// Only filter files for PROD and PROD-R
+						if (SBMConstants.FILE_ENV_CD_PROD.equals(envCd) || SBMConstants.FILE_ENV_CD_PROD_R.equals(envCd)) {
+							// Typical fileName: SBMI.FEP0106ID.D161114.T124239968.R
+							String[] tkns = StringUtils.split(file.getName(), ".");
+							String envComponent = null;
+							if (tkns.length >= 5) {
+								envComponent = tkns[4];
+							}
+							if (envComponent != null) {
+								isEnv = (envComponent.length() == 1 && envComponent.indexOf(envCd) == 0);
+							}
+						}
+					}
+					return isFile && isEnv;
 				}
 			});
 			if(ArrayUtils.isNotEmpty(dirFiles)) {
@@ -73,15 +95,25 @@ public class CommonUtil {
 		} else {
 			throw new EnvironmentException("E9004: Service Access Failure, unexpected file type: Directory=" + dir);
 		}
-		
+
 		//sort by last modified date
 		if(CollectionUtils.isNotEmpty(files)) {
 			files.sort(LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
 		}
-		
+
 		return files;
 	}
-	
+
+	/**
+	 * Get file with no filtering.
+	 * @param dir
+	 * @return
+	 */
+	public static List<File> getFilesFromDir(File dir) {
+
+		return getFilesFromDir(dir, null);
+	}
+
 	/**
 	 * Checks if originalStr is found in list of values (Note: Not case
 	 * sensitive).
