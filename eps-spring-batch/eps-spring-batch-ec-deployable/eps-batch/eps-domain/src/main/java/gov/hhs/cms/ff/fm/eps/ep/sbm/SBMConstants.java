@@ -29,6 +29,19 @@ public class SBMConstants {
 	public static final String FUNCTION_CODE_SBMIS = "SBMIS";
 	public static final String TARGET_EFT_APPLICATION_TYPE = "EPS";
 	
+	/**
+	 * Though there are many environments, production (PROD) files will always be 'P'
+	 */
+	public static final String FILE_ENV_CD_PROD = "P";
+	/**
+	 * PROD-R files will always be 'R'
+	 */
+	public static final String FILE_ENV_CD_PROD_R = "R";
+	/**
+	 * ALL environments other than Production and PROD-R will be 'T' (dev, test, impl, etc.)
+	 */
+	public static final String FILE_ENV_CD_TEST = "T";
+	
 	public static final String JOBPARAMETER_PROCESSINGTYPE_SBMI = "sbmi";
 	public static final String SBMI_JOB_NM = "sbmIngestionBatchJob";
 	public static final String SBM_INGEST = "SBMINGEST";

@@ -90,6 +90,7 @@
 			<property name="fileValidator" ref="sbmFileValidator" />
 			<property name="fileCompositeDao" ref="sbmFileCompositeDao" />
 			<property name="fileSatusHandler" ref="sbmFileStatusHandler" />
+			<property name="environmentCd"  value="${eps.eft.filenameSuffix.environmentCode}" />
 		</bean>
 
 		<bean id="sbmiFileIngestionWriter" 	

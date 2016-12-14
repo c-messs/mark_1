@@ -73,6 +73,7 @@ public class SbmiFileIngestionReader  {
 	private SBMFileCompositeDAO fileCompositeDao;
 	private SbmFileValidator fileValidator;
 	private SBMFileStatusHandler fileSatusHandler;
+	private String environmentCd;
 
 	private DateTimeFormatter zipFormatter = DateTimeFormatter.ofPattern(SBMConstants.FILENAME_ZIP_PATTERN);
 	private DateTimeFormatter gzipFormatter = DateTimeFormatter.ofPattern(SBMConstants.FILENAME_GZIP_PATTERN);
@@ -229,15 +230,17 @@ public class SbmiFileIngestionReader  {
 	}
 
 	private File getAFileFromEFT() {
-		List<File> filesList = CommonUtil.getFilesFromDir(eftFolder);
-		LOG.info("Files in {}: {}", eftFolder, filesList);
+		
+		List<File> filesList = CommonUtil.getFilesFromDir(eftFolder, environmentCd);
+		LOG.debug("'{}' Files in {}: {}", environmentCd, eftFolder, filesList);
 
 		if(CollectionUtils.isEmpty(filesList)) {
+			LOG.info(" NO '{}' files in EFT folder: {}", environmentCd, eftFolder.getName());
 			return null;
 		}		
 
 		File fileFromEFT = filesList.get(0);
-		LOG.info("Returning {}", fileFromEFT.getName());
+		LOG.info("Returning '{}' file from EFT folder: {}", environmentCd, fileFromEFT.getName());
 		return fileFromEFT;
 	}
 
@@ -730,5 +733,13 @@ public class SbmiFileIngestionReader  {
 	public void setProcessedFolder(File processedFolder) {
 		this.processedFolder = processedFolder;
 	}
+
+	/**
+	 * @param environmentCd the environmentCd to set
+	 */
+	public void setEnvironmentCd(String environmentCd) {
+		this.environmentCd = environmentCd;
+	}
+
 
 }

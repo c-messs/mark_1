@@ -3,7 +3,9 @@ package gov.hhs.cms.ff.fm.eps.ep.jobs.sbm;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -15,6 +17,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
+import org.joda.time.LocalDate;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,9 +29,11 @@ import org.springframework.batch.item.UnexpectedInputException;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.xml.sax.SAXException;
 
+import gov.cms.dsh.sbmi.Enrollment;
 import gov.cms.dsh.sbmi.FileInformationType;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMErrorWarningCode;
 import gov.hhs.cms.ff.fm.eps.ep.enums.SBMFileStatus;
+import gov.hhs.cms.ff.fm.eps.ep.jobs.util.SBMTestDataDBUtil;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMErrorDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMFileInfo;
@@ -421,6 +426,182 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		assertEquals("FileNm", expectedFileNm , actual.getSbmFileNm());
 		
 	}
+	
+	@Test
+	public void test_getAFileFromEFT_T() throws InterruptedException, IOException {
+
+		File expectedFile = null;
+		fileIngestionReader.setEnvironmentCd(SBMConstants.FILE_ENV_CD_TEST);
+		// from table SERVERENVIRONMENTTYPE
+		String[] envCds = {SBMConstants.FILE_ENV_CD_PROD_R, SBMConstants.FILE_ENV_CD_PROD, SBMConstants.FILE_ENV_CD_TEST};
+		String stateCd = SBMTestDataDBUtil.getRandomSbmState();
+		String sourceId = SBMTestDataDBUtil.getRandomNumberAsString(3) + stateCd;
+
+		String tenantId = stateCd + "0";
+		int covYr = LocalDate.now().getYear();
+
+		for (int i = 0; i < envCds.length; ++i) {
+
+			String fileName = SBMTestDataDBUtil.makeFileName(sourceId, envCds[i]);
+			int idx = (i + 1);
+			String sbmFileId = "FID-" + String.format("%05d", idx);
+			String issuerId =  String.format("%05d", idx);
+
+			Enrollment enrollment = SBMTestDataDBUtil.makeEnrollment(sbmFileId, tenantId, covYr, issuerId, SBMTestDataDBUtil.FILES_ONE_PER_ISSUER);
+			String sbmFileXML = SBMTestDataDBUtil.getEnrollmentAsXmlString(enrollment);
+			sbmFileXML = SBMTestDataDBUtil.prettyXMLFormat(sbmFileXML);
+
+			// Load up various files into EFT folder.
+			File file = new File(eftFolder + File.separator + fileName);
+			BufferedWriter output = new BufferedWriter(new FileWriter(file));
+			output.write(sbmFileXML);
+			output.close();
+			// In this case envCd='T' will get all files, so the first one is grabbed.
+			if (i == 0) {
+				expectedFile = file;
+			}
+			// Delay a little to get a different fileName since it is timestamp based.
+			Thread.sleep(5);
+		}
+		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
+		File actualFile = (File) ReflectionTestUtils.invokeMethod(fileIngestionReader, "getAFileFromEFT");
+		assertEquals("file name with environmentCode 'T'", expectedFile.getName(), actualFile.getName());
+	}
+
+	@Test
+	public void test_getAFileFromEFT_P() throws InterruptedException, IOException {
+
+		File expectedFile = null;
+		fileIngestionReader.setEnvironmentCd(SBMConstants.FILE_ENV_CD_PROD);
+		// from table SERVERENVIRONMENTTYPE
+		String[] envCds = { "1A", "1B", "0", "T0", "T1", "T2", SBMConstants.FILE_ENV_CD_PROD_R, SBMConstants.FILE_ENV_CD_PROD};
+		String stateCd = SBMTestDataDBUtil.getRandomSbmState();
+		String sourceId = SBMTestDataDBUtil.getRandomNumberAsString(3) + stateCd;
+
+		String tenantId = stateCd + "0";
+		int covYr = LocalDate.now().getYear();
+
+		for (int i = 0; i < envCds.length; ++i) {
+
+			String fileName = SBMTestDataDBUtil.makeFileName(sourceId, envCds[i]);
+			int idx = (i + 1);
+			String sbmFileId = "FID-" + String.format("%05d", idx);
+			String issuerId =  String.format("%05d", idx);
+
+			Enrollment enrollment = SBMTestDataDBUtil.makeEnrollment(sbmFileId, tenantId, covYr, issuerId, SBMTestDataDBUtil.FILES_ONE_PER_ISSUER);
+			String sbmFileXML = SBMTestDataDBUtil.getEnrollmentAsXmlString(enrollment);
+			sbmFileXML = SBMTestDataDBUtil.prettyXMLFormat(sbmFileXML);
+
+			// Load up various files into EFT folder.
+			File file = new File(eftFolder + File.separator + fileName);
+			BufferedWriter output = new BufferedWriter(new FileWriter(file));
+			output.write(sbmFileXML);
+			output.close();
+
+			if (i == (envCds.length - 1)) {
+				expectedFile = file;
+			}
+			// Delay a little to get a different fileName since it is timestamp based.
+			Thread.sleep(5);
+		}
+		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
+		File actualFile = (File) ReflectionTestUtils.invokeMethod(fileIngestionReader, "getAFileFromEFT");
+		assertEquals("file name with environmentCode 'P'", expectedFile.getName(), actualFile.getName());
+	}
+
+
+	/**
+	 * Confirm NO production P files are pulled from folder when there all files from
+	 * many different environments including some bogus ones (PP, PROD)
+	 * @throws InterruptedException
+	 * @throws IOException
+	 */
+	@Test
+	public void test_getAFileFromEFT_P_NoFiles() throws InterruptedException, IOException {
+
+		File expectedFile = null;
+		fileIngestionReader.setEnvironmentCd(SBMConstants.FILE_ENV_CD_PROD);
+		// from table SERVERENVIRONMENTTYPE
+		String[] envCds = { "1A", "1B", "0", "T0", "T1", "T2", SBMConstants.FILE_ENV_CD_PROD_R, "T", "PP", "PROD"};
+		String stateCd = SBMTestDataDBUtil.getRandomSbmState();
+		String sourceId = SBMTestDataDBUtil.getRandomNumberAsString(3) + stateCd;
+
+		String tenantId = stateCd + "0";
+		int covYr = LocalDate.now().getYear();
+
+		for (int i = 0; i < envCds.length; ++i) {
+
+			String fileName = SBMTestDataDBUtil.makeFileName(sourceId, envCds[i]);
+			int idx = (i + 1);
+			String sbmFileId = "FID-" + String.format("%05d", idx);
+			String issuerId =  String.format("%05d", idx);
+
+			Enrollment enrollment = SBMTestDataDBUtil.makeEnrollment(sbmFileId, tenantId, covYr, issuerId, SBMTestDataDBUtil.FILES_ONE_PER_ISSUER);
+			String sbmFileXML = SBMTestDataDBUtil.getEnrollmentAsXmlString(enrollment);
+			sbmFileXML = SBMTestDataDBUtil.prettyXMLFormat(sbmFileXML);
+
+			// Load up various files into EFT folder.
+			File file = new File(eftFolder + File.separator + fileName);
+			BufferedWriter output = new BufferedWriter(new FileWriter(file));
+			output.write(sbmFileXML);
+			output.close();
+
+			// Delay a little to get a different fileName since it is timestamp based.
+			Thread.sleep(5);
+		}
+		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
+		File actualFile = (File) ReflectionTestUtils.invokeMethod(fileIngestionReader, "getAFileFromEFT");
+		assertEquals("file with environmentCode 'P'", expectedFile, actualFile);
+	}
+
+	/**
+	 * Confirm only the PROD-R file is pulled from folder when there all files from
+	 * many different environments including some bogus ones (PP, PROD)
+	 * @throws InterruptedException
+	 * @throws IOException
+	 */
+	@Test
+	public void test_getAFileFromEFT_R() throws InterruptedException, IOException {
+
+		File expectedFile = null;
+		fileIngestionReader.setEnvironmentCd(SBMConstants.FILE_ENV_CD_PROD_R);
+		// from table SERVERENVIRONMENTTYPE
+		String[] envCds = { "1A", "1B", "0", "T0", "T1", "T2", "PROD-R", "PR", "T", SBMConstants.FILE_ENV_CD_PROD_R};
+		String stateCd = SBMTestDataDBUtil.getRandomSbmState();
+		String sourceId = SBMTestDataDBUtil.getRandomNumberAsString(3) + stateCd;
+
+		String tenantId = stateCd + "0";
+		int covYr = LocalDate.now().getYear();
+
+		for (int i = 0; i < envCds.length; ++i) {
+
+			String fileName = SBMTestDataDBUtil.makeFileName(sourceId, envCds[i]);
+			int idx = (i + 1);
+			String sbmFileId = "FID-" + String.format("%05d", idx);
+			String issuerId =  String.format("%05d", idx);
+
+			Enrollment enrollment = SBMTestDataDBUtil.makeEnrollment(sbmFileId, tenantId, covYr, issuerId, SBMTestDataDBUtil.FILES_ONE_PER_ISSUER);
+			String sbmFileXML = SBMTestDataDBUtil.getEnrollmentAsXmlString(enrollment);
+			sbmFileXML = SBMTestDataDBUtil.prettyXMLFormat(sbmFileXML);
+
+			// Load up various files into EFT folder.
+			File file = new File(eftFolder + File.separator + fileName);
+			BufferedWriter output = new BufferedWriter(new FileWriter(file));
+			output.write(sbmFileXML);
+			output.close();
+
+			if (i == (envCds.length - 1)) {
+				expectedFile = file;
+			}
+			// Delay a little to get a different fileName since it is timestamp based.
+			Thread.sleep(5);
+		}
+		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
+		File actualFile = (File) ReflectionTestUtils.invokeMethod(fileIngestionReader, "getAFileFromEFT");
+		assertEquals("file with environmentCode 'P'", expectedFile.getName(), actualFile.getName());
+	}
+
+
 
 
 }
