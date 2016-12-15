@@ -1,5 +1,6 @@
 package gov.hhs.cms.ff.fm.eps.ep.util.sbm;
 
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -15,6 +16,12 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.Marshaller;
 import javax.xml.namespace.QName;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import gov.cms.dsh.sbmi.Enrollment;
 import gov.cms.dsh.sbmi.FileInformationType;
@@ -85,6 +92,21 @@ public class TestDataSBMUtility {
 		enrollment.setFileInformation(makeFileInformationType(sbmFileId, tenantId, covYr, issuerId, issuerFileType));
 		return enrollment;
 	}
+	
+	/**
+	 * Also makes FileInformationType and IssuerFileInformation. 
+	 * @param xprId
+	 * @param tenantId
+	 * @param covYr
+	 * @param issuerId
+	 * @return
+	 */
+	public static Enrollment makeEnrollment(String sbmFileId, String tenantId, int covYr, String issuerId, int issuerFileType) {
+
+		Enrollment enrollment = new Enrollment();
+		enrollment.setFileInformation(makeFileInformationType(sbmFileId, tenantId, covYr, issuerId, issuerFileType));
+		return enrollment;
+	}
 
 	/**
 	 * Makes FileInformationType with IssuerFileInformation but WITHOUT IssuerFileSet. Call "makeIssuerFileSet" 
@@ -117,6 +139,36 @@ public class TestDataSBMUtility {
 		}
 		return fileInfo;
 	}
+	
+	/**
+	 * Makes FileInformationType with IssuerFileInformation but WITHOUT IssuerFileSet. Call "makeIssuerFileSet" 
+	 * to create IssuerFileSet.
+	 * 
+	 * issuerFileTypes:
+	 *   - FILES_STATE_WIDE
+	 *   - FILES_ONE_PER_ISSUER
+	 *   - FILES_FILESET
+
+	 * @param fileId
+	 * @param tenantId
+	 * @param covYr
+	 * @param issuerId
+	 * @return
+	 */
+	public static FileInformationType makeFileInformationType(String sbmFileId, String tenantId, int covYr, String issuerId, int issuerFileType) {
+
+		FileInformationType fileInfo = new FileInformationType();
+		
+		fileInfo.setFileId(sbmFileId);
+		fileInfo.setFileCreateDateTime(DateTimeUtil.getXMLGregorianCalendar(getLocalDateTimeWithMicros()));
+		fileInfo.setTenantId(tenantId);
+		fileInfo.setCoverageYear(covYr);
+		if (issuerFileType != FILES_STATE_WIDE) {
+			fileInfo.setIssuerFileInformation(makeIssuerFileInformation(issuerId));	
+		}
+		return fileInfo;
+	}
+
 
 
 	/** 
@@ -645,6 +697,33 @@ public class TestDataSBMUtility {
 	}
 
 
+	/**
+	 * File Name =TradingPartnerID.AppId.FuncCode.Date.Time.EnvCode.Direction
+	 * 
+	 * Trading Partner ID SBM Source ID (for source)
+     * App ID - EPS
+     * Function Code - SBMI
+     * Date - DYYMMDD where the first character ‘D’ is static text and the rest us the date in ‘YYMMDD’ format
+     * Time - THHMMSSmmm where the first character ‘T’ is a static text and the rest is the time in ‘HHMMSSmmm’ format
+     * Environment Code - P for production, T for testing, R for production readiness
+     * Direction - IN
+	 * @param sourceId
+	 * @return
+	 */
+	public static String makeZipEntryFileName(String sourceId, String envCd) {
+
+		return sourceId + ".EPS.SBMI." + LocalDateTime.now().format(DTF_FILE) + "." + envCd;
+	}
+	
+	/**
+	 * Zip File Name format: FuncCode.TradingPartnerID.Date.Time.EnvCode.Direction
+	 * @param sourceId
+	 * @return
+	 */
+	public static String makeFileName(String sourceId, String envCd) {
+
+		return "SBMI." + sourceId + "."+ LocalDateTime.now().format(DTF_FILE) + "." + envCd;
+	}
 
 	/**
 	 * File Name =TradingPartnerID.AppId.FuncCode.Date.Time.EnvCode.Direction
@@ -733,6 +812,26 @@ public class TestDataSBMUtility {
 		String idxStr = exchangePolicyId.substring(exchangePolicyId.length() - 1, exchangePolicyId.length());
 		int idx = Integer.parseInt(idxStr);
 		return idx;
+	}
+	
+	public static String prettyXMLFormat(String input, int indent) {
+		try {
+			Source xmlInput = new StreamSource(new StringReader(input));
+			StringWriter stringWriter = new StringWriter();
+			StreamResult xmlOutput = new StreamResult(stringWriter);
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			transformerFactory.setAttribute("indent-number", indent);
+			Transformer transformer = transformerFactory.newTransformer(); 
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.transform(xmlInput, xmlOutput);
+			return xmlOutput.getWriter().toString();
+		} catch (Exception e) {
+			throw new RuntimeException(e); // simple exception handling, please review it
+		}
+	}
+
+	public static String prettyXMLFormat(String input) {
+		return prettyXMLFormat(input, 2);
 	}
 
 	public static int getRandomNumber(int digits) {

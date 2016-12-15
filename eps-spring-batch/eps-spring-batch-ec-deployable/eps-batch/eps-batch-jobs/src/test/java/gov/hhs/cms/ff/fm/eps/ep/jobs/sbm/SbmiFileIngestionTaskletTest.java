@@ -6,6 +6,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -60,10 +62,13 @@ public class SbmiFileIngestionTaskletTest {
 		tasklet.setFileIngestionWriter(mockFileIngestionWriter);
 		tasklet.setSbmEvaluatePendingFiles(mockSbmEvaluatePendingFiles);
 
-		SBMFileProcessingDTO mockDTO = new SBMFileProcessingDTO();		
-		expect(mockFileIngestionReader.read(EasyMock.anyLong())).andReturn(mockDTO);
+		List<SBMFileProcessingDTO> mockDTOList = new ArrayList<SBMFileProcessingDTO>();
+		mockDTOList.add(new SBMFileProcessingDTO());
+		expect(mockFileIngestionReader.read(EasyMock.anyLong())).andReturn(mockDTOList);
 		replay(mockFileIngestionReader);
 
+		SBMFileProcessingDTO mockDTO = new SBMFileProcessingDTO();
+		
 		mockFileIngestionWriter.write(mockDTO);
 		replay(mockFileIngestionWriter);
 
@@ -96,8 +101,8 @@ public class SbmiFileIngestionTaskletTest {
 		tasklet.setFileIngestionReader(mockFileIngestionReader);
 		tasklet.setSbmEvaluatePendingFiles(mockSbmEvaluatePendingFiles);
 
-		SBMFileProcessingDTO mockDTO = null;		
-		expect(mockFileIngestionReader.read(EasyMock.anyLong())).andReturn(mockDTO);
+		List<SBMFileProcessingDTO> mockDTOList = new ArrayList<SBMFileProcessingDTO>();		
+		expect(mockFileIngestionReader.read(EasyMock.anyLong())).andReturn(mockDTOList);
 	
 		mockSbmEvaluatePendingFiles.evaluateBypassFreeze(EasyMock.anyLong());
 		mockSbmEvaluatePendingFiles.evaluateFreezeFiles(EasyMock.anyLong());

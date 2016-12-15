@@ -40,6 +40,7 @@ import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgCountData;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.SbmTransMsgValidationPO;
 import gov.hhs.cms.ff.fm.eps.ep.po.StagingSbmGroupLockPO;
+import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMConstants;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SBMSummaryAndFileInfoDTO;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmDataUtil;
 import gov.hhs.cms.ff.fm.eps.ep.sbm.SbmResponseDTO;
@@ -101,9 +102,10 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 			userVO.setUserId(batchId.toString());
 		}
 
-		boolean isCmsAppovalReq = sbmFileProcSumDao.verifyCmsApprovalRequired(sbmFileProcSumId);
-
 		SbmFileProcessingSummaryPO epsSummaryPO = sbmFileProcSumDao.selectSbmFileProcessingSummary(sbmFileProcSumId);
+		
+		boolean isAutoApproval = SBMConstants.N.equals(epsSummaryPO.getCmsApprovalRequiredInd());
+		boolean isApproved = sbmFileProcSumMapper.determineApproved(epsSummaryPO);
 
 		// Retrieve the missing policy data for the outbound response and for
 		// Termination count determination.
@@ -119,8 +121,6 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		List<SbmFileInfoPO> filePOList = sbmFileInfoDao.getSbmFileInfoList(sbmFileProcSumId);
 		epsSummaryPO.setTotalIssuerFileCount(filePOList.size());
 
-		boolean isApproved = sbmFileProcSumMapper.determineApproved(epsSummaryPO);
-
 		if (isApproved) {
 
 			getApprovalTotals(epsSummaryPO);
@@ -133,8 +133,9 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 		for (SbmFileInfoPO filePO : filePOList) {
 
 			FileInformationType fileInfo = sbmFileInfoMapper.mapEpsToSbmr(filePO, epsSummaryPO.getSbmFileStatusTypeCd());
-
-			if (!isCmsAppovalReq) {
+			// Show Errors and Warnings when file is Accepted (manual approval and not approved yet) or when AutoApproved.
+			// If manualApproval and is Approved, don't show the errors on the second SBMR.
+			if ((!isAutoApproval && !isApproved) || isAutoApproval) {
 
 				List<SbmTransMsgPO> sbmTransMsgPOList = sbmTransMsgDao.selectSbmTransMsg(filePO.getSbmFileInfoId());
 
@@ -176,8 +177,7 @@ public class SbmResponseCompositeDaoImpl implements SbmResponseCompositeDao {
 
 		sbmFileProcSumDao.updateSbmFileProcessingSummary(epsSummaryPO);
 
-
-		if (!isCmsAppovalReq || isApproved) {
+		if (isApproved) {
 			deleteStagingData(sbmFileProcSumId);
 		}
 

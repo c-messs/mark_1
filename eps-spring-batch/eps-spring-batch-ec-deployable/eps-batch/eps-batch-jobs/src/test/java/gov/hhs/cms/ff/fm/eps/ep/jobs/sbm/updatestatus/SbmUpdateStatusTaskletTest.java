@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -188,13 +189,13 @@ public class SbmUpdateStatusTaskletTest extends TestCase {
 		File expectedFile = null;
 		sbmUpdateStatusTasklet.setEnvironmentCd(SBMConstants.FILE_ENV_CD_TEST);
 		// from table SERVERENVIRONMENTTYPE
-		String[] envCds = {SBMConstants.FILE_ENV_CD_PROD_R, SBMConstants.FILE_ENV_CD_PROD, SBMConstants.FILE_ENV_CD_TEST};
+		String[] envCds = {SBMConstants.FILE_ENV_CD_PROD_R, SBMConstants.FILE_ENV_CD_PROD, "ANY"};
 		String stateCd = SBMTestDataDBUtil.getRandomSbmState();
 		String sourceId = SBMTestDataDBUtil.getRandomNumberAsString(3) + stateCd;
 
 		for (int i = 0; i < envCds.length; ++i) {
 
-			String fileName = SBMTestDataDBUtil.makeFileName(sourceId, envCds[i]);
+			String fileName = SBMTestDataDBUtil.makeFileName(sourceId, envCds[i], LocalDateTime.now().plusMinutes(i));
 
 			String content = "Any ol' content: " + i;
 
@@ -208,8 +209,8 @@ public class SbmUpdateStatusTaskletTest extends TestCase {
 			if (i == 0) {
 				expectedFile = file;
 			}
-			// Delay a little to get a different fileName since it is timestamp based.
-			Thread.sleep(5);
+			// Delay at least one second to get a different file LastModifiedDateTime.
+			Thread.sleep(1000);
 		}
 		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
 		File actualFile = (File) ReflectionTestUtils.invokeMethod(sbmUpdateStatusTasklet, "getAFileToProcess");

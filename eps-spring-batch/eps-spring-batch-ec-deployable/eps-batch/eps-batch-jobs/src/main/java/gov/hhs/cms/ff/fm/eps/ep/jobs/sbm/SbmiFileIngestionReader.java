@@ -87,7 +87,7 @@ public class SbmiFileIngestionReader  {
 	 * @throws ParseException
 	 * @throws NonTransientResourceException
 	 */
-	public SBMFileProcessingDTO read(Long jobId) throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+	public List<SBMFileProcessingDTO> read(Long jobId) throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
 
 		//Get a file from EFT
 		SBMFileProcessingDTO fileProcDto = getAFileToProcessFromEFT();
@@ -99,89 +99,85 @@ public class SbmiFileIngestionReader  {
 
 		if(fileProcDto == null) {
 			LOG.info("No files to process");
-			return null;
+			return new ArrayList<SBMFileProcessingDTO>();
 		}
 
-		LOG.info("Processing filename:{}, jobId:{}", fileProcDto.getSbmFileInfo().getSbmFileNm(), jobId);
-		fileProcDto.setBatchId(jobId);
+		List<SBMFileProcessingDTO> fileProcDtoList = processCompressedFiles(fileProcDto);
 
-		//reject if zip file validation errors exists
-		processCompressedFiles(fileProcDto);
+		for (SBMFileProcessingDTO fileDto : fileProcDtoList) {
 
-		if(CollectionUtils.isNotEmpty(fileProcDto.getErrorList())) {
-			LOG.info("Errors In Compressed files");
-			return fileProcDto;
-		}
+			LOG.info("Processing filename:{}, jobId:{}", fileDto.getSbmFileInfo().getSbmFileNm(), jobId);
+			fileDto.setBatchId(jobId);
 
+			SBMFileInfo fileInfo = fileDto.getSbmFileInfo();
 
-		List<SBMErrorDTO> errorList = fileProcDto.getErrorList();
-		SBMFileInfo fileInfo = fileProcDto.getSbmFileInfo();
+			if (fileDto.getErrorList().isEmpty()) {
 
-		//duplicate file is allowed only if file status is rejected or disapproved
-		List<SBMSummaryAndFileInfoDTO> summaryDtoList = fileCompositeDao.getFileStatus(fileInfo.getSbmFileNm());		
-		if( SbmHelper.isNotRejectedNotDisapproved(summaryDtoList)) {
-			//create error - duplicate file
-			errorList.add(createErrorLog(null, ER_012.getCode()));
-			fileProcDto.setSbmFileStatusType(REJECTED); 
-			fileInfo.setRejectedInd(true);
-			LOG.info("Duplicate file; Rejecting file");
-			return fileProcDto;
-		}
+				//duplicate file is allowed only if file status is rejected or disapproved
+				List<SBMSummaryAndFileInfoDTO> summaryDtoList = fileCompositeDao.getFileStatus(fileInfo.getSbmFileNm());		
+				if( SbmHelper.isNotRejectedNotDisapproved(summaryDtoList)) {
+					fileDto.getErrorList().add(createErrorLog(null, ER_012.getCode()));
+					LOG.info("Duplicate file; Rejecting file");
+				}
+			}
 
-		if( ! xmlValidator.isValidXML(fileProcDto.getSbmiFile())) {			
-			//create error - invalid xml
-			errorList.add(createErrorLog(null, ER_013.getCode()));
-			fileProcDto.setSbmFileStatusType(REJECTED); 
-			fileInfo.setRejectedInd(true);
-			LOG.info("Invalid xml; Rejecting file");
-			return fileProcDto;
-		}
+			if (fileDto.getErrorList().isEmpty()) {
 
-		//set valid xml to save inbound file to DB
-		fileProcDto.setValidXML(true);
+				if( ! xmlValidator.isValidXML(fileDto.getSbmiFile())) {			
+					fileDto.getErrorList().add(createErrorLog(null, ER_013.getCode()));
+					LOG.info("Invalid xml; Rejecting file");
 
-		// check schema errors
-		errorList.addAll(xmlValidator.validateSchemaForFileInfo(fileInfo.getSbmFileInfoId(), fileProcDto.getSbmiFile()));
+				}
+			}
 
-		// add file level errors to dto and generate SBMS
-		if( ! fileProcDto.getErrorList().isEmpty()) { 
-			fileProcDto.setSbmFileStatusType(REJECTED); 
-			fileInfo.setRejectedInd(true);
-			LOG.info("Schema errors exists; Rejecting file");
-			LOG.info("Schema errors: {}", fileProcDto.getErrorList());
-			return fileProcDto;
-		}
+			if (fileDto.getErrorList().isEmpty()) {
+				//set valid xml to save inbound file to DB
+				fileDto.setValidXML(true);
 
-		//No schema errors, unmarshall FileInformationType
-		FileInformationType sbmiFileInfoType = xmlValidator.unmarshallSBMIFileInfo(fileProcDto.getSbmiFile());
-		fileProcDto.setFileInfoType(sbmiFileInfoType);
-		//Marshall FileInformationType to xml string to save to SBMFileInfo table
-		fileProcDto.setFileInfoXML(xmlValidator.marshallFileInfo(sbmiFileInfoType));		
+				// check schema errors
+				fileDto.getErrorList().addAll(xmlValidator.validateSchemaForFileInfo(fileInfo.getSbmFileInfoId(), fileDto.getSbmiFile()));
+			} 
 
-		updateAttributes(fileProcDto);
+			if (fileDto.getErrorList().isEmpty()) {
+				//No schema errors, unmarshall FileInformationType
+				FileInformationType sbmiFileInfoType = xmlValidator.unmarshallSBMIFileInfo(fileDto.getSbmiFile());
+				fileDto.setFileInfoType(sbmiFileInfoType);
+				//Marshall FileInformationType to xml string to save to SBMFileInfo table
+				fileDto.setFileInfoXML(xmlValidator.marshallFileInfo(sbmiFileInfoType));		
 
-		//perform file meta data validations & perform file level validations
-		fileValidator.validate(fileProcDto);
+				updateAttributes(fileDto);
 
-		// add file level errors to dto and generate SBMS
-		if( ! fileProcDto.getErrorList().isEmpty()) { 
-			fileProcDto.setSbmFileStatusType(REJECTED); 
-			fileInfo.setRejectedInd(true);
-			LOG.info("File level errors exists; Rejecting file");
-			LOG.info("File level errors: {}", fileProcDto.getErrorList());
-			return fileProcDto;
-		}
+				//perform file meta data validations & perform file level validations
+				fileValidator.validate(fileDto);
+			}
 
-		// all validations passed
-		LOG.info("All validations passed.");
+			if(fileDto.getErrorList().isEmpty()) { 
 
-		//Set File status to IN_PROCESS, ON_HOLD, FREEZE or PENDING_FILES
-		fileSatusHandler.determineAndSetFileStatus(fileProcDto);
+				// all validations passed
+				LOG.info("All validations passed.");
 
-		LOG.info("SummaryId:{}, status:{}, File rejectedInd: {}", fileProcDto.getSbmFileProcSumId(), fileProcDto.getSbmFileStatusType(), fileInfo.isRejectedInd());  
-		return fileProcDto;
+				//Set File status to IN_PROCESS, ON_HOLD, FREEZE or PENDING_FILES
+				fileSatusHandler.determineAndSetFileStatus(fileDto);
+
+			} else {
+				
+				fileDto.setSbmFileStatusType(REJECTED); 
+				fileInfo.setRejectedInd(true);
+				LOG.info("Schema errors exists; Rejecting file");
+				LOG.info("Schema errors: {}", fileDto.getErrorList());
+			}
+
+			LOG.info("SummaryId:{}, status:{}, File rejectedInd: {}", fileDto.getSbmFileProcSumId(), fileDto.getSbmFileStatusType(), fileInfo.isRejectedInd());  
+		} // END for fileProcDtoList
+		
+		return fileProcDtoList;
 	}
 
+
+	/** 
+	 * @return
+	 * @throws IOException
+	 */
 	private SBMFileProcessingDTO getAFileToProcessFromEFT() throws IOException {
 
 		File fileFromEFT = null;
@@ -230,7 +226,7 @@ public class SbmiFileIngestionReader  {
 	}
 
 	private File getAFileFromEFT() {
-		
+
 		List<File> filesList = CommonUtil.getFilesFromDir(eftFolder, environmentCd);
 		LOG.debug("'{}' Files in {}: {}", environmentCd, eftFolder, filesList);
 
@@ -407,10 +403,16 @@ public class SbmiFileIngestionReader  {
 
 	}
 
-	/*
+
+	/**
 	 * Process Compressed files - Winzip and Gzip are the only supported compression formats.
+	 * @param fileProcDto
+	 * @return
+	 * @throws IOException
 	 */
-	private void processCompressedFiles(SBMFileProcessingDTO fileProcDto) throws IOException {
+	private List<SBMFileProcessingDTO> processCompressedFiles(SBMFileProcessingDTO fileProcDto) throws IOException {
+
+		List<SBMFileProcessingDTO> fileProcDtoList = new ArrayList<SBMFileProcessingDTO>();
 
 		File fileToValidate = fileProcDto.getSbmiFile();
 		boolean isZip = false;
@@ -424,7 +426,8 @@ public class SbmiFileIngestionReader  {
 
 			isZip = true;
 			//move to zipped folder
-			processZipFiles(fileToValidate, fileProcDto);
+			List<SBMFileProcessingDTO> zipFileList = processZipFiles(fileToValidate);
+			fileProcDtoList.addAll(zipFileList);
 		}
 
 		boolean isGzip = false;
@@ -434,25 +437,46 @@ public class SbmiFileIngestionReader  {
 		}
 
 		if (isGzip) {
-			processGzip(fileToValidate, fileProcDto);
+			SBMFileProcessingDTO gZipFileProcDto = processGzip(fileToValidate);
+			if (gZipFileProcDto != null) {
+				fileProcDtoList.add(gZipFileProcDto);
+			}
+		} 
+
+		if (!isZip && !isGzip) {
+			fileProcDtoList.add(fileProcDto);
 		}
+
+		return fileProcDtoList;
 	}
 
 	/*
 	 * Process Zip files
 	 */
-	private void processZipFiles(File file, SBMFileProcessingDTO fileProcDto) throws FileNotFoundException, IOException {
+	/**
+	 * Reads a Zip file and extracts files.  Validates each filename and SourceId of
+	 * each extracted file (zipEntry).  Returns a list of DTOs that contain each invalid
+	 * file and the first valid zipEntry file (oldest, using Java LastModifiedFileComparator).
+	 * @param file
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	private List<SBMFileProcessingDTO> processZipFiles(File file) throws FileNotFoundException, IOException {
+
+		List<SBMFileProcessingDTO> dtoList = new ArrayList<SBMFileProcessingDTO>();
 
 		byte[] buffer = new byte[1024];
 
 		LOG.info("file : "+ file.getAbsoluteFile());
 
 		final ZipFile zipFile = new ZipFile(file);
+		
+		String zipFileNm = file.getName().replaceAll(LOCK_EXTENSION, "");
 
-		File zipDirectory = new File(zipFilesFolder.getAbsolutePath() + File.separator + file.getName().replaceAll(LOCK_EXTENSION, ""));
+		File zipDirectory = new File(zipFilesFolder.getAbsolutePath() + File.separator + zipFileNm);
 		zipDirectory.mkdir();
 
-		List<SBMErrorDTO> zipErrorList = new ArrayList<SBMErrorDTO>();
 		String zipFileSrcId = SbmHelper.getTradingPartnerId(file.getName());
 
 		String zipFileTs = zipFormatter.format(LocalDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneId.systemDefault()));
@@ -467,6 +491,8 @@ public class SbmiFileIngestionReader  {
 
 				String zipEntryName = ze.getName();
 
+				List<SBMErrorDTO> zipErrorList = new ArrayList<SBMErrorDTO>();
+
 				if(!isZipEntryNameValid(zipEntryName)) {
 
 					LOG.info("ER-063: Invalid file name within Zip file");
@@ -474,36 +500,46 @@ public class SbmiFileIngestionReader  {
 					SBMErrorDTO error = new SBMErrorDTO();
 					error.setSbmErrorWarningTypeCd(SBMErrorWarningCode.ER_063.getCode());
 					error.setElementInErrorNm("FileID");
-					error.setAdditionalErrorInfoText(zipEntryName);
+					error.getAdditionalErrorInfoList().add("Extracted from ZIP file:  " + zipFileNm);
 
 					zipErrorList.add(error);
 
-					SBMFileInfo fileInfo = new SBMFileInfo();		
-					fileInfo.setSbmFileNm(zipEntryName);
-					fileProcDto.setSbmFileInfo(fileInfo);
-					fileProcDto.setSbmFileStatusType(REJECTED);
-					fileInfo.setRejectedInd(true);
+					SBMFileProcessingDTO zipEntryDTO = new SBMFileProcessingDTO();
+					SBMFileInfo zipEntryFileInfo = new SBMFileInfo();
+					zipEntryFileInfo.setSbmFileNm(zipEntryName);
+					zipEntryFileInfo.setTradingPartnerId(zipFileSrcId);
+					zipEntryFileInfo.setRejectedInd(true);
+					zipEntryDTO.setSbmFileInfo(zipEntryFileInfo);
+					zipEntryDTO.setSbmFileStatusType(REJECTED);
+					zipEntryDTO.getErrorList().addAll(zipErrorList);
 
-					break;
+					dtoList.add(zipEntryDTO);
 				}
 
-				String zipEntrySrcId = SbmHelper.getZipFileTradingPartnerId(zipEntryName);
+				if (zipErrorList.isEmpty()) {
 
-				if(!zipEntrySrcId.equalsIgnoreCase(zipFileSrcId)) {
+					String zipEntrySrcId = SbmHelper.getZipFileTradingPartnerId(zipEntryName);
 
-					LOG.info("ER-011: Mismatched SourceId in ZIP file");
+					if(!zipEntrySrcId.equalsIgnoreCase(zipFileSrcId)) {
 
-					SBMErrorDTO error = new SBMErrorDTO();
-					error.setSbmErrorWarningTypeCd(SBMErrorWarningCode.ER_011.getCode());
-					zipErrorList.add(error);
+						LOG.info("ER-011: Mismatched SourceId in ZIP file");
 
-					SBMFileInfo fileInfo = new SBMFileInfo();		
-					fileInfo.setSbmFileNm(zipEntryName);
-					fileProcDto.setSbmFileInfo(fileInfo);
-					fileProcDto.setSbmFileStatusType(REJECTED);					
-					fileInfo.setRejectedInd(true);
+						SBMErrorDTO error = new SBMErrorDTO();
+						error.setSbmErrorWarningTypeCd(SBMErrorWarningCode.ER_011.getCode());
+						error.getAdditionalErrorInfoList().add("Extracted from ZIP file:  " + zipFileNm);
+						zipErrorList.add(error);
 
-					break;
+						SBMFileProcessingDTO zipEntryDTO = new SBMFileProcessingDTO();
+						SBMFileInfo zipEntryFileInfo = new SBMFileInfo();
+						zipEntryFileInfo.setSbmFileNm(zipEntryName);
+						zipEntryFileInfo.setTradingPartnerId(zipFileSrcId);
+						zipEntryFileInfo.setRejectedInd(true);
+						zipEntryDTO.setSbmFileInfo(zipEntryFileInfo);
+						zipEntryDTO.setSbmFileStatusType(REJECTED);
+						zipEntryDTO.getErrorList().addAll(zipErrorList);
+
+						dtoList.add(zipEntryDTO);
+					}
 				}
 
 				if(zipErrorList.isEmpty()) {
@@ -539,39 +575,35 @@ public class SbmiFileIngestionReader  {
 			zipFile.close();
 		}
 
-		if(!zipErrorList.isEmpty()) {
-			fileProcDto.getErrorList().addAll(zipErrorList);
+		LOG.info(file.getName() + " Unziped to: " + zipDirectory);
 
-		} else {
+		List<File> unzippedFiles = CommonUtil.getFilesFromDir(zipDirectory);
 
-			LOG.info(file.getName() + " Unziped to: " + zipDirectory);
+		if(CollectionUtils.isNotEmpty(unzippedFiles)) {
 
-			List<File> unzippedFiles = CommonUtil.getFilesFromDir(zipDirectory);
+			File firstFile = unzippedFiles.get(0);
+			String fileNm = StringUtils.substringBefore(firstFile.getName(), SBMConstants.ZIPD);
 
-			if(CollectionUtils.isNotEmpty(unzippedFiles)) {
+			File newFile = lockFile(firstFile);
+			SBMFileProcessingDTO firstFileDTO = new SBMFileProcessingDTO();
+			SBMFileInfo firstFileInfo = new SBMFileInfo();		
+			firstFileInfo.setSbmFileNm(fileNm);
+			firstFileInfo.setFunctionCd(SbmHelper.getFunctionCodeFromPreEFTFormat(fileNm)); 
+			firstFileInfo.setTradingPartnerId(SbmHelper.getTradingPartnerIdFromPreEFTFormat(fileNm)); 
+			firstFileInfo.setFileLastModifiedDateTime(LocalDateTime.parse(zipFileTs, zipFormatter)); 
+			firstFileDTO.setSbmFileInfo(firstFileInfo);
+			firstFileDTO.setSbmiFile(newFile);
+			dtoList.add(firstFileDTO);
 
-				File firstFile = unzippedFiles.get(0);
-				String fileNm = StringUtils.substringBefore(firstFile.getName(), SBMConstants.ZIPD);
+			for (File unzipFile:unzippedFiles) {
 
-				File newFile = lockFile(firstFile);
-
-				SBMFileInfo fileInfo = new SBMFileInfo();		
-				fileInfo.setSbmFileNm(fileNm);
-				fileInfo.setFunctionCd(SbmHelper.getFunctionCodeFromPreEFTFormat(fileNm)); 
-				fileInfo.setTradingPartnerId(SbmHelper.getTradingPartnerIdFromPreEFTFormat(fileNm)); 
-				fileInfo.setFileLastModifiedDateTime(LocalDateTime.parse(zipFileTs, zipFormatter)); 
-				fileProcDto.setSbmFileInfo(fileInfo);
-				fileProcDto.setSbmiFile(newFile);
-
-				for (File unzipFile:unzippedFiles) {
-
-					if(unzipFile.exists()) {
-						LOG.info("Moving file from {} to {}", zipDirectory, privateFolder);
-						FileUtils.moveFileToDirectory(unzipFile, privateFolder, false);
-					}
+				if(unzipFile.exists()) {
+					LOG.info("Moving file from {} to {}", zipDirectory, privateFolder);
+					FileUtils.moveFileToDirectory(unzipFile, privateFolder, false);
 				}
 			}
 		}
+
 		File moveZippedFile = new File(processedFolder, file.getName().replaceAll(LOCK_EXTENSION, "")
 				.concat(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))));
 
@@ -579,7 +611,11 @@ public class SbmiFileIngestionReader  {
 		FileUtils.moveFile(file, moveZippedFile);
 
 		FileUtils.deleteDirectory(zipDirectory);
+		// Return the dto list of all rejected files and the 1st valid file, if any are valid.
+		// If all files valid, then return the first zipEntry file.
+		return dtoList;
 	}
+
 
 	/*
 	 * Validate zipped file name format
@@ -595,8 +631,9 @@ public class SbmiFileIngestionReader  {
 	/*
 	 * Process GZip files
 	 */
-	private void processGzip(File file, SBMFileProcessingDTO fileProcDto) throws IOException {
+	private SBMFileProcessingDTO processGzip(File file) throws IOException {
 
+		SBMFileProcessingDTO gZipFileProcDto = null;
 		LOG.info("process Gzip..");
 
 		byte[] buffer = new byte[1024];
@@ -658,13 +695,14 @@ public class SbmiFileIngestionReader  {
 
 			File newFile = lockFile(firstFile);
 
+			gZipFileProcDto = new SBMFileProcessingDTO();
 			SBMFileInfo fileInfo = new SBMFileInfo();		
 			fileInfo.setSbmFileNm(fileNm);
 			fileInfo.setFunctionCd(SbmHelper.getFunctionCodeFromFile(fileNm)); 
 			fileInfo.setTradingPartnerId(SbmHelper.getTradingPartnerId(fileNm)); 
 			fileInfo.setFileLastModifiedDateTime(LocalDateTime.parse(gzipFileTs, gzipFormatter)); 
-			fileProcDto.setSbmFileInfo(fileInfo);
-			fileProcDto.setSbmiFile(newFile);
+			gZipFileProcDto.setSbmFileInfo(fileInfo);
+			gZipFileProcDto.setSbmiFile(newFile);
 
 			for (File gunzipFile:gunzippedFiles) {
 
@@ -676,6 +714,8 @@ public class SbmiFileIngestionReader  {
 		}
 
 		FileUtils.deleteDirectory(gzipDirectory);
+
+		return gZipFileProcDto;
 	}
 
 	/**
