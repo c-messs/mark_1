@@ -450,9 +450,6 @@ public class SbmiFileIngestionReader  {
 		return fileProcDtoList;
 	}
 
-	/*
-	 * Process Zip files
-	 */
 	/**
 	 * Reads a Zip file and extracts files.  Validates each filename and SourceId of
 	 * each extracted file (zipEntry).  Returns a list of DTOs that contain each invalid

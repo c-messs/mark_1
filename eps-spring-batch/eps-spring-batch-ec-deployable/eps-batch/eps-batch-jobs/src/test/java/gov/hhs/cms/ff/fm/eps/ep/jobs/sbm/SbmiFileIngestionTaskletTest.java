@@ -69,9 +69,6 @@ public class SbmiFileIngestionTaskletTest {
 
 		SBMFileProcessingDTO mockDTO = new SBMFileProcessingDTO();
 		
-		mockFileIngestionWriter.write(mockDTO);
-		replay(mockFileIngestionWriter);
-
 		ChunkContext chkContext = new ChunkContext(new StepContext(new StepExecution("fileIngestionStep", jobEx)));	
 		StepExecution stepEx = new StepExecution("AnyStep", jobEx);
 		StepContribution contribution = new StepContribution(stepEx);
