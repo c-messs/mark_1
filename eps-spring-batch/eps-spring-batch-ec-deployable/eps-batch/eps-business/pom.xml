@@ -4,7 +4,7 @@
   <parent>
     <groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
     <artifactId>eps</artifactId>
-    <version>26.0.123-SNAPSHOT</version>
+    <version>26.0.123</version>
   </parent>
   <artifactId>eps-business</artifactId>
   <name>eps-business</name>
@@ -127,6 +127,6 @@
   <scm>
     <connection>scm:git:${git.repo.url}</connection>
     <developerConnection>scm:git:${git.repo.url}</developerConnection>
-    <tag>eps-25.0.2</tag>
+    <tag>eps-26.0.123</tag>
   </scm>
 </project>
