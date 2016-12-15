@@ -666,8 +666,8 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 
 			zipEntryFileNameList.add(zipEntryFileName);
 
-			// Delay a little to get a different fileName since it is timestamp based.
-			Thread.sleep(10);
+			// Delay a little to get a different fileName since it is file LastModifiedDateTime based.
+			Thread.sleep(1000);
 		}
 
 		zos.close();
