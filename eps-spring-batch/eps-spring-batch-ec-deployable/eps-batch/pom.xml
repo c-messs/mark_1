@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>gov.hhs.cms.ff.fm.eps.ep</groupId>
   <artifactId>eps</artifactId>
-  <version>26.0.123</version>
+  <version>26.0.124-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>eps</name>
   <distributionManagement>
@@ -347,6 +347,6 @@
   <scm>
     <connection>scm:git:${git.repo.url}</connection>
     <developerConnection>scm:git:${git.repo.url}</developerConnection>
-    <tag>eps-26.0.123</tag>
+    <tag>eps-25.0.2</tag>
   </scm>
 </project>
