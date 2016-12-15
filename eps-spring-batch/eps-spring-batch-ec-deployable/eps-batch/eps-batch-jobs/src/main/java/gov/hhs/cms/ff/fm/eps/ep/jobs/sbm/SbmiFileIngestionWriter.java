@@ -21,9 +21,9 @@ import gov.hhs.cms.ff.fm.eps.ep.sbm.services.SBMFileCompositeDAO;
  *
  */
 public class SbmiFileIngestionWriter {
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(SbmiFileIngestionWriter.class);
-	
+
 	private SBMFileCompositeDAO fileCompositeDao;
 	private File processedFolder;
 	private File invalidFolder;
@@ -61,7 +61,7 @@ public class SbmiFileIngestionWriter {
 				dto.getFileProcSummaryFromDB().setSbmFileStatusType(dto.getSbmFileStatusType());
 			}
 		}
-		
+
 		//insert record into StagingSbmGroupLock for extract process only if the status is set to IN_PROCESS
 		if(SBMFileStatus.IN_PROCESS.equals(dto.getSbmFileStatusType())) {
 			fileCompositeDao.insertStagingSbmGroupLockForExtract(dto.getSbmFileProcSumId());
@@ -75,34 +75,37 @@ public class SbmiFileIngestionWriter {
 
 		//save StagingSBMFile
 		if(dto.isValidXML()) {
-			
+
 			InputStream in = new FileInputStream(dto.getSbmiFile());
 			InputStreamReader reader=new InputStreamReader(in);  
 			dto.setSbmFileXMLStream(reader);
-			
+
 			LOG.info("Saving SBMI file to StagingSBMFile");
 			fileCompositeDao.saveFileToStagingSBMFile(dto);
 		}
-				
+
 		// create SBMS only if file is rejected; SBMS for other status like FREEZE, ON_HOLD, PENDING_FILES will be sent when files are re-evaluated.
 		if(dto.getSbmFileInfo().isRejectedInd()) { 
 			//create SBMS and dispatch
 			responseGenerator.generateSBMS(dto);
 		}
-		
+
 		// move file to archive 
 		String filename = dto.getSbmFileInfo().getSbmFileNm();
 		File destFolder = processedFolder;
 		if( ! dto.isValidXML()) {
 			destFolder = invalidFolder;				
 		}
-		
+
 		File destFile = new File(destFolder, filename);
-		
+
 		try {
-			if(dto.getSbmiFile().exists()) {
-				LOG.info("Moving file from {} to {}", dto.getSbmiFile(), destFile);
-				FileUtils.moveFile(dto.getSbmiFile(), destFile);
+			// file will be null when Invalid ZipEntry file.
+			if (dto.getSbmiFile() != null) {
+				if(dto.getSbmiFile().exists()) {
+					LOG.info("Moving file from {} to {}", dto.getSbmiFile(), destFile);
+					FileUtils.moveFile(dto.getSbmiFile(), destFile);
+				}
 			}
 		}
 		catch(FileExistsException e) {
@@ -144,6 +147,6 @@ public class SbmiFileIngestionWriter {
 	public void setResponseGenerator(SBMResponseGenerator responseGenerator) {
 		this.responseGenerator = responseGenerator;
 	}
-	
+
 
 }

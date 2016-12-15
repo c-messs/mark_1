@@ -284,6 +284,7 @@ public class SBMResponseGenerator {
 
 	private String createSbmsXml(SBMFileInfo sbmFileInfo, List<SBMErrorDTO> errorList, SBMFileStatus fileStatus) throws JAXBException  {
 
+		String sbmsXmlStr = null;
 		SBMS sbms = new SBMS();
 		sbms.setFileName(sbmFileInfo.getSbmFileNm());
 
@@ -314,9 +315,10 @@ public class SBMResponseGenerator {
 
 		StringWriter writer = new StringWriter();	
 		sbmsMarshaller.marshal(sbms, writer);
-		LOG.debug("SBMS:\n{}", writer.toString());
+		sbmsXmlStr = writer.toString();
+		LOG.debug("SBMS:\n{}", sbmsXmlStr);
 
-		return writer.toString();
+		return sbmsXmlStr;
 	}
 
 	private BigDecimal getPercentRejected(SbmResponseDTO sbmrDto) {

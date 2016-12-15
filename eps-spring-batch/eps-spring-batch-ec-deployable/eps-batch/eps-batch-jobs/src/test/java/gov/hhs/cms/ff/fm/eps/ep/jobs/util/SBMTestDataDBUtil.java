@@ -122,6 +122,16 @@ public class SBMTestDataDBUtil {
 
 		return "SBMI." + sourceId + "."+ LocalDateTime.now().format(DTF_FILE) + "." + envCd;
 	}
+	
+	/**
+	 * Zip File Name format: FuncCode.TradingPartnerID.Date.Time.EnvCode.Direction
+	 * @param sourceId
+	 * @return
+	 */
+	public static String makeFileName(String sourceId, String envCd, LocalDateTime dtTm) {
+
+		return "SBMI." + sourceId + "."+ dtTm.format(DTF_FILE) + "." + envCd;
+	}
 
 
 	/**
