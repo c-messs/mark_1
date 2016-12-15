@@ -61,10 +61,10 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 	private SBMFileCompositeDAO mockFileCompositeDao;
 	private SbmFileValidator mockFileValidator;
 	private SBMFileStatusHandler mockFileStatusHandler;
-	
+
 	private final DateTimeFormatter DTF_FILE = DateTimeFormatter.ofPattern("'D'yyMMdd'.T'HHmmssSSS");
 	private final DateTimeFormatter DTF_ZIP = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
-	
+
 	@Before
 	public void setUp() throws IOException, ParserConfigurationException, SAXException {
 
@@ -132,14 +132,14 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 
 	@Test
 	public void testReaderZip() throws UnexpectedInputException, ParseException, NonTransientResourceException, Exception {
-		
+
 		FileUtils.copyFileToDirectory(new File("./src/test/resources/sbm/sbmTestFiles/zipFiles/SBMI.NY1.D160810.T100000007.T"), eftFolder);
 
 		String expectedTradingPartnerId = "NY1";
 		String expectedFunctionCd = "SBMI";
 		String expectedFileNm = "NY1.EPS.SBMI.D160810.T100000007.T";
 		boolean expectedRejectInd = false;
-		
+
 		expect(mockFileCompositeDao.getFileStatus(EasyMock.anyString())).andReturn(new ArrayList<SBMSummaryAndFileInfoDTO>());
 		replay(mockFileCompositeDao);
 
@@ -156,7 +156,7 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 
 		assertNotNull("Reader should return dto", dto);
 		SBMFileInfo actual = dto.getSbmFileInfo();
-		
+
 		assertEquals("TradingPartnerId", expectedTradingPartnerId , actual.getTradingPartnerId());
 		assertEquals("FunctionCd", expectedFunctionCd , actual.getFunctionCd());
 		assertEquals("FileNm", expectedFileNm , actual.getSbmFileNm());
@@ -221,7 +221,7 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		String expectedFunctionCd = "WA1";
 		String expectedFileNm = expectedFunctionCd + "." + expectedTradingPartnerId + ".SBMI.D160810.T200000007.T.IN";
 		boolean expectedRejectInd = false;
-		
+
 		FileUtils.copyFileToDirectory(new File("./src/test/resources/sbm/sbmTestFiles/zipFiles/" + expectedFileNm), eftFolder);
 
 		expect(mockFileCompositeDao.getFileStatus(EasyMock.anyString())).andReturn(new ArrayList<SBMSummaryAndFileInfoDTO>());
@@ -240,15 +240,15 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 
 		assertNotNull("Reader should return dto", dto);
 		SBMFileInfo actual = dto.getSbmFileInfo();
-		
+
 		assertEquals("TradingPartnerId", expectedTradingPartnerId , actual.getTradingPartnerId());
 		assertEquals("FunctionCd", expectedFunctionCd , actual.getFunctionCd());
 		assertEquals("FileNm", expectedFileNm , actual.getSbmFileNm());
 		assertNotNull("FileLastModifiedDateTime", actual.getFileLastModifiedDateTime());
 		assertEquals("FileNm", expectedRejectInd , actual.isRejectedInd());
 	}
-	
-	
+
+
 	@Test
 	public void test_No_Files() throws UnexpectedInputException, ParseException, NonTransientResourceException, Exception {
 
@@ -256,21 +256,21 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		SBMFileProcessingDTO dto = fileIngestionReader.read(batchId);
 		assertNull("Reader should return null", dto);
 	}
-	
-	
+
+
 	@Test
 	public void test_REJECTED_ER_012() throws UnexpectedInputException, ParseException, NonTransientResourceException, Exception {
 
 		boolean expectedRejectInd = true;
 		SBMFileStatus expectedFileStatus = SBMFileStatus.REJECTED;
 		SBMErrorWarningCode expectedError = SBMErrorWarningCode.ER_012;
-		
+
 		// Use any valid file for this test
 		FileUtils.copyFileToDirectory(new File("./src/test/resources/sbm/schemaErrors/SBMI_noSchemaErrors.xml"), eftFolder);
-		
+
 		List<SBMSummaryAndFileInfoDTO> dtoList = new ArrayList<SBMSummaryAndFileInfoDTO>();
 		SBMSummaryAndFileInfoDTO dto = new SBMSummaryAndFileInfoDTO();
-		
+
 		dto.setSbmFileStatusType(SBMFileStatus.ACCEPTED_WITH_WARNINGS);
 		SBMFileInfo sbmFileInfo = new SBMFileInfo();
 		sbmFileInfo.setRejectedInd(false);
@@ -284,33 +284,33 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		SBMFileProcessingDTO actualDTO = fileIngestionReader.read(batchId);
 
 		assertNotNull("Reader should return dto", actualDTO);
-		
+
 		List<SBMErrorDTO> errorList = actualDTO.getErrorList();
-		
+
 		assertEquals("ErrorList size", 1, errorList.size());
 		SBMErrorDTO actualError = errorList.get(0);
 		assertEquals("SbmErrorWarningTypeCd", expectedError.getCode(), actualError.getSbmErrorWarningTypeCd());
-		
+
 		assertEquals("SbmFileStatusType", expectedFileStatus , actualDTO.getSbmFileStatusType());
-		
+
 		SBMFileInfo actual = actualDTO.getSbmFileInfo();
 		assertEquals("RejectInd", expectedRejectInd , actual.isRejectedInd());
 	}
-	
-	
+
+
 	@Test
 	public void test_REJECTED_ER_013() throws UnexpectedInputException, ParseException, NonTransientResourceException, Exception {
 
 		boolean expectedRejectInd = true;
 		SBMFileStatus expectedFileStatus = SBMFileStatus.REJECTED;
 		SBMErrorWarningCode expectedError = SBMErrorWarningCode.ER_013;
-		
+
 		// Use any valid file for this test
 		FileUtils.copyFileToDirectory(new File("./src/test/resources/sbm/schemaErrors/SBMI_noSchemaErrors.xml"), eftFolder);
-		
+
 		List<SBMSummaryAndFileInfoDTO> dtoList = new ArrayList<SBMSummaryAndFileInfoDTO>();
 		SBMSummaryAndFileInfoDTO dto = new SBMSummaryAndFileInfoDTO();
-		
+
 		dto.setSbmFileStatusType(SBMFileStatus.REJECTED);
 		SBMFileInfo sbmFileInfo = new SBMFileInfo();
 		sbmFileInfo.setRejectedInd(false);
@@ -319,7 +319,7 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 
 		expect(mockFileCompositeDao.getFileStatus(EasyMock.anyString())).andReturn(dtoList);
 		replay(mockFileCompositeDao);
-		
+
 		// Set isValid to return false.
 		expect(mockXmlValidator.isValidXML(EasyMock.anyObject(File.class))).andReturn(false);
 		replay(mockXmlValidator);
@@ -328,38 +328,38 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		SBMFileProcessingDTO actualDTO = fileIngestionReader.read(batchId);
 
 		assertNotNull("Reader should return dto", actualDTO);
-		
+
 		List<SBMErrorDTO> errorList = actualDTO.getErrorList();
-		
+
 		assertEquals("ErrorList size", 1, errorList.size());
 		SBMErrorDTO actualError = errorList.get(0);
 		assertEquals("SbmErrorWarningTypeCd", expectedError.getCode(), actualError.getSbmErrorWarningTypeCd());
-		
+
 		assertEquals("SbmFileStatusType", expectedFileStatus , actualDTO.getSbmFileStatusType());
-		
+
 		SBMFileInfo actual = actualDTO.getSbmFileInfo();
 		assertEquals("RejectInd", expectedRejectInd , actual.isRejectedInd());
 	}
-	
+
 	@Test
 	public void test_REJECTED_Schema_Errors() throws UnexpectedInputException, ParseException, NonTransientResourceException, Exception {
 
 		boolean expectedRejectInd = true;
 		SBMFileStatus expectedFileStatus = SBMFileStatus.REJECTED;
-		
+
 		// Use any valid file for this test
 		FileUtils.copyFileToDirectory(new File("./src/test/resources/sbm/schemaErrors/SBMI_noSchemaErrors.xml"), eftFolder);
-		
+
 		List<SBMSummaryAndFileInfoDTO> dtoList = new ArrayList<SBMSummaryAndFileInfoDTO>();
-		
+
 		List<SBMErrorDTO> schemaErrors = new ArrayList<SBMErrorDTO>();
 		schemaErrors.add(new SBMErrorDTO());
 		schemaErrors.add(new SBMErrorDTO());
 		schemaErrors.add(new SBMErrorDTO());
-		
+
 		expect(mockFileCompositeDao.getFileStatus(EasyMock.anyString())).andReturn(dtoList);
 		replay(mockFileCompositeDao);
-		
+
 		expect(mockXmlValidator.isValidXML(EasyMock.anyObject(File.class))).andReturn(true);
 		expect(mockXmlValidator.validateSchemaForFileInfo(EasyMock.anyLong(), EasyMock.anyObject(File.class))).andReturn(schemaErrors);
 		replay(mockXmlValidator);
@@ -368,72 +368,72 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 		SBMFileProcessingDTO actualDTO = fileIngestionReader.read(batchId);
 
 		assertNotNull("Reader should return dto", actualDTO);
-		
+
 		List<SBMErrorDTO> errorList = actualDTO.getErrorList();
-		
+
 		assertEquals("ErrorList size", schemaErrors.size(), errorList.size());
-		
-		
+
+
 		assertEquals("SbmFileStatusType", expectedFileStatus , actualDTO.getSbmFileStatusType());
-		
+
 		SBMFileInfo actual = actualDTO.getSbmFileInfo();
 		assertEquals("RejectInd", expectedRejectInd , actual.isRejectedInd());
 	}
-	
+
 	@Test
 	public void test_createSBMFileInfo_ZIPD() {
-		
-	    String expectedTradingPartnerId = "WA1";
+
+		String expectedTradingPartnerId = "WA1";
 		String expectedFunctionCd = "SBMI";
 		LocalDateTime dtFile = LocalDateTime.now().minusDays(5).minusHours(1);
 		LocalDateTime dtNow = LocalDateTime.of(2016, 10, 25, 11, 22, 33);
 		String fileDateTime =  dtFile.format(DTF_FILE);
 		String expectedFileNm = "WA1.EPS.SBMI." + fileDateTime + ".T";
 		String fileNm = expectedFileNm + SBMConstants.ZIPD + dtNow.format(DTF_ZIP);
-		
+
 		ZonedDateTime zdt = ZonedDateTime.now();
 		long lastModifiedTimeMillis = zdt.toInstant().toEpochMilli();
-		
+
 		SBMFileInfo actual = (SBMFileInfo) ReflectionTestUtils.invokeMethod(fileIngestionReader, "createSBMFileInfo", fileNm, lastModifiedTimeMillis);
-		
+
 		assertEquals("TradingPartnerId", expectedTradingPartnerId , actual.getTradingPartnerId());
 		assertEquals("FunctionCd", expectedFunctionCd , actual.getFunctionCd());
 		assertEquals("FileNm", expectedFileNm , actual.getSbmFileNm());
 		assertNotNull("FileLastModifiedDateTime", actual.getFileLastModifiedDateTime());
 		assertEquals("FileNm", expectedFileNm , actual.getSbmFileNm());
 	}
-	
+
 	@Test
 	public void test_createSBMFileInfo_GZIPD() {
-		
-	    String expectedTradingPartnerId = "EPS";
+
+		String expectedTradingPartnerId = "EPS";
 		String expectedFunctionCd = "WA1";
 		LocalDateTime dtFile = LocalDateTime.now().minusDays(5).minusHours(1);
 		LocalDateTime dtNow = LocalDateTime.of(2016, 10, 25, 11, 22, 33);
 		String fileDateTime =  dtFile.format(DTF_FILE);
 		String expectedFileNm = "WA1.EPS.SBMI." + fileDateTime + ".T";
 		String fileNm = expectedFileNm + SBMConstants.GZIPD + dtNow.format(DTF_ZIP);
-		
+
 		ZonedDateTime zdt = ZonedDateTime.now();
 		long lastModifiedTimeMillis = zdt.toInstant().toEpochMilli();
-		
+
 		SBMFileInfo actual = (SBMFileInfo) ReflectionTestUtils.invokeMethod(fileIngestionReader, "createSBMFileInfo", fileNm, lastModifiedTimeMillis);
-		
+
 		assertEquals("TradingPartnerId", expectedTradingPartnerId , actual.getTradingPartnerId());
 		assertEquals("FunctionCd", expectedFunctionCd , actual.getFunctionCd());
 		assertEquals("FileNm", expectedFileNm , actual.getSbmFileNm());
 		assertNotNull("FileLastModifiedDateTime", actual.getFileLastModifiedDateTime());
 		assertEquals("FileNm", expectedFileNm , actual.getSbmFileNm());
-		
+
 	}
-	
+
 	@Test
 	public void test_getAFileFromEFT_T() throws InterruptedException, IOException {
 
 		File expectedFile = null;
 		fileIngestionReader.setEnvironmentCd(SBMConstants.FILE_ENV_CD_TEST);
 		// from table SERVERENVIRONMENTTYPE
-		String[] envCds = {SBMConstants.FILE_ENV_CD_PROD_R, SBMConstants.FILE_ENV_CD_PROD, SBMConstants.FILE_ENV_CD_TEST};
+		String[] envCds = {SBMConstants.FILE_ENV_CD_PROD_R, SBMConstants.FILE_ENV_CD_PROD, "ANY"};
 		String stateCd = SBMTestDataDBUtil.getRandomSbmState();
 		String sourceId = SBMTestDataDBUtil.getRandomNumberAsString(3) + stateCd;
 
@@ -460,8 +460,8 @@ public class SbmiFileIngestionReaderTest extends TestCase {
 			if (i == 0) {
 				expectedFile = file;
 			}
-			// Delay a little to get a different fileName since it is timestamp based.
-			Thread.sleep(5);
+			// Delay at least one second to get a different fileName since it is LastModifiedDT based.
+			Thread.sleep(1000);
 		}
 		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
 		File actualFile = (File) ReflectionTestUtils.invokeMethod(fileIngestionReader, "getAFileFromEFT");

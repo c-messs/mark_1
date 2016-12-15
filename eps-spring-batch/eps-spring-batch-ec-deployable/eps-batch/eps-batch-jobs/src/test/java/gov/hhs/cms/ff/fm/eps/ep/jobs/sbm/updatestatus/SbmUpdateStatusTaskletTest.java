@@ -188,7 +188,7 @@ public class SbmUpdateStatusTaskletTest extends TestCase {
 		File expectedFile = null;
 		sbmUpdateStatusTasklet.setEnvironmentCd(SBMConstants.FILE_ENV_CD_TEST);
 		// from table SERVERENVIRONMENTTYPE
-		String[] envCds = {SBMConstants.FILE_ENV_CD_PROD_R, SBMConstants.FILE_ENV_CD_PROD, SBMConstants.FILE_ENV_CD_TEST};
+		String[] envCds = {SBMConstants.FILE_ENV_CD_PROD_R, SBMConstants.FILE_ENV_CD_PROD, "ANY"};
 		String stateCd = SBMTestDataDBUtil.getRandomSbmState();
 		String sourceId = SBMTestDataDBUtil.getRandomNumberAsString(3) + stateCd;
 
@@ -208,8 +208,8 @@ public class SbmUpdateStatusTaskletTest extends TestCase {
 			if (i == 0) {
 				expectedFile = file;
 			}
-			// Delay a little to get a different fileName since it is timestamp based.
-			Thread.sleep(5);
+			// Delay at least one second to get a different fileName since it is LastModifiedDT based.
+			Thread.sleep(1000);
 		}
 		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
 		File actualFile = (File) ReflectionTestUtils.invokeMethod(sbmUpdateStatusTasklet, "getAFileToProcess");
