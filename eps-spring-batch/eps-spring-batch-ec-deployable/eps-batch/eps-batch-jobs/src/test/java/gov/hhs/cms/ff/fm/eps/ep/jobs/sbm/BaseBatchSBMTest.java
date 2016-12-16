@@ -6,6 +6,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import org.junit.Test;
@@ -47,14 +49,30 @@ public class BaseBatchSBMTest extends TestCase {
 	protected void assertFolderFileList(File folder, List<String> expectedList, int expectedCount) {
 
 		String[] actualArr = folder.list();
+		
+		if (actualArr != null && actualArr.length > 0) {
+			Arrays.sort(actualArr, new Comparator<String>() {
+				/**
+				 * @param fileName0
+				 * @param fileName1
+				 * @return
+				 */
+				public int compare(String fileName0, String fileName1) {
+					
+					return fileName0.compareTo(fileName1);
+				}
+			});
+		}
 
 		assertEquals("Number of files in folder:  " + folder.getName(), expectedCount, actualArr.length);
-
+	
 		for (int i = 0; i < actualArr.length; ++i) {
-			String privateFileNm = actualArr[i].substring(0,  actualArr[i].indexOf("_ZIP"));
+			String privateFileNm = actualArr[i].substring(0, actualArr[i].indexOf("_ZIP"));
 			assertEquals(folder.getName() + " File " + (i + 1), expectedList.get(i), privateFileNm);
 		}
 	}
+	
+	
 
 	@Test
 	public void test_nothing() {

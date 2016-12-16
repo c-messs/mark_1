@@ -523,7 +523,7 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 			// Delay a little to get a different fileName since it is timestamp based.
 			Thread.sleep(5);
 		}
-		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
+		// Confirm we only get the P (PROD) file.
 		File actualFile = (File) ReflectionTestUtils.invokeMethod(fileIngestionReader, "getAFileFromEFT");
 		assertEquals("file name with environmentCode 'P'", expectedFile.getName(), actualFile.getName());
 	}
@@ -568,7 +568,7 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 			// Delay a little to get a different fileName since it is timestamp based.
 			Thread.sleep(5);
 		}
-		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
+		// Confirm we get no files.
 		File actualFile = (File) ReflectionTestUtils.invokeMethod(fileIngestionReader, "getAFileFromEFT");
 		assertEquals("file with environmentCode 'P'", expectedFile, actualFile);
 	}
@@ -615,9 +615,9 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 			// Delay a little to get a different fileName since it is timestamp based.
 			Thread.sleep(5);
 		}
-		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
+		// Confirm we only get the R (PROD-R) file.
 		File actualFile = (File) ReflectionTestUtils.invokeMethod(fileIngestionReader, "getAFileFromEFT");
-		assertEquals("file with environmentCode 'P'", expectedFile.getName(), actualFile.getName());
+		assertEquals("file with environmentCode 'R'", expectedFile.getName(), actualFile.getName());
 	}
 
 
@@ -629,7 +629,10 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 	@Test
 	public void test_processZipFiles_All_Entries_Valid() throws IOException, InterruptedException {
 
-		int expectedFileListSize = 3;
+		int expectedDTOListSize = 1;
+		int expectedPrivateFolderListSize = 3;
+
+		int fileListSize = 3;
 		String envCd = "T";
 		String stateCd = SBMTestDataDBUtil.getRandomSbmState();
 		String sourceId = SBMTestDataDBUtil.getRandomNumberAsString(3) + stateCd;
@@ -648,7 +651,7 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 
 		ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile));
 
-		for (int i = 0; i < expectedFileListSize; ++i) {
+		for (int i = 0; i < fileListSize; ++i) {
 
 			zipEntryFileName = SBMTestDataDBUtil.makeZipEntryFileName(sourceId, envCd);
 			int idx = (i + 1);
@@ -674,19 +677,17 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 
 		List<SBMFileProcessingDTO> actualList = ReflectionTestUtils.invokeMethod(fileIngestionReader, "processZipFiles", zipFile);
 
-		assertEquals("Since no zip file errors should return a list", 1 , actualList.size());
+		assertEquals("Since no zip file errors should return a list", expectedDTOListSize, actualList.size());
 
 		SBMFileProcessingDTO actualFileProcDto = actualList.get(0);
 
-		assertFolderFileList(privateFolder, zipEntryFileNameList, expectedFileListSize);
+		assertFolderFileList(privateFolder, zipEntryFileNameList, expectedPrivateFolderListSize);
 
 		assertNotNull("SbmFileInfo", actualFileProcDto.getSbmFileInfo());
 
 		assertEquals("FunctionCd", "SBMI", actualFileProcDto.getSbmFileInfo().getFunctionCd());
 		assertEquals("TradingPartnerId", sourceId, actualFileProcDto.getSbmFileInfo().getTradingPartnerId());
-		// TODO: determine is this fileName has any relevance when doing HappyPath.
-		//	assertEquals("SbmFileNm", zipFileNm, fileProcDto.getSbmFileInfo().getSbmFileNm());
-		//	fileInfo.setFileLastModifiedDateTime(LocalDateTime.parse(zipFileTs, zipFormatter)); 
+
 	}
 
 	/**
@@ -696,7 +697,10 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 	@Test
 	public void test_processZipFiles_ER_063() throws IOException, InterruptedException {
 
-		int expectedFileListSize = 3;
+		int expectedDTOListSize = 2;
+		int expectedPrivateFolderListSize = 2;
+
+		int fileListSize = 3;
 		String envCd = "T";
 		String stateCd = SBMTestDataDBUtil.getRandomSbmState();
 		String sourceId = SBMTestDataDBUtil.getRandomNumberAsString(3) + stateCd;
@@ -709,7 +713,6 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 		String tenantId = stateCd + "0";
 		int covYr = YEAR;
 
-
 		// Put the created zip file in the test folder for now. The actual File handle is 
 		// passed into method processZipFiles(,).
 		File zipFile = new File(testZipFilesFolder + File.separator + zipFileNm);
@@ -717,8 +720,7 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 		ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile));
 
 
-
-		for (int i = 0; i < expectedFileListSize; ++i) {
+		for (int i = 0; i < fileListSize; ++i) {
 
 			zipEntryFileName = SBMTestDataDBUtil.makeZipEntryFileName(sourceId, envCd);
 
@@ -732,7 +734,7 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 
 			if(i == 0 || i == 1) {
 				// ZipEntryFiles with errors and the first good file are the only files 
-				// exepected to be returned from reader.
+				// expected to be returned from reader.
 				zipEntryFileNameList.add(zipEntryFileName);
 			}
 
@@ -749,7 +751,81 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 			byte[] data = sbmFileXML.getBytes();
 			zos.write(data, 0, data.length);
 
+			// Delay a little to get a different fileName since it is timestamp based.
+			Thread.sleep(10);
+		}
 
+		zos.close();
+
+		List<SBMFileProcessingDTO> actualList = ReflectionTestUtils.invokeMethod(fileIngestionReader, "processZipFiles", zipFile);
+
+		assertEquals("Since at least one good zip entry file and one with error", expectedDTOListSize, actualList.size());
+
+		// Confirm only the "good" files made it to the private folder.
+		assertFolderFileList(privateFolder, privateFolderFileNameList, expectedPrivateFolderListSize);
+
+		for (int i = 0; i < actualList.size(); ++i) {
+
+			SBMFileProcessingDTO actualFileProcDto = actualList.get(i);
+			assertNotNull("SbmFileInfo", actualFileProcDto.getSbmFileInfo());
+			assertEquals("TradingPartnerId", sourceId, actualFileProcDto.getSbmFileInfo().getTradingPartnerId());
+			assertEquals("SbmFileNm", zipEntryFileNameList.get(i), actualFileProcDto.getSbmFileInfo().getSbmFileNm());
+		}
+	}
+
+	@Test
+	public void test_processZipFiles_All_Invalid() throws IOException, InterruptedException {
+
+		int expectedDTOListSize = 3;
+		int expectedPrivateFolderListSize = 0;
+
+		int fileListSize = 3;
+		String envCd = "T";
+		String stateCd = SBMTestDataDBUtil.getRandomSbmState();
+		String sourceId = SBMTestDataDBUtil.getRandomNumberAsString(3) + stateCd;
+
+		String zipFileNm = SBMTestDataDBUtil.makeFileName(sourceId, envCd);
+		String zipEntryFileName = null;
+		List<String> zipEntryFileNameList = new ArrayList<String>();
+		List<String> privateFolderFileNameList = new ArrayList<String>();
+
+		String tenantId = stateCd + "0";
+		int covYr = YEAR;
+
+		// Put the created zip file in the test folder for now. The actual File handle is 
+		// passed into method processZipFiles(,).
+		File zipFile = new File(testZipFilesFolder + File.separator + zipFileNm);
+
+		ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile));
+
+
+		for (int i = 0; i < fileListSize; ++i) {
+
+			if(i == 0 || i == 1) {
+				// For the zipEntry file, booger up the name to log ER-063.
+				zipEntryFileName = SBMTestDataDBUtil.makeZipEntryFileName(sourceId, envCd);
+				zipEntryFileName = "XXX." + zipEntryFileName + ".PPPPP";
+			} else {
+				// For the zipEntry file, booger up the sourceId to log ER-011.
+				zipEntryFileName = SBMTestDataDBUtil.makeZipEntryFileName("XX" + sourceId + "PP", envCd);
+				privateFolderFileNameList.add(zipEntryFileName);
+			}
+
+			// ZipEntryFiles with errors expected to be returned from reader.
+			zipEntryFileNameList.add(zipEntryFileName);
+
+			int idx = (i + 1);
+			String sbmFileId = "FID-" + idx + "" + idx + "" + idx;
+			String issuerId = idx + "" + idx  + "" + idx + "" + idx + "" + idx;
+
+			Enrollment enrollment = SBMTestDataDBUtil.makeEnrollment(sbmFileId, tenantId, covYr, issuerId, SBMTestDataDBUtil.FILES_ONE_PER_ISSUER);
+			String sbmFileXML = SBMTestDataDBUtil.getEnrollmentAsXmlString(enrollment);
+			sbmFileXML = SBMTestDataDBUtil.prettyXMLFormat(sbmFileXML);
+
+			ZipEntry zipEntry = new ZipEntry(zipEntryFileName);
+			zos.putNextEntry(zipEntry);
+			byte[] data = sbmFileXML.getBytes();
+			zos.write(data, 0, data.length);
 
 			// Delay a little to get a different fileName since it is timestamp based.
 			Thread.sleep(10);
@@ -759,10 +835,10 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 
 		List<SBMFileProcessingDTO> actualList = ReflectionTestUtils.invokeMethod(fileIngestionReader, "processZipFiles", zipFile);
 
-		assertEquals("Since at least one good zip entry file and one with error", 2, actualList.size());
+		assertEquals("Since all files invalid", expectedDTOListSize, actualList.size());
 
-		// Confirm only the "good" files made it to the private folder.
-		assertFolderFileList(privateFolder, privateFolderFileNameList, expectedFileListSize - 1);
+		// Confirm NO "good" files made it to the private folder. All 3 are invalid.
+		assertFolderFileList(privateFolder, privateFolderFileNameList, expectedPrivateFolderListSize);
 
 		for (int i = 0; i < actualList.size(); ++i) {
 
@@ -771,13 +847,7 @@ public class SbmiFileIngestionReaderTest extends BaseBatchSBMTest {
 			assertEquals("TradingPartnerId", sourceId, actualFileProcDto.getSbmFileInfo().getTradingPartnerId());
 			assertEquals("SbmFileNm", zipEntryFileNameList.get(i), actualFileProcDto.getSbmFileInfo().getSbmFileNm());
 		}
-
-		// TODO: determine is this fileName has any relevance when doing HappyPath.
-		//	assertEquals("SbmFileNm", zipFileNm, fileProcDto.getSbmFileInfo().getSbmFileNm());
-		//	fileInfo.setFileLastModifiedDateTime(LocalDateTime.parse(zipFileTs, zipFormatter)); 
-		//assertEquals("FunctionCd", "SBMI", actualFileProcDto1.getSbmFileInfo().getFunctionCd());
 	}
-
 
 
 }
