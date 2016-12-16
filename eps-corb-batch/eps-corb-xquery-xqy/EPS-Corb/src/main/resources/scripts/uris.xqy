@@ -36,9 +36,8 @@ let $PAETCompletionIndicator := if ($PAETCompletion eq "Y") then
 
 let $EEPAETCount := fn:count(cts:element-values(xs:QName("p:preAuditCutOffDateTime"), (),("document","score-zero"),(cts:element-query(xs:QName("p:preAuditRunMetadata"),
                             cts:and-query((
-                              cts:element-value-query(xs:QName("p:preAuditCoverageYearNumber"),$planPolicyYearFilter),
                               cts:element-value-query(xs:QName("p:preAuditRunType") ,"FULL"),
-							                cts:element-range-query(xs:QName("p:preAuditCutOffDateTime"), ">", $PAETDate	)
+							  cts:element-range-query(xs:QName("p:preAuditCutOffDateTime"), ">", $PAETDate	)
                             ))
                         )
 					)))
@@ -46,10 +45,9 @@ let $EEPAETCount := fn:count(cts:element-values(xs:QName("p:preAuditCutOffDateTi
 let $EEPAETExists := if ( $EEPAETCount > 0) then "Y" else "N"					
 				   									
 (: Get the PAET date from the EE tower to be used while determining the documents to bbe extracted :)
-let $EEPAET :=  fn:adjust-dateTime-to-timezone(fn:min(cts:element-values(xs:QName("p:preAuditCutOffDateTime"), (),("document","score-zero"),
+let $EEPAET :=  fn:adjust-dateTime-to-timezone(fn:max(cts:element-values(xs:QName("p:preAuditCutOffDateTime"), (),("document","score-zero"),
                         cts:element-query(xs:QName("p:preAuditRunMetadata"),
                             cts:and-query((
-                              cts:element-value-query(xs:QName("p:preAuditCoverageYearNumber"),$planPolicyYearFilter),
                               cts:element-value-query(xs:QName("p:preAuditRunType") ,"FULL"),
 							  cts:element-range-query(xs:QName("p:preAuditCutOffDateTime"), ">", $PAETDate	)
                             ))
