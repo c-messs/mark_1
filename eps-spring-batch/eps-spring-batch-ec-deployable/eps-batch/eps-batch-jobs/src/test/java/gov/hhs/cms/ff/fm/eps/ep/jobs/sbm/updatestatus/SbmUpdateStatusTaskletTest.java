@@ -245,7 +245,7 @@ public class SbmUpdateStatusTaskletTest extends TestCase {
 			// Delay a little to get a different fileName since it is timestamp based.
 			Thread.sleep(5);
 		}
-		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
+		// Confirm we only get the P (PROD) file.
 		File actualFile = (File) ReflectionTestUtils.invokeMethod(sbmUpdateStatusTasklet, "getAFileToProcess");
 		assertEquals("file name with environmentCode 'P'", expectedFile.getName(), actualFile.getName());
 	}
@@ -282,7 +282,7 @@ public class SbmUpdateStatusTaskletTest extends TestCase {
 			// Delay a little to get a different fileName since it is timestamp based.
 			Thread.sleep(5);
 		}
-		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
+		// Confirm we only get the P (PROD).
 		File actualFile = (File) ReflectionTestUtils.invokeMethod(sbmUpdateStatusTasklet, "getAFileToProcess");
 		assertEquals("file with environmentCode 'P'", expectedFile, actualFile);
 	}
@@ -321,7 +321,7 @@ public class SbmUpdateStatusTaskletTest extends TestCase {
 			// Delay a little to get a different fileName since it is timestamp based.
 			Thread.sleep(5);
 		}
-		// Confirm we only get the T (test) file and not the PROD or PROD-R file.
+		// Confirm we only get the R (PROD-R) file.
 		File actualFile = (File) ReflectionTestUtils.invokeMethod(sbmUpdateStatusTasklet, "getAFileToProcess");
 		assertEquals("file with environmentCode 'R'", expectedFile.getName(), actualFile.getName());
 	}
